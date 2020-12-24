@@ -1,4 +1,4 @@
-# Simulation Requirements Analysis
+# Design Documentation
 
 ## Mathematical Model of Blocks
 
@@ -10,19 +10,47 @@ Each *block* implements a dynamical system of the general form
 
 with the state vector `x(t)`, the input vector `u(t)` and the output vector `y(t)`.
 
-If `y(t)` directly depends on component `ui(t)` of `u(t)`, then `ui(t)` is said to *feed-through*.
+If `y(t)` directly depends on component `ui(t)` of `u(t)`, then `ui(t)` is said to be a *feed-through* input.
 
-A block is called *algebraic* if its state vector is 0-dimensional: `y(t)=h(t,u(t))`.
+## Composition of Block Graphs
 
-A block is called *autonomous* if its input vector is 0-dimensional: `dx/dt = g(t,x(t))`, `y(t) = h(t,x(t))`.
+A block graph is a tree structure, with a single root, and blocks as nodes.
+The leaves of the tree are leaf blocks, all other nodes of the tree are non-leaf blocks.
+If a block instance is contained multiple times in the same tree, the results are undefined.
 
-Blocks may be either leaf blocks or non-leaf blocks.
-Non-leaf blocks are described by a composition of blocks, where
+The non-leaf blocks represent the composition of their child blocks and do not contain individual dynamics.
+Instead, their inputs and outputs are connected to inputs and outputs of the child blocks.
+In addition, outputs of child blocks may be connected to inputs of child blocks.
 
-- each input of an internal block may be connected either to an output of an internal block or an input of the non-leaf block, and
-- each output of the non-leaf block may be connected to an output of an internal block.
+## Compilation
 
-% Events for leaf blocks
+During compilation, a block graph is compiled into a structure consisting of
+
+ - information about the state and output vectors of the dynamical system represented by the block graph,
+ - a mapping of the states and outputs of the leaf blocks into the state and output vectors,
+ - a mapping of the inputs and outputs of all blocks into the output vector,
+ - an execution sequence of leaf blocks honoring the inter-dependencies of leaf blocks represented by the input-output connections and feed-through information.
+
+### The State and Output Vectors
+
+The state and output vectors of a dynamical system represented by a block graph are composed of the state and output vectors of the leaf blocks contained in the graph.
+Non-leaf blocks do not have state, and their inputs and outputs are merely symbolic in nature, connecting inputs and outputs of leaf blocks across non-leaf block borders.
+
+### Input Mapping
+
+Each input of a block may be connected to at most one output of another block.
+During compilation, each input is mapped to an entry of the output vector that represents the output the input is connected to.
+During this process, each output of each non-leaf block is also mapped to the entry of the output vector.
+
+### Execution Order
+
+The derivatives of the state vectors of individual leaf blocks may depend on the current value of both the state vector and the inputs of that leaf block.
+Thus, before calculating the state derivative, the input values need to be determined, which in turn are taken from the outputs of possibly other blocks.
+
+However, the outputs of a block may in turn depend on the inputs of that block.
+Therefore, the output vector of the whole system needs to be filled in an order that is compatible with these dependencies.
+
+Such an execution order is determined during compilation using the information about inter-connections and applying Kahn's algorithm to this information.
 
 ## Principal Operation of the Main Simulation Loop
 
@@ -50,7 +78,9 @@ Non-leaf blocks are described by a composition of blocks, where
       4. Add the current time, state, output and event vector to the simulation result.
    2. Return the simulation result.
 
-## Mapping of inputs to the output vector
+## Implementation Details
+
+### Mapping of inputs to the output vector
 
 The input map is a mapping of block inputs to elements of the output vector.
 
@@ -67,14 +97,7 @@ We further assume that `inmap` is pre-populated to a value marking each entry as
 After this, `inmap[B,i]` is either undefined or contains the index of the output connected to input i of block B in the output vector.
 If it is undefined, the input i of block B is not connected to any output.
 
-## Determination of Execution Order
-
-For the determination of a valid execution order, the dependencies between blocks need to be established.
-Definition: Block B depends on Block A, if A generates an output that is used as an input for calculation of the output for B.
-
-% TODO
-
-### Kahn's Algorithm:
+### Kahn's Algorithm
 
 Input:
    - Let `N' be the number of nodes.

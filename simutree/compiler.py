@@ -20,22 +20,38 @@ class Compiler:
    determination of an execution order consistent with the inter-block dependencies.
    """
    def compile(self):
-      # Collect all leaf blocks in the graph
-      self.leaf_blocks = list(self.root.enumerate_leaf_blocks());
-      self.leaf_block_index = {block:index for index,block in zip(itertools.count(),self.leaf_blocks)};
-      # Allocate the state and output indices for the leaf blocks
-      self.leaf_first_state_index = [0]+list(itertools.accumulate([block.num_states for block in self.leaf_blocks]));
-      self.leaf_first_output_index = [0]+list(itertools.accumulate([block.num_outputs for block in self.leaf_blocks]));
       # Collect all blocks in the graph
       self.blocks = list(Compiler.enumerate_blocks_pre_order(self.root));
       self.block_index = {block:index for index,block in zip(itertools.count(),self.blocks)};
+      
       # Allocate input and output indices for all blocks
+      # The first_input_index and first_output_index arrays give the index of the first input or output associated
+      # with the block identified by the index, respectively.
       self.first_input_index = [0]+list(itertools.accumulate([block.num_outputs for block in self.blocks]));
       self.first_output_index = [0]+list(itertools.accumulate([block.num_outputs for block in self.blocks]));
-      self.leaf_first_input_index = [self.first_input_index[self.block_index[leaf_block]] for leaf_block in self.leaf_blocks];
-      # Set up input and output vector maps
+      
+      # Set up input and output vector maps for all blocks
+      # For each input input_idx of block block_idx, self.input_vector_index[self.first_input_index[block_idx]+input_idx]
+      # gives the index of the corresponding entry in the output vector.
       self.input_vector_index = [None]*self.first_input_index[-1];
+      # For each output output_idx of block block_idx, self.output_vector_index[self.first_output_index[block_idx]+output_idx]
+      # gives the index of the corresponding entry in the output vector.
       self.output_vector_index = [None]*self.first_output_index[-1];
+      
+      # Collect all leaf blocks in the graph
+      self.leaf_blocks = list(self.root.enumerate_leaf_blocks());
+      self.leaf_block_index = {block:index for index,block in zip(itertools.count(),self.leaf_blocks)};
+      
+      # Allocate the input, output and state indices for the leaf blocks
+      self.leaf_first_input_index = [0]+list(itertools.accumulate([block.num_inputs for block in self.leaf_blocks]));
+      self.leaf_first_output_index = [0]+list(itertools.accumulate([block.num_outputs for block in self.leaf_blocks]));
+      self.leaf_first_state_index = [0]+list(itertools.accumulate([block.num_states for block in self.leaf_blocks]));
+      
+      # Set up the input vector maps for leaf blocks
+      # self.leaf_input_vector_index[self.leaf_first_input_index[block_idx]+input_index] gives the offset of the
+      # entry associated with input input_index of leaf block block_idx in the output vector.
+      self.leaf_input_vector_index = [None]*self.leaf_first_input_index[-1];
+      
       # Establish input-to-output mapping
       self.map_inputs_to_outputs();
       # Establish execution order
@@ -105,6 +121,14 @@ class Compiler:
       
       # Iterate over all non-leaf blocks and process incoming connections
       self.map_nonleaf_block_inputs();
+      
+      # Establish the leaf input vector map
+      for leaf_block,leaf_block_idx in self.leaf_block_index.items():
+         block_idx = self.block_index[leaf_block];
+         leaf_input_start = self.leaf_first_input_index[leaf_block_idx];
+         global_input_start = self.first_input_index[block_idx];
+         self.leaf_input_vector_index[leaf_input_start:leaf_input_start+leaf_block.num_inputs] = \
+            self.input_vector_index[global_input_start:global_input_start+leaf_block.num_inputs];
    
    """
    Establish an execution order of leaf blocks compatible with inter-block dependencies.
@@ -112,8 +136,6 @@ class Compiler:
    def build_execution_order(self):
       # We use Kahn's algorithm here
       # Initialize the number of incoming connections by leaf block
-      input_defined = [index is not None for index in self.input_vector_index];
-      input_vector_ranges = [(self.leaf_first_input_index[block_index],block.num_inputs) for block,block_index in self.leaf_block_index.items()];
       num_incoming = [len(block.feedthrough_inputs) for block in self.leaf_blocks];
 
       # Initialize the list of leaf blocks that do not require any inputs
@@ -128,12 +150,11 @@ class Compiler:
          src_output_index_start = self.leaf_first_output_index[src_index];
          src_output_index_end = src_output_index_start+src.num_outputs;
          for dest,dest_leaf_index in self.leaf_block_index.items():
-            dest_index = self.block_index[dest];
             dest_port_offset = self.leaf_first_input_index[dest_leaf_index];
             # We consider only ports that feed through
             for dest_port in dest.feedthrough_inputs:
                dest_port_index = dest_port_offset+dest_port;
-               src_port_index = self.input_vector_index[dest_port_index];
+               src_port_index = self.leaf_input_vector_index[dest_port_index];
                if src_output_index_start <= src_port_index and src_port_index < src_output_index_end:
                   # The destination port is connected to the source system
                   num_incoming[dest_leaf_index]=num_incoming[dest_leaf_index]-1;
