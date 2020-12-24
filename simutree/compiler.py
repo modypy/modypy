@@ -27,7 +27,7 @@ class Compiler:
       self.leaf_first_state_index = [0]+list(itertools.accumulate([block.num_states for block in self.leaf_blocks]));
       self.leaf_first_output_index = [0]+list(itertools.accumulate([block.num_outputs for block in self.leaf_blocks]));
       # Collect all blocks in the graph
-      self.blocks = list(self.enumerate_blocks_pre_order(self.root));
+      self.blocks = list(Compiler.enumerate_blocks_pre_order(self.root));
       self.block_index = {block:index for index,block in zip(itertools.count(),self.blocks)};
       # Allocate input and output indices for all blocks
       self.first_input_index = [0]+list(itertools.accumulate([block.num_outputs for block in self.blocks]));
@@ -55,7 +55,7 @@ class Compiler:
    Fill output_vector_index for outputs of non-leaf blocks.
    """
    def map_nonleaf_block_outputs(self):
-      for block in self.enumerate_blocks_post_order(self.root):
+      for block in Compiler.enumerate_blocks_post_order(self.root):
          if block not in self.leaf_block_index:
             block_index = self.block_index[block];
             dest_port_offset = self.first_output_index[block_index];
@@ -68,7 +68,7 @@ class Compiler:
    Fill input_vector_index for the destinations of internal connections.
    """
    def map_internal_connections(self):
-      for block in self.enumerate_blocks_post_order(self.root):
+      for block in Compiler.enumerate_blocks_post_order(self.root):
          if block not in self.leaf_block_index:
             for src_block,src_port_index,dst_block,dest_port_index in block.enumerate_internal_connections():
                src_block_index = self.block_index[src_block];
@@ -81,7 +81,7 @@ class Compiler:
    Fill input_vector_index for the destinations of non-leaf block inputs.
    """
    def map_nonleaf_block_inputs(self):
-      for block in self.enumerate_blocks_pre_order(self.root):
+      for block in Compiler.enumerate_blocks_pre_order(self.root):
          if block not in self.leaf_block_index:
             block_index = self.block_index[block];
             src_port_offset = self.first_input_index[block_index];
@@ -151,11 +151,12 @@ class Compiler:
    """
    Enumerate all blocks in the graph with the given root in pre-order.
    """
-   def enumerate_blocks_pre_order(self,root):
+   @staticmethod
+   def enumerate_blocks_pre_order(root):
       yield root;
       try:
          for child in root.children:
-            yield from self.enumerate_blocks_post_order(child);
+            yield from Compiler.enumerate_blocks_pre_order(child);
       except AttributeError:
          # Ignore this, the root is not a non-leaf node
          pass;
@@ -163,19 +164,12 @@ class Compiler:
    """
    Enumerate all blocks in the graph with the given root in post-order.
    """
-   def enumerate_blocks_post_order(self,root):
+   @staticmethod
+   def enumerate_blocks_post_order(root):
       try:
          for child in root.children:
-            yield from self.enumerate_blocks_post_order(child);
+            yield from Compiler.enumerate_blocks_post_order(child);
       except AttributeError:
          # Ignore this, the root is not a non-leaf node
          pass;
       yield root;
-      
-   def dump_vector_mapping(self):
-      print("Vector mapping");
-      for block, block_index in self.block_index.items():
-         first_input_index = self.first_input_index[block_index];
-         first_output_index = self.first_output_index[block_index];
-         print("\tBlock %s(%d) input_mapping=%s output_mapping=%s" % (block.name,block_index,self.input_vector_index[first_input_index:first_input_index+block.num_inputs],self.output_vector_index[first_output_index:first_output_index+block.num_outputs]));   
-   

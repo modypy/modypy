@@ -16,9 +16,6 @@ class Block(object):
    """
    def enumerate_leaf_blocks(self):
       yield self;
-   
-   def __repr__(self):
-      return "<Block \"%s\" %s>" % (self.name,object.__repr__(self));
 
 class NonLeafBlock(Block):
    def __init__(self,
