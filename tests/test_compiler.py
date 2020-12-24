@@ -21,34 +21,34 @@ def test_enumerate_blocks_post_order(dcmotor_model):
 
 def test_compile(dcmotor_model):
    compiler = Compiler(dcmotor_model.system);
-   compiler.compile();
+   result = compiler.compile();
    
    # Check counts of internal states and outputs
-   assert compiler.leaf_first_state_index[-1]==2;
-   assert compiler.leaf_first_output_index[-1]==6;
+   assert result.first_state_index[-1]==2;
+   assert result.first_output_index[-1]==6;
    
    # Check leaf input connections
-   sp_idx = compiler.block_index[dcmotor_model.static_propeller];
-   dcm_idx = compiler.block_index[dcmotor_model.dcmotor];
-   voltage_idx = compiler.block_index[dcmotor_model.voltage];
-   rho_idx = compiler.block_index[dcmotor_model.density];
-   engine_idx = compiler.block_index[dcmotor_model.engine];
+   sp_idx = result.global_block_index[dcmotor_model.static_propeller];
+   dcm_idx = result.global_block_index[dcmotor_model.dcmotor];
+   voltage_idx = result.global_block_index[dcmotor_model.voltage];
+   rho_idx = result.global_block_index[dcmotor_model.density];
+   engine_idx = result.global_block_index[dcmotor_model.engine];
    
    # Check connection from dcmotor:0 to static_propeller:0
-   assert compiler.output_vector_index[compiler.first_output_index[dcm_idx]+0]==compiler.input_vector_index[compiler.first_input_index[sp_idx]+0];
-   # Check connection from static_propeller:1 to dcmotor:1
-   assert compiler.output_vector_index[compiler.first_output_index[sp_idx]+1]==compiler.input_vector_index[compiler.first_input_index[dcm_idx]+1];
-   # Check connection from voltage:0 to dcmotor:0
-   assert compiler.output_vector_index[compiler.first_output_index[voltage_idx]+0]==compiler.input_vector_index[compiler.first_input_index[dcm_idx]+0];
-   # Check connection from density:0 to static_propeller:1
-   assert compiler.output_vector_index[compiler.first_output_index[voltage_idx]+0]==compiler.input_vector_index[compiler.first_input_index[dcm_idx]+0];
-   # Check connection from static_propeller:0 to engine:0 (output)
-   assert compiler.output_vector_index[compiler.first_output_index[sp_idx]+0]==compiler.output_vector_index[compiler.first_output_index[engine_idx]+0];
+   assert result.global_output_index[result.global_first_output_index[    dcm_idx]+0]==result.global_input_index [result.global_first_input_index [    sp_idx]+0];
    # Check connection from dcmotor:1 to engine:1 (output)
-   assert compiler.output_vector_index[compiler.first_output_index[dcm_idx]+1]==compiler.output_vector_index[compiler.first_output_index[engine_idx]+1];
+   assert result.global_output_index[result.global_first_output_index[    dcm_idx]+1]==result.global_output_index[result.global_first_output_index[engine_idx]+1];
+   # Check connection from static_propeller:1 to dcmotor:1
+   assert result.global_output_index[result.global_first_output_index[     sp_idx]+1]==result.global_input_index [result.global_first_input_index [   dcm_idx]+1];
+   # Check connection from static_propeller:0 to engine:0 (output)
+   assert result.global_output_index[result.global_first_output_index[     sp_idx]+0]==result.global_output_index[result.global_first_output_index[engine_idx]+0];
+   # Check connection from voltage:0 to dcmotor:0
+   assert result.global_output_index[result.global_first_output_index[voltage_idx]+0]==result.global_input_index [result.global_first_input_index [   dcm_idx]+0];
+   # Check connection from density:0 to static_propeller:1
+   assert result.global_output_index[result.global_first_output_index[voltage_idx]+0]==result.global_input_index [result.global_first_input_index [   dcm_idx]+0];
    
    # Check execution order
-   exec_seq = compiler.execution_sequence;
+   exec_seq = result.blocks;
    assert exec_seq.index(dcmotor_model.dcmotor)<exec_seq.index(dcmotor_model.static_propeller);
    assert exec_seq.index(dcmotor_model.density)<exec_seq.index(dcmotor_model.static_propeller);
 

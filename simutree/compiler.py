@@ -1,6 +1,31 @@
 import numpy as np;
 import itertools;
 
+class CompilationResult:
+   def __init__(self,
+                blocks,
+                block_index,
+                first_input_index,
+                first_state_index,
+                first_output_index,
+                input_index,
+                global_block_index,
+                global_first_input_index,
+                global_first_output_index,
+                global_input_index,
+                global_output_index):
+      self.blocks = blocks;
+      self.block_index = block_index;
+      self.first_input_index = first_input_index;
+      self.first_state_index = first_state_index;
+      self.first_output_index = first_output_index;
+      self.input_index = input_index;
+      self.global_block_index = global_block_index;
+      self.global_first_input_index = global_first_input_index;
+      self.global_first_output_index = global_first_output_index;
+      self.global_input_index = global_input_index;
+      self.global_output_index = global_output_index;
+
 """
 Compiler for block trees.
 
@@ -56,6 +81,18 @@ class Compiler:
       self.map_inputs_to_outputs();
       # Establish execution order
       self.build_execution_order();
+      
+      return CompilationResult(blocks=self.execution_sequence,
+                               block_index=self.leaf_block_index,
+                               first_input_index=self.leaf_first_input_index,
+                               first_state_index=self.leaf_first_state_index,
+                               first_output_index=self.leaf_first_output_index,
+                               input_index=self.leaf_input_vector_index,
+                               global_block_index=self.block_index,
+                               global_first_input_index=self.first_input_index,
+                               global_first_output_index=self.first_output_index,
+                               global_input_index=self.input_vector_index,
+                               global_output_index=self.output_vector_index);
 
    """
    Fill output_vector_index with the output vector indices for leaf blocks.
