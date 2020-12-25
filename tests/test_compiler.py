@@ -80,4 +80,4 @@ def test_compiled_system(dcmotor_model):
    assert initial_output==pytest.approx([4.44,1.29,0.0,0.0,0.0,0.0,0.0],abs=1.E-2);
    
    initial_state_update = result.state_update_function(0,result.initial_condition,initial_output);
-   assert initial_state_update==pytest.approx([2336.84,0.0],abs=1.E-2);
+   assert initial_state_update==pytest.approx([0.0,2336.84],abs=1.E-2);

@@ -8,11 +8,11 @@ def test_run_dcmotor(dcmotor_model):
    compiler = Compiler(dcmotor_model.system);
    result = compiler.compile();
    
-   simulator = Simulator(result,t0=0.,tbound=10.0 );
+   simulator = Simulator(result,t0=0.,tbound=2.0 );
    simulator.run();
    
    assert simulator.status == 'finished';
-   assert simulator.result.t[-1] == pytest.approx(10.0);
+   assert simulator.result.t[-1] == pytest.approx(2.0);
 
 def test_run_decay_model(decay_model):
    compiler = Compiler(decay_model);

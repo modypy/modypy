@@ -31,8 +31,8 @@ class DCMotor(LeafBlock):
       self.J = J;
    
    def state_update_function(self,t,states,inputs):
-      return [(inputs[0]-self.Kv*states[0]-self.R*states[1])/self.L,
-              (self.Kv*states[0]-inputs[1])/self.J];
+      return [(self.Kv*states[1]-inputs[1])/self.J,
+              (inputs[0]-self.Kv*states[0]-self.R*states[1])/self.L];
    
    def output_function(self,t,states,inputs):
       return [states[0]/(2*math.pi),states[1]];
