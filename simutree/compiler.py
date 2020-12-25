@@ -1,7 +1,7 @@
 import numpy as np;
 import itertools;
 
-class CompilationResult:
+class CompiledSystem:
    def __init__(self,
                 blocks,
                 block_index,
@@ -25,6 +25,80 @@ class CompilationResult:
       self.global_first_output_index = global_first_output_index;
       self.global_input_index = global_input_index;
       self.global_output_index = global_output_index;
+      
+      self.num_outputs = self.first_output_index[-1];
+      self.num_states = self.first_state_index[-1];
+      
+      self.initial_condition = np.zeros(self.num_states);
+      for block,block_index in self.block_index.items():
+         first_state = self.first_state_index[block_index];
+         self.initial_condition[first_state:first_state+block.num_states] = block.initial_condition;
+   
+   """
+   Combined output function of the compiled system.
+   
+   This calculates the output vector for all the leaf blocks contained in the system.
+   """
+   def output_function(self,t,state):
+      outputs = np.zeros(self.num_outputs);
+      # Calculate the output vector
+      for block in self.blocks:
+         # We also process blocks without outputs. These may be sinks.
+         block_index = self.block_index[block];
+         
+         first_input = self.first_input_index[block_index];
+         first_state = self.first_state_index[block_index];
+         first_output = self.first_output_index[block_index];
+         input_indices = self.input_index[first_input:first_input+block.num_inputs];
+         
+         block_inputs = outputs[input_indices];
+         block_states = state[first_state:first_state+block.num_states];
+         
+         if block.num_inputs>0 and block.num_states>0:
+            # This system has inputs and states
+            block_outputs = block.output_function(t,block_states,block_inputs);
+         elif block.num_states>0:
+            # This system has states, but no inputs
+            block_outputs = block.output_function(t,block_states);
+         elif block.num_inputs>0:
+            # This system has inputs, but no states
+            block_outputs = block.output_function(t,block_inputs);
+         else:
+            # This system neither has inputs nor states
+            block_outputs = block.output_function(t);
+         
+         outputs[first_output:first_output+block.num_outputs] = block_outputs;
+      
+      return outputs;
+
+   """
+   Combined state update function of the compiled system.
+   
+   This calculates the state update vector for all the leaf blocks contained in the system.
+   """
+   def state_update_function(self,t,state,outputs):
+      state_derivative = np.zeros(self.num_states);
+      for block,block_index in self.block_index.items():
+         if block.num_states>0:
+            # We only consider blocks that have state
+            first_input = self.first_input_index[block_index];
+            first_state = self.first_state_index[block_index];
+            input_indices = self.input_index[first_input:first_input+block.num_inputs];
+            
+            block_inputs = outputs[input_indices];
+            block_states = state[first_state:first_state+block.num_states];
+            
+            if block.num_inputs>0:
+               # This system has inputs
+               block_state_derivative = block.state_update_function(t,block_states,block_inputs);
+            else:
+               # This system has no inputs
+               block_state_derivative = block.state_update_function(t,block_states);
+         
+            state_derivative[first_state:first_state+block.num_states] = block_state_derivative;
+      
+      return state_derivative;
+      
 
 """
 Compiler for block trees.
@@ -82,7 +156,7 @@ class Compiler:
       # Establish execution order
       self.build_execution_order();
       
-      return CompilationResult(blocks=self.execution_sequence,
+      return CompiledSystem(blocks=self.execution_sequence,
                                block_index=self.leaf_block_index,
                                first_input_index=self.leaf_first_input_index,
                                first_state_index=self.leaf_first_state_index,

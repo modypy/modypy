@@ -3,7 +3,11 @@ import bisect;
 import itertools;
 
 class Block(object):
-   def __init__(self,num_inputs=0,num_outputs=0,name=None,feedthrough_inputs=None):
+   def __init__(self,
+                num_inputs=0,
+                num_outputs=0,
+                name=None,
+                feedthrough_inputs=None):
       self.num_inputs = num_inputs;
       self.num_outputs = num_outputs;
       self.name = name;
@@ -121,7 +125,7 @@ class NonLeafBlock(Block):
    def enumerate_internal_connections(self):
       for dest_block_index, dest_block, first_dest_index in zip(itertools.count(),self.children, self.first_destination_index):
          for dest_port_index, src_index in zip(range(dest_block.num_inputs),self.connection_source[first_dest_index:]):
-            if src_index>=self.num_inputs:
+            if src_index is not None and src_index>=self.num_inputs:
                # This is a connection from an internal block
                src_block_index = bisect.bisect_right(self.first_source_index,src_index)-1;
                src_block = self.children[src_block_index];
@@ -140,7 +144,7 @@ class NonLeafBlock(Block):
    def enumerate_input_connections(self):
       for dest_block_index, dest_block, first_dest_index in zip(itertools.count(),self.children, self.first_destination_index):
          for dest_port_index, src_index in zip(range(dest_block.num_inputs),self.connection_source[first_dest_index:]):
-            if src_index<self.num_inputs:
+            if src_index is not None and src_index<self.num_inputs:
                # This is a connection from an external input
                yield (src_index,dest_block,dest_port_index);
    
@@ -167,6 +171,10 @@ class NonLeafBlock(Block):
 class LeafBlock(Block):
    def __init__(self,
                 num_states=0,
+                initial_condition=None,
                 **kwargs):
       Block.__init__(self,**kwargs);
       self.num_states = num_states;
+      if initial_condition is None:
+         initial_condition = np.zeros(self.num_states);
+      self.initial_condition = initial_condition;
