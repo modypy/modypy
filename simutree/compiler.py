@@ -1,7 +1,40 @@
 import numpy as np;
 import itertools;
 
+"""
+A system provided by the compiler.
+
+The system provides implementations of `output_function` and `state_update_function`
+as well properties `num_outputs` and `num_states` for the compiled system.
+It can be used as input for `simutree.simulator.Simulator`.
+"""
 class CompiledSystem:
+   """
+   Constructor for the compiled system:
+   
+   blocks: list
+     List of the leaf blocks contained in this system, in the order they need to be executed.
+   block_index: dictionary
+     Dictionary mapping leaf blocks to their leaf block index.
+   first_input_index: list-like of integer
+     List of the respective first input index for each of the leaf systems based on the leaf block index.
+   first_state_index: list-like of integer
+     List of the respective first state index for each of the leaf systems based on the leaf block index.
+   first_output_index: list-like of integer
+     List of the respective first output index for each of the leaf systems based on the leaf block index.
+   input_index: list-like of integer
+     List of the indices in the output vector corresponding to the respective input for leaf blocks.
+   global_block_index: dictionary
+     Dictionary mapping blocks to their block index.
+   global_first_input_index: list-like of integer
+     List of the respective first input index for each of the leaf systems based on the block index.
+   global_first_output_index: list-like of integer
+     List of the respective first output index for each of the leaf systems based on the block index.
+   global_input_index: list-like of integer
+     List of the indices in the output vector corresponding to the respective input for all blocks.
+   global_output_index: list-like of integer
+     List of the indices in the output vector corresponding to the respective output for all blocks.
+   """
    def __init__(self,
                 blocks,
                 block_index,
