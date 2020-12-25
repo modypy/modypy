@@ -1,14 +1,9 @@
 import pytest;
 from simutree.blocks import LeafBlock, NonLeafBlock;
+from simutree.blocks.linear import LTISystem;
+from simutree.blocks.sources import Constant;
 import math;
-
-class Constant(LeafBlock):
-   def __init__(self,value,**kwargs):
-      LeafBlock.__init__(self,num_outputs=1,**kwargs);
-      self.value = value;
-   
-   def output_function(self,t):
-      return [self.value];
+import numpy as np;
 
 class StaticPropeller(LeafBlock):
    def __init__(self,ct,cp,D,**kwargs):
@@ -26,20 +21,16 @@ class StaticPropeller(LeafBlock):
       outputs = self.output_function(t,inputs);
       return [outputs[1]-0.04];
 
-class DCMotor(LeafBlock):
+class DCMotor(LTISystem):
    def __init__(self,Kv,R,L,J,**kwargs):
-      LeafBlock.__init__(self,num_inputs=2,num_states=2,num_outputs=2,num_events=2,feedthrough_inputs=[],**kwargs);
-      self.Kv = Kv;
-      self.R = R;
-      self.L = L;
-      self.J = J;
-   
-   def state_update_function(self,t,states,inputs):
-      return [(self.Kv*states[1]-inputs[1])/self.J,
-              (inputs[0]-self.Kv*states[0]-self.R*states[1])/self.L];
-   
-   def output_function(self,t,states,inputs):
-      return [states[0]/(2*math.pi),states[1]];
+      LTISystem.__init__(self,
+                         A=[[0,Kv/J],[-Kv/L,-R/L]],
+                         B=[[0,-1/J],[1/L,0]],
+                         C=[[1/(2*math.pi),0],[0,1]],
+                         D=[[0,0],[0,0]],
+                         feedthrough_inputs=[],
+                         num_events=2,
+                         **kwargs);
    
    def event_function(self,t,states,inputs):
       return [states[0]-101,states[1]-87.75];
@@ -73,16 +64,9 @@ class DCMotorModel:
       
       self.leaf_blocks = set([self.dcmotor, self.static_propeller, self.voltage, self.density]);
 
-class ExponentialDecay(LeafBlock):
+class ExponentialDecay(LTISystem):
    def __init__(self,T,**kwargs):
-      LeafBlock.__init__(self,num_states=1,num_outputs=1,num_events=1,**kwargs);
-      self.T = T;
-   
-   def state_update_function(self,t,states):
-      return -states[0]/self.T;
-   
-   def output_function(self,t,states):
-      return states;
+      LTISystem.__init__(self,A=[[-1/T]],B=np.zeros((1,0)),C=[[1]],D=np.zeros((1,0)),num_events=1,**kwargs);
    
    def event_function(self,t,states):
       return [states[0]/self.initial_condition[0]-0.1];
@@ -102,12 +86,12 @@ class ExponentialDecayNoState(LeafBlock):
 
 @pytest.fixture
 def decay_model():
-   return ExponentialDecay(T=1.,initial_condition=[10.0]);
+   return ExponentialDecay(T=1.,initial_condition=[10.0],name="decay");
 
 @pytest.fixture
 def decay_model_no_state():
-   exp_decay_no_state = ExponentialDecayNoState(T=1.,x0=10.0);
-   exp_decay_state = ExponentialDecay(T=1.,initial_condition=[10.0]);
+   exp_decay_no_state = ExponentialDecayNoState(T=1.,x0=10.0,name="decay_no_state");
+   exp_decay_state = ExponentialDecay(T=1.,initial_condition=[10.0],name="decay_state");
    sys = NonLeafBlock(children=[exp_decay_no_state,exp_decay_state]);
    return sys;
    
