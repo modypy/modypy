@@ -12,7 +12,7 @@ class Constant(LeafBlock):
 
 class StaticPropeller(LeafBlock):
    def __init__(self,ct,cp,D,**kwargs):
-      LeafBlock.__init__(self,num_inputs=2,num_outputs=3,**kwargs);
+      LeafBlock.__init__(self,num_inputs=2,num_outputs=3,num_events=1,**kwargs);
       self.cp = cp;
       self.ct = ct;
       self.D = D;
@@ -21,10 +21,14 @@ class StaticPropeller(LeafBlock):
       return [self.ct*inputs[1]*self.D**4*inputs[0]**2,
               self.cp*inputs[1]*self.D**5*inputs[0]**3,
               self.cp/(2*math.pi)*inputs[1]*self.D**5*inputs[0]**2];
+   
+   def event_function(self,t,inputs):
+      outputs = self.output_function(t,inputs);
+      return [outputs[1]-0.04];
 
 class DCMotor(LeafBlock):
    def __init__(self,Kv,R,L,J,**kwargs):
-      LeafBlock.__init__(self,num_inputs=2,num_states=2,num_outputs=2,feedthrough_inputs=[],**kwargs);
+      LeafBlock.__init__(self,num_inputs=2,num_states=2,num_outputs=2,num_events=2,feedthrough_inputs=[],**kwargs);
       self.Kv = Kv;
       self.R = R;
       self.L = L;
@@ -36,6 +40,9 @@ class DCMotor(LeafBlock):
    
    def output_function(self,t,states,inputs):
       return [states[0]/(2*math.pi),states[1]];
+   
+   def event_function(self,t,states,inputs):
+      return [states[0]-101,states[1]-87.75];
 
 class DCMotorModel:
    def __init__(self):
@@ -68,7 +75,7 @@ class DCMotorModel:
 
 class ExponentialDecay(LeafBlock):
    def __init__(self,T,**kwargs):
-      LeafBlock.__init__(self,num_states=1,num_outputs=1,**kwargs);
+      LeafBlock.__init__(self,num_states=1,num_outputs=1,num_events=1,**kwargs);
       self.T = T;
    
    def state_update_function(self,t,states):
@@ -76,10 +83,33 @@ class ExponentialDecay(LeafBlock):
    
    def output_function(self,t,states):
       return states;
+   
+   def event_function(self,t,states):
+      return [states[0]/self.initial_condition[0]-0.1];
+
+class ExponentialDecayNoState(LeafBlock):
+   def __init__(self,x0,T,**kwargs):
+      LeafBlock.__init__(self,num_outputs=1,num_events=1,**kwargs);
+      self.x0 = x0;
+      self.T = T;
+   
+   def output_function(self,t):
+      return [math.exp(-t/self.T)*self.x0];
+   
+   def event_function(self,t):
+      outputs = self.output_function(t);
+      return [outputs[0]/self.x0-0.1];
 
 @pytest.fixture
 def decay_model():
    return ExponentialDecay(T=1.,initial_condition=[10.0]);
+
+@pytest.fixture
+def decay_model_no_state():
+   exp_decay_no_state = ExponentialDecayNoState(T=1.,x0=10.0);
+   exp_decay_state = ExponentialDecay(T=1.,initial_condition=[10.0]);
+   sys = NonLeafBlock(children=[exp_decay_no_state,exp_decay_state]);
+   return sys;
    
 @pytest.fixture
 def dcmotor_model():

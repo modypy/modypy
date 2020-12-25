@@ -12,6 +12,12 @@ with the state vector `x(t)`, the input vector `u(t)` and the output vector `y(t
 
 If `y(t)` directly depends on component `ui(t)` of `u(t)`, then `ui(t)` is said to be a *feed-through* input.
 
+## Mathematical Model of Events
+
+Each leaf block may provide an *event function* `e(t,x,u)`, which defines a vector of real values based on the current time `t`, the current state vector `x` and the current input vector `u`.
+
+An event is said to occur at time `t` if any component of `e(t,x(t),u(t))` crosses zero, i.e. the sign of `ei(t,x(t),u(t))` changes at `t` for some `i`.
+
 ## Composition of Block Graphs
 
 A block graph is a tree structure, with a single root, and blocks as nodes.
@@ -52,31 +58,17 @@ Therefore, the output vector of the whole system needs to be filled in an order 
 
 Such an execution order is determined during compilation using the information about inter-connections and applying Kahn's algorithm to this information.
 
-## Principal Operation of the Main Simulation Loop
+## Simulation Step
 
-1. Compilation
-    1. Collect all leaf blocks in the graph.
-    2. Establish global state, output and event vectors, mapping the states, outputs and events of each block onto a contiguous sequence of entries in the respective global vectors.
-    3. For each input, determine the source index in the global output vector.
-    4. Determine the execution order of the blocks in the graph.
-2. Initialization
-    1. Initialize the current time to the start time of integration.
-    2. Initialize the state vectors from the definitions in the non-virtual blocks in the graph.
-    3. Initialize the global output vector by evaluating the output function for each non-virtual block according to the execution order.
-    4. Initialize the global event function vector by evaluating the event function for each non-virtual block according to the execution order.
-    5. Add the current time, state, output and event vector to the simulation result.
-3. Simulation
-   1. Integration (repeated until the current time equals the final time)
-      1. Determine the next time step
-         1. If integration times are specified explicitly: Use the minimum of t+dt and the next integration time specified.
-         2. Otherwise use the minimum of t+dt and the end time of integration.
-      2. Integrate until the next time step
-      3. Event handling
-         1. If an event occurred (event function has changed sign), determine the time of the event for each event having occurred.
-         2. Determine the time of the first event having occurred.
-         3. Re-integrate only until the time of the event.
-      4. Add the current time, state, output and event vector to the simulation result.
-   2. Return the simulation result.
+1. Run the integrator for one step
+2. Check if events occurred (this is the case if any of the event functions has changed its sign)
+3. If events occurred:
+   1. Using the dense output, find the time at which the events occurred.
+   2. Determine the first event that occurred and set the event flags accordingly.
+   3. Using the dense output, determine the system state at the time of the first event.
+   4. Based on the system state, determine the output values at the time of the first event.
+   5. Set the time on the integrator.
+4. Add the tuple of (time,state,outputs,event flags) to the simulation result.
 
 ## Implementation Details
 

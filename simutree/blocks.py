@@ -171,10 +171,12 @@ class NonLeafBlock(Block):
 class LeafBlock(Block):
    def __init__(self,
                 num_states=0,
+                num_events=0,
                 initial_condition=None,
                 **kwargs):
       Block.__init__(self,**kwargs);
       self.num_states = num_states;
+      self.num_events = num_events;
       if initial_condition is None:
          initial_condition = np.zeros(self.num_states);
       self.initial_condition = initial_condition;

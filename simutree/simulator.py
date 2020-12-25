@@ -1,13 +1,18 @@
 import numpy as np;
-from scipy.integrate import DOP853;
+import scipy.integrate;
+import scipy.optimize;
 
 INITIAL_RESULT_SIZE = 16;
 RESULT_SIZE_EXTENSION = 16;
 
-DEFAULT_INTEGRATOR = DOP853;
+DEFAULT_INTEGRATOR = scipy.integrate.DOP853;
 DEFAULT_INTEGRATOR_OPTIONS = {
    'rtol': 1.E-6,
    'atol': 1.E-6
+};
+
+DEFAULT_ROOTFINDER = scipy.optimize.brentq;
+DEFAULT_ROOTFINDER_OPTIONS = {
 };
 
 """
@@ -23,6 +28,7 @@ class SimulationResult:
       self._t = np.empty(INITIAL_RESULT_SIZE);
       self._state = np.empty((INITIAL_RESULT_SIZE,self.system.num_states));
       self._output = np.empty((INITIAL_RESULT_SIZE,self.system.num_outputs));
+      self._events = np.zeros((INITIAL_RESULT_SIZE,self.system.num_events),dtype=bool);
       
       self.current_idx = 0;
    
@@ -38,15 +44,21 @@ class SimulationResult:
    def output(self):
       return self._output[0:self.current_idx];
    
+   @property
+   def events(self):
+      return self._events[0:self.current_idx];
+   
    """
    Append a sample to the result.
    """
-   def append(self,t,state,output):
+   def append(self,t,state,output,event=None):
       if self.current_idx >= self._t.size:
          self.extend_space();
       self._t     [self.current_idx] = t;
       self._state [self.current_idx] = state;
       self._output[self.current_idx] = output;
+      if event is not None:
+         self._events[self.current_idx,event] = True;
       
       self.current_idx += 1;
    
@@ -54,6 +66,7 @@ class SimulationResult:
       self._t      = np.r_[self._t,      np.empty(RESULT_SIZE_EXTENSION)];
       self._state  = np.r_[self._state,  np.empty((RESULT_SIZE_EXTENSION,self.system.num_states))];
       self._output = np.r_[self._output, np.empty((RESULT_SIZE_EXTENSION,self.system.num_outputs))];
+      self._events = np.r_[self._events, np.zeros((RESULT_SIZE_EXTENSION,self.system.num_events),dtype=bool)];
 
 """
 Simulator for dynamic systems.
@@ -83,18 +96,33 @@ class Simulator:
      The end time of the simulation. This also limits the maximum time until which stepping is possible.
    initial_condition: list-like of numbers, optional
      The initial condition of the system state. If not set, the initial condition specified in the system is used.
-   integrator_constructor: function or class, optional
+   integrator_constructor: callable, optional
      The constructor to be used to instantiate the integrator. If not given, `DEFAULT_INTEGRATOR` is used.
    integrator_options: dictionary, optional
      Additional parameters to be passed to the integrator constructor. If not given, `DEFAULT_INTEGRATOR_OPTIONS` is used.
+   rootfinder_constructor: callable, optional
+     The constructor to be used to instantiate the rootfinder. If not given, `DEFAULT_ROOTFINDER` is used.
+   rootfinder_options: dictionary, optional
+     Additional parameters to be passed to the rootfinder constructor. If not given, `DEFAULT_ROOTFINDER_OPTIONS` is used.
    
    The simulator is written with the interface of `scipy.integrate.OdeSolver` in mind for the integrator, specifically
    using the constructor, the `step` and the `dense_output` functions as well as the `status` property. However, it is
    possible to use other integrators if they honor this interface.
+   
+   Similarly, the rootfinder is expected to comply with the interface of `scipy.optimize.brentq`.
    """
-   def __init__(self,system,t0,tbound,initial_condition=None,integrator_constructor=DEFAULT_INTEGRATOR,integrator_options=DEFAULT_INTEGRATOR_OPTIONS):
+   def __init__(self,
+                system,
+                t0,tbound,
+                initial_condition=None,
+                integrator_constructor=DEFAULT_INTEGRATOR,
+                integrator_options=DEFAULT_INTEGRATOR_OPTIONS,
+                rootfinder_constructor=DEFAULT_ROOTFINDER,
+                rootfinder_options=DEFAULT_ROOTFINDER_OPTIONS):
       self.system = system;
       self.result = SimulationResult(system);
+      self.rootfinder_constructor = rootfinder_constructor;
+      self.rootfinder_options = rootfinder_options;
 
       # Set up the integrator
       if initial_condition is None:
@@ -126,6 +154,11 @@ class Simulator:
    def output(self):
       return self.system.output_function(self.t,self.state);
    
+   """The current outputs of the event functions."""
+   @property
+   def event_values(self):
+      return self.system.event_function(self.t,self.state,self.output);
+   
    """The current status of the integrator."""
    @property
    def status(self):
@@ -138,11 +171,48 @@ class Simulator:
    
    """Execute a single simulation step."""
    def step(self):
+      # Save the last event values
+      old_event_values = self.event_values;
+      last_t = self.t;
       message = self.integrator.step();
-      if message is None:
-         # The last integration step was successful.
-         # Add the current status to the result collection
-         self.result.append(self.t,self.state,self.output);
+      if message is not None:
+         # The last integration step failed
+         return message;
+      
+      # Check for changes in event functions
+      new_event_values = self.event_values;
+      events_occurred = np.flatnonzero(np.sign(new_event_values)!=np.sign(old_event_values));
+      if len(events_occurred)>0:
+         # There was at least one event
+         # For each of the events that have occurred, find the time when they occurred.
+         # For that, we use the dense output of the integrator.
+         interpolator = self.integrator.dense_output();
+         
+         # Function to interpolate the event function across the last integration step
+         def event_interpolator(t):
+            state = interpolator(t);
+            outputs = self.system.output_function(t,state);
+            event_value = self.system.event_function(t,state,outputs);
+            return event_value;
+         
+         tcross = [];
+         for eventidx in events_occurred:
+            tc = scipy.optimize.brentq(f=(lambda t: event_interpolator(t)[eventidx]),
+                                                 a=last_t,
+                                                 b=self.t);
+            assert last_t<=tc and tc<=self.t;
+            tcross.append((eventidx,tc));
+
+         # Sort the events by increasing time
+         tcross.sort(key=(lambda entry: entry[1]));
+         
+         # Go through all the events and record them one by one
+         for eventidx,tc in tcross:
+            state = interpolator(tc);
+            outputs = self.system.output_function(tc,state);
+            self.result.append(tc,state,outputs,eventidx);
+      # Add the current status to the result collection
+      self.result.append(self.t,self.state,self.output);
       return message;
    
    """Simulate the system until the end time of the simulation."""

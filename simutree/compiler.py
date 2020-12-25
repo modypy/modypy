@@ -41,6 +41,7 @@ class CompiledSystem:
                 first_input_index,
                 first_state_index,
                 first_output_index,
+                first_event_index,
                 input_index,
                 global_block_index,
                 global_first_input_index,
@@ -52,6 +53,7 @@ class CompiledSystem:
       self.first_input_index = first_input_index;
       self.first_state_index = first_state_index;
       self.first_output_index = first_output_index;
+      self.first_event_index = first_event_index;
       self.input_index = input_index;
       self.global_block_index = global_block_index;
       self.global_first_input_index = global_first_input_index;
@@ -61,6 +63,7 @@ class CompiledSystem:
       
       self.num_outputs = self.first_output_index[-1];
       self.num_states = self.first_state_index[-1];
+      self.num_events = self.first_event_index[-1];
       
       self.initial_condition = np.zeros(self.num_states);
       for block,block_index in self.block_index.items():
@@ -131,13 +134,49 @@ class CompiledSystem:
             state_derivative[first_state:first_state+block.num_states] = block_state_derivative;
       
       return state_derivative;
+   
+   """
+   Combined event function for the compiled system.
+   
+   This calculates the event vector for all the leaf blocks contained in the system.
+   """
+   def event_function(self,t,state,outputs):
+      event_values = np.zeros(self.num_events);
+      for block,block_index in self.block_index.items():
+         if block.num_events>0:
+            # We only consider blocks that have events
+            first_input = self.first_input_index[block_index];
+            first_state = self.first_state_index[block_index];
+            first_event = self.first_event_index[block_index];
+            input_indices = self.input_index[first_input:first_input+block.num_inputs];
+            
+            block_inputs = outputs[input_indices];
+            block_states = state[first_state:first_state+block.num_states];
+            
+            if block.num_inputs>0 and block.num_states>0:
+               # This system has inputs and states
+               block_event_values = block.event_function(t,block_states,block_inputs);
+            elif block.num_states>0:
+               # This system has states, but no inputs
+               block_event_values = block.event_function(t,block_states);
+            elif block.num_inputs>0:
+               # This system has inputs, but no states
+               block_event_values = block.event_function(t,block_inputs);
+            else:
+               # This system neither has inputs nor states
+               block_event_values = block.event_function(t);
+         
+            event_values[first_event:first_event+block.num_events] = block_event_values;
+      
+      return event_values;
+      
       
 
 """
 Compiler for block trees.
 
 - Determine leaf blocks.
-- Determines the size and mapping of state and output vectors for leaf blocks.
+- Determines the size and mapping of state, output and event vectors for leaf blocks.
 - Determine mapping of inputs to output vector items for all blocks.
 - Determine execution sequence for leaf blocks.
 """
@@ -174,10 +213,11 @@ class Compiler:
       self.leaf_blocks = list(self.root.enumerate_leaf_blocks());
       self.leaf_block_index = {block:index for index,block in zip(itertools.count(),self.leaf_blocks)};
       
-      # Allocate the input, output and state indices for the leaf blocks
+      # Allocate the input, output, state and event indices for the leaf blocks
       self.leaf_first_input_index = [0]+list(itertools.accumulate([block.num_inputs for block in self.leaf_blocks]));
       self.leaf_first_output_index = [0]+list(itertools.accumulate([block.num_outputs for block in self.leaf_blocks]));
       self.leaf_first_state_index = [0]+list(itertools.accumulate([block.num_states for block in self.leaf_blocks]));
+      self.leaf_first_event_index = [0]+list(itertools.accumulate([block.num_events for block in self.leaf_blocks]));
       
       # Set up the input vector maps for leaf blocks
       # self.leaf_input_vector_index[self.leaf_first_input_index[block_idx]+input_index] gives the offset of the
@@ -190,16 +230,17 @@ class Compiler:
       self.build_execution_order();
       
       return CompiledSystem(blocks=self.execution_sequence,
-                               block_index=self.leaf_block_index,
-                               first_input_index=self.leaf_first_input_index,
-                               first_state_index=self.leaf_first_state_index,
-                               first_output_index=self.leaf_first_output_index,
-                               input_index=self.leaf_input_vector_index,
-                               global_block_index=self.block_index,
-                               global_first_input_index=self.first_input_index,
-                               global_first_output_index=self.first_output_index,
-                               global_input_index=self.input_vector_index,
-                               global_output_index=self.output_vector_index);
+                            block_index=self.leaf_block_index,
+                            first_input_index=self.leaf_first_input_index,
+                            first_state_index=self.leaf_first_state_index,
+                            first_output_index=self.leaf_first_output_index,
+                            first_event_index=self.leaf_first_event_index,
+                            input_index=self.leaf_input_vector_index,
+                            global_block_index=self.block_index,
+                            global_first_input_index=self.first_input_index,
+                            global_first_output_index=self.first_output_index,
+                            global_input_index=self.input_vector_index,
+                            global_output_index=self.output_vector_index);
 
    """
    Fill output_vector_index with the output vector indices for leaf blocks.
