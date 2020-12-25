@@ -10,6 +10,13 @@ DEFAULT_INTEGRATOR_OPTIONS = {
    'atol': 1.E-6
 };
 
+"""
+The results provided by a simulation.
+
+A `SimulationResult` object captures the time series provided by a simulation.
+It has properties `t`, `state` and `output` representing the time, state vector and
+output vector for each individual sample.
+"""
 class SimulationResult:
    def __init__(self,system):
       self.system = system;
@@ -31,6 +38,9 @@ class SimulationResult:
    def output(self):
       return self._output[0:self.current_idx];
    
+   """
+   Append a sample to the result.
+   """
    def append(self,t,state,output):
       if self.current_idx >= self._t.size:
          self.extend_space();
