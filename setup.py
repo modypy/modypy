@@ -27,6 +27,7 @@ setuptools.setup(
     python_requires='>=3.6',
     install_requires=[
       "numpy>=1.18.1",
+      "scipy>=1.5.4",
     ],
     setup_requires=[
       "pytest-runner",
