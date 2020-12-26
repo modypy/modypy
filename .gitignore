@@ -3,3 +3,6 @@ dist
 .coverage
 .eggs
 *.egg-info
+build
+dist
+htmlcov

@@ -6,7 +6,7 @@ A system provided by the compiler.
 
 The system provides implementations of `output_function` and `state_update_function`
 as well properties `num_outputs` and `num_states` for the compiled system.
-It can be used as input for `simutree.simulator.Simulator`.
+It can be used as input for `simtree.simulator.Simulator`.
 """
 class CompiledSystem:
    """

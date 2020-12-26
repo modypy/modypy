@@ -1,5 +1,5 @@
 import pytest;
-from simutree.blocks import LeafBlock, NonLeafBlock;
+from simtree.blocks import LeafBlock, NonLeafBlock;
 from fixtures.models import dcmotor_model;
 
 def test_multiple_block_addition(dcmotor_model):

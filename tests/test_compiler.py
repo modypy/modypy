@@ -1,6 +1,6 @@
 import pytest;
-from simutree.blocks import LeafBlock, NonLeafBlock;
-from simutree.compiler import Compiler;
+from simtree.blocks import LeafBlock, NonLeafBlock;
+from simtree.compiler import Compiler;
 from fixtures.models import dcmotor_model, decay_model;
 
 def test_enumerate_blocks_pre_order(dcmotor_model):

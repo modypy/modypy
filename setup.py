@@ -4,14 +4,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="simutree-YOUR-USERNAME-HERE",
-    version="0.1.0",
+    name="simtree-ralfgerlich",
+    version="0.1.1",
     author="Ralf Gerlich",
     author_email="ralf@ralfgerlich.biz",
     description="A framework for hierarchical modelling and simulation of dynamic systems",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    #url="https://github.com/pypa/sampleproject",
+    url="https://github.com/ralfgerlich/simtree",
     license="BSD 2-clause \"Simplified\" License",
     packages=setuptools.find_packages(),
     classifiers=[

@@ -1,7 +1,7 @@
 import pytest;
-from simutree.blocks import LeafBlock, NonLeafBlock;
-from simutree.blocks.linear import LTISystem;
-from simutree.blocks.sources import Constant;
+from simtree.blocks import LeafBlock, NonLeafBlock;
+from simtree.blocks.linear import LTISystem;
+from simtree.blocks.sources import Constant;
 import math;
 import numpy as np;
 

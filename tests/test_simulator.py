@@ -1,8 +1,8 @@
 import pytest;
 import numpy as np;
-from simutree.blocks import LeafBlock, NonLeafBlock;
-from simutree.compiler import Compiler;
-from simutree.simulator import Simulator;
+from simtree.blocks import LeafBlock, NonLeafBlock;
+from simtree.compiler import Compiler;
+from simtree.simulator import Simulator;
 from fixtures.models import dcmotor_model, decay_model, decay_model_no_state;
 
 def test_run_dcmotor(dcmotor_model):

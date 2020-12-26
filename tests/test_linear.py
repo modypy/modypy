@@ -1,5 +1,5 @@
 import pytest;
-from simutree.blocks.linear import LTISystem;
+from simtree.blocks.linear import LTISystem;
 
 def test_lti_nonsquare_state_matrix():
    with pytest.raises(ValueError):

@@ -1,11 +1,13 @@
 [![Build Status](https://travis-ci.com/ralfgerlich/simtree.svg?branch=master)](https://travis-ci.com/ralfgerlich/simtree)
 [![codecov](https://codecov.io/gh/ralfgerlich/simtree/branch/master/graph/badge.svg)](https://codecov.io/gh/ralfgerlich/simtree)
 
-SimuTree is a Python package for hierarchical modelling and simulation of dynamical systems.
+SimTree is a Python package for hierarchical modelling and simulation of linear and non-linear dynamical systems in [state-space representation](https://en.wikipedia.org/wiki/State-space_representation).
 
-It was inspired by [simupy](https://github.com/simupy/simupy) developed by Ben Margolis.
-The architecture of SimuTree differs in that it was explicitly designed to support hierarchical modelling, were models can be built from both atomic and composite blocks.
+Its main features:
 
-SimuTree features a model compiler that flattens the hierarchy, resolves hierarchical connections and determines a suitable execution order of the blocks based on their interdependencies.
+   - hierarchical modelling, building models from atomic and composite blocks
+   - simulator for continuous-time, linear and non-linear systems
+   - model compilation for resolving hierarchical connections and dependencies, useful for simulation, code generation or other analysis
+   - tested for 100% statement and branch coverage
 
-The model compiler can be used to establish a simulation model or for code generation.
+SimTree was inspired by [simupy](https://github.com/simupy/simupy) developed by Ben Margolis.

@@ -1,4 +1,4 @@
-from simutree.blocks import LeafBlock;
+from simtree.blocks import LeafBlock;
 import numpy as np;
 
 """

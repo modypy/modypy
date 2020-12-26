@@ -90,7 +90,7 @@ class Simulator:
    Construct a simulator for a system.
    
    system
-     The system to be simulated. This can be the result of a compilation using `simutree.compiler.Compiler`.
+     The system to be simulated. This can be the result of a compilation using `simtree.compiler.Compiler`.
    t0: number
      The start time of the simulation.
    tbound: number
