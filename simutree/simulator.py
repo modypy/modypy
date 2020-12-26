@@ -8,11 +8,12 @@ RESULT_SIZE_EXTENSION = 16;
 DEFAULT_INTEGRATOR = scipy.integrate.DOP853;
 DEFAULT_INTEGRATOR_OPTIONS = {
    'rtol': 1.E-6,
-   'atol': 1.E-6
+   'atol': 1.E-6,
 };
 
 DEFAULT_ROOTFINDER = scipy.optimize.brentq;
 DEFAULT_ROOTFINDER_OPTIONS = {
+   'xtol':1.E-6,
 };
 
 """
@@ -120,7 +121,10 @@ class Simulator:
                 rootfinder_constructor=DEFAULT_ROOTFINDER,
                 rootfinder_options=DEFAULT_ROOTFINDER_OPTIONS):
       self.system = system;
+      self.tbound = tbound;
       self.result = SimulationResult(system);
+      self.integrator_constructor = integrator_constructor;
+      self.integrator_options = integrator_options;
       self.rootfinder_constructor = rootfinder_constructor;
       self.rootfinder_options = rootfinder_options;
 
@@ -128,13 +132,7 @@ class Simulator:
       if initial_condition is None:
          initial_condition = self.system.initial_condition;
       
-      # Define the state derivative function for the integrator
-      def state_derivative_function(t,state):
-         outputs = self.system.output_function(t,state);
-         dxdt = self.system.state_update_function(t,state,outputs);
-         return dxdt;
-      
-      self.integrator = integrator_constructor(state_derivative_function,t0,initial_condition,tbound,**integrator_options);
+      self.integrator = self.integrator_constructor(self.state_derivative_function,t0,initial_condition,tbound,**self.integrator_options);
       
       # Store the initial state
       self.result.append(self.t,self.state,self.output);
@@ -169,6 +167,12 @@ class Simulator:
    def running(self):
       return self.integrator.status=="running";
    
+   """Combined state derivative function used for the integrator."""
+   def state_derivative_function(self,t,state):
+         outputs = self.system.output_function(t,state);
+         dxdt = self.system.state_update_function(t,state,outputs);
+         return dxdt;
+
    """Execute a single simulation step."""
    def step(self):
       # Save the last event values
@@ -181,7 +185,9 @@ class Simulator:
       
       # Check for changes in event functions
       new_event_values = self.event_values;
-      events_occurred = np.flatnonzero(np.sign(new_event_values)!=np.sign(old_event_values));
+      old_event_signs = np.sign(old_event_values);
+      new_event_signs = np.sign(new_event_values);
+      events_occurred = np.flatnonzero((old_event_signs!=new_event_signs));
       if len(events_occurred)>0:
          # There was at least one event
          # For each of the events that have occurred, find the time when they occurred.
@@ -206,14 +212,25 @@ class Simulator:
          # Sort the events by increasing time
          tcross.sort(key=(lambda entry: entry[1]));
          
-         # Go through all the events and record them one by one
-         for eventidx,tc in tcross:
-            state = interpolator(tc);
-            outputs = self.system.output_function(tc,state);
-            self.result.append(tc,state,outputs,eventidx);
-      # Add the current status to the result collection
-      self.result.append(self.t,self.state,self.output);
-      return message;
+         # Process only the first event
+         event_idx, event_t = tcross[0];
+         event_state = interpolator(event_t);
+         event_outputs = self.system.output_function(event_t,event_state);
+         
+         # Add the event to the result collection
+         self.result.append(event_t,event_state,event_outputs,event_idx);
+         
+         # We continue right of the event in order not to find the event again in the next loop.
+         next_t = event_t+self.rootfinder_options["xtol"]/2;
+         next_state = interpolator(next_t);
+         
+         # We need to reset the integrator
+         self.integrator = self.integrator_constructor(self.state_derivative_function,next_t,next_state,self.tbound,**self.integrator_options);
+      else:
+         # No events to handle
+         # Add the current status to the result collection
+         self.result.append(self.t,self.state,self.output);
+      return None;
    
    """Simulate the system until the end time of the simulation."""
    def run(self):
