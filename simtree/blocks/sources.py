@@ -1,5 +1,5 @@
-from simtree.blocks import LeafBlock
 import numpy as np
+from simtree.blocks import LeafBlock
 
 
 class Constant(LeafBlock):

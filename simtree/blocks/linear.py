@@ -1,5 +1,5 @@
-from simtree.blocks import LeafBlock
 import numpy as np
+from simtree.blocks import LeafBlock
 
 
 class LTISystem(LeafBlock):
@@ -44,14 +44,12 @@ class LTISystem(LeafBlock):
     def state_update_function(self, t, states, inputs=None):
         if self.num_inputs > 0:
             return np.matmul(self.A, states)+np.matmul(self.B, inputs)
-        else:
-            return np.matmul(self.A, states)
+        return np.matmul(self.A, states)
 
     def output_function(self, t, states, inputs=None):
         if self.num_inputs > 0:
             return np.matmul(self.C, states)+np.matmul(self.D, inputs)
-        else:
-            return np.matmul(self.C, states)
+        return np.matmul(self.C, states)
 
 
 class Gain(LeafBlock):

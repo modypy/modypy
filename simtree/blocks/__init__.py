@@ -1,9 +1,9 @@
-import numpy as np
 import bisect
 import itertools
+import numpy as np
 
 
-class Block(object):
+class Block:
     def __init__(self,
                  num_inputs=0,
                  num_outputs=0,
@@ -25,12 +25,12 @@ class Block(object):
 
 class NonLeafBlock(Block):
     def __init__(self,
-                 children=[],
+                 children=None,
                  **kwargs):
         Block.__init__(self, **kwargs)
 
         # List of children contained in this block
-        self.children = []
+        self.children = children or []
         # Map of child indices by block object
         self.child_index = {}
 
@@ -79,9 +79,9 @@ class NonLeafBlock(Block):
         src_block_index = self.child_index[src]
         dest_block_index = self.child_index[dest]
 
-        if not(0 <= src_output_index and src_output_index < src.num_outputs):
+        if not 0 <= src_output_index < src.num_outputs:
             raise ValueError("Invalid source output index")
-        if not(0 <= dest_input_index and dest_input_index < dest.num_inputs):
+        if not 0 <= dest_input_index < dest.num_inputs:
             raise ValueError("Invalid destination input index")
 
         src_port_index = self.first_source_index[src_block_index] + \
@@ -98,9 +98,9 @@ class NonLeafBlock(Block):
 
         dest_block_index = self.child_index[dest]
 
-        if not(0 <= input_index and input_index < self.num_inputs):
+        if not 0 <= input_index < self.num_inputs:
             raise ValueError("Invalid source input index")
-        if not(0 <= dest_input_index and dest_input_index < dest.num_inputs):
+        if not 0 <= dest_input_index < dest.num_inputs:
             raise ValueError("Invalid destination input index")
 
         dest_port_index = self.first_destination_index[dest_block_index] + \
@@ -115,9 +115,9 @@ class NonLeafBlock(Block):
 
         src_block_index = self.child_index[src]
 
-        if not(0 <= src_output_index and src_output_index < src.num_outputs):
+        if not 0 <= src_output_index < src.num_outputs:
             raise ValueError("Invalid source output index")
-        if not(0 <= output_index and output_index < self.num_outputs):
+        if not 0 <= output_index < self.num_outputs:
             raise ValueError("Invalid destination output index")
 
         src_port_index = self.first_source_index[src_block_index] + \
@@ -137,9 +137,8 @@ class NonLeafBlock(Block):
          - dest_port being the index of the input on the destination block.
         """
 
-        for dest_block_index, dest_block, first_dest_index in \
-                zip(itertools.count(),
-                    self.children,
+        for dest_block, first_dest_index in \
+                zip(self.children,
                     self.first_destination_index):
             for dest_port_index, src_index in \
                     zip(range(dest_block.num_inputs),
@@ -164,9 +163,8 @@ class NonLeafBlock(Block):
          - dest_port being the index of the input on the destination block.
         """
 
-        for dest_block_index, dest_block, first_dest_index in \
-                zip(itertools.count(),
-                    self.children,
+        for  dest_block, first_dest_index in \
+                zip(self.children,
                     self.first_destination_index):
             for dest_port_index, src_index in \
                     zip(range(dest_block.num_inputs),

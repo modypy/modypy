@@ -160,8 +160,12 @@ class Simulator:
         if initial_condition is None:
             initial_condition = self.system.initial_condition
 
-        self.integrator = self.integrator_constructor(
-            self.state_derivative_function, t0, initial_condition, tbound, **self.integrator_options)
+        self.integrator = \
+            self.integrator_constructor(self.state_derivative_function,
+                                        t0,
+                                        initial_condition,
+                                        tbound,
+                                        **self.integrator_options)
 
         # Store the initial state
         self.result.append(self.t, self.state, self.output)
@@ -210,7 +214,8 @@ class Simulator:
 
     @property
     def running(self):
-        """Boolean indicating whether the simulation is still running, i.e. has not been finished or aborted."""
+        """Boolean indicating whether the simulation is still running, i.e. has
+        not been finished or aborted."""
 
         return self.integrator.status == "running"
 
@@ -219,58 +224,50 @@ class Simulator:
 
         if self.system.num_inputs > 0:
             if self.input_callable is None:
-                inputs = np.zeros(self.system.num_inputs)
-            else:
-                inputs = self.input_callable(t)
-        else:
-            inputs = np.empty(0)
-        return inputs
+                return np.zeros(self.system.num_inputs)
+            return self.input_callable(t)
+        return np.empty(0)
 
     def state_derivative_function(self, t, state):
         """Combined state derivative function used for the integrator."""
 
         if self.system.num_inputs > 0:
             inputs = self.input_function(t)
-            dxdt = self.system.state_update_function(t, state, inputs)
-        else:
-            dxdt = self.system.state_update_function(t, state)
-        return dxdt
+            return self.system.state_update_function(t, state, inputs)
+        return self.system.state_update_function(t, state)
 
     def signal_function(self, t, states=None):
         """Combined signal vector for the system"""
         inputs = self.input_function(t)
         if self.system.num_inputs > 0 and self.system.num_states > 0:
             return self.system.signal_function(t, states, inputs)
-        elif self.system.num_inputs > 0:
+        if self.system.num_inputs > 0:
             return self.system.signal_function(t, inputs)
-        elif self.system.num_states > 0:
+        if self.system.num_states > 0:
             return self.system.signal_function(t, states)
-        else:
-            return self.system.signal_function(t)
+        return self.system.signal_function(t)
 
     def output_function(self, t, states=None):
         """Combined output vector for the system"""
         inputs = self.input_function(t)
         if self.system.num_inputs > 0 and self.system.num_states > 0:
             return self.system.output_function(t, states, inputs)
-        elif self.system.num_inputs > 0:
+        if self.system.num_inputs > 0:
             return self.system.output_function(t, inputs)
-        elif self.system.num_states > 0:
+        if self.system.num_states > 0:
             return self.system.output_function(t, states)
-        else:
-            return self.system.output_function(t)
+        return self.system.output_function(t)
 
     def event_function(self, t, states=None):
         """Combined event vector for the system"""
         inputs = self.input_function(t)
         if self.system.num_inputs > 0 and self.system.num_states > 0:
             return self.system.event_function(t, states, inputs)
-        elif self.system.num_inputs > 0:
+        if self.system.num_inputs > 0:
             return self.system.event_function(t, inputs)
-        elif self.system.num_states > 0:
+        if self.system.num_states > 0:
             return self.system.event_function(t, states)
-        else:
-            return self.system.event_function(t)
+        return self.system.event_function(t)
 
     def step(self):
         """Execute a single simulation step."""
@@ -290,9 +287,10 @@ class Simulator:
         events_occurred = np.flatnonzero((old_event_signs != new_event_signs))
 
         if len(events_occurred) > 0:
-            # At least one of the event functions has changed its sign, so there was at least one event.
-            # We need to identify the first event that occurred. To do that, we find the time
-            # of occurrence for each of the events using the dense output of the integrator and the root finder.
+            # At least one of the event functions has changed its sign, so there
+            # was at least one event. We need to identify the first event that
+            # occurred. To do that, we find the time of occurrence for each of
+            # the events using the dense output of the integrator and the root finder.
             interpolator = self.integrator.dense_output()
 
             # Function to interpolate the event function across the last integration step
@@ -322,9 +320,9 @@ class Simulator:
             # Add the event to the result collection
             self.result.append(event_t, event_state, event_outputs, event_idx)
 
-            # We continue right of the event in order to avoid finding the same event in the next step again.
-            # FIXME: We might want to try using the interpolator to find a time
-            # where we are properly on the other side to avoid endless event loops
+            # We continue right of the event in order to avoid finding the same
+            # event in the next step again.
+            # FIXME: We might want to try to find a time where the event value is safely on the other side
             next_t = event_t+self.rootfinder_options["xtol"]/2
             next_state = interpolator(next_t)
             next_inputs = self.input_function(next_t)
@@ -338,10 +336,15 @@ class Simulator:
                     self.system.update_state_function(next_t, next_state)
 
             # We need to reset the integrator.
-            # Ideally, we would want to just reset the time and the state, but proper behaviour of the integrator
-            # in this case is not guaranteed, so we just create a new one.
-            self.integrator = self.integrator_constructor(
-                self.state_derivative_function, next_t, new_state, self.tbound, **self.integrator_options)
+            # Ideally, we would want to just reset the time and the state, but
+            # proper behaviour of the integrator in this case is not guaranteed,
+            # so we just create a new one.
+            self.integrator = \
+                self.integrator_constructor(self.state_derivative_function,
+                                            next_t,
+                                            new_state,
+                                            self.tbound,
+                                            **self.integrator_options)
         else:
             # No events to handle
             # Add the current status to the result collection
