@@ -30,7 +30,7 @@ class NonLeafBlock(Block):
         Block.__init__(self, **kwargs)
 
         # List of children contained in this block
-        self.children = children or []
+        self.children = []
         # Map of child indices by block object
         self.child_index = {}
 
@@ -47,8 +47,9 @@ class NonLeafBlock(Block):
         # Connection sources by connection destination
         self.connection_source = [None]*self.num_outputs
 
-        for child in children:
-            self.add_block(child)
+        if children is not None:
+            for child in children:
+                self.add_block(child)
 
     def add_block(self, child):
         """
@@ -56,8 +57,7 @@ class NonLeafBlock(Block):
         """
 
         if child in self.child_index:
-            raise ValueError(
-                "Child is already contained in this non-leaf block")
+            raise ValueError("Child is already contained in this non-leaf block")
 
         # Add the child to the list of children
         index = len(self.children)
