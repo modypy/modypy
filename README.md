@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.com/ralfgerlich/simtree.svg?branch=master)](https://travis-ci.com/ralfgerlich/simtree)
-[![codecov](https://codecov.io/gh/ralfgerlich/simtree/branch/master/graph/badge.svg)](https://codecov.io/gh/ralfgerlich/simtree)
+[![Code Coverage](https://codecov.io/gh/ralfgerlich/simtree/branch/master/graph/badge.svg)](https://codecov.io/gh/ralfgerlich/simtree)
+![Code Quality Score](https://www.code-inspector.com/project/17342/score/svg)
+![Code Grade](https://www.code-inspector.com/project/17342/status/svg)
 
 SimTree is a Python package for hierarchical modelling and simulation of linear and non-linear dynamical systems in [state-space representation](https://en.wikipedia.org/wiki/State-space_representation).
 
