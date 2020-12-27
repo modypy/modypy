@@ -51,22 +51,22 @@ def test_compile(dcmotor_model):
 
     # Check connection from dcmotor:0 to static_propeller:0
     assert result.output_to_signal_map[result.first_output_by_block_index[dcm_idx] + 0] == \
-           result.input_to_signal_map[result.first_input_by_block_index[sp_idx] + 0]
+        result.input_to_signal_map[result.first_input_by_block_index[sp_idx] + 0]
     # Check connection from dcmotor:1 to engine:1 (output)
     assert result.output_to_signal_map[result.first_output_by_block_index[dcm_idx] + 1] == \
-           result.output_to_signal_map[result.first_output_by_block_index[engine_idx] + 1]
+        result.output_to_signal_map[result.first_output_by_block_index[engine_idx] + 1]
     # Check connection from static_propeller:1 to dcmotor:1
     assert result.output_to_signal_map[result.first_output_by_block_index[sp_idx] + 1] == \
-           result.input_to_signal_map[result.first_input_by_block_index[dcm_idx] + 1]
+        result.input_to_signal_map[result.first_input_by_block_index[dcm_idx] + 1]
     # Check connection from static_propeller:0 to engine:0 (output)
     assert result.output_to_signal_map[result.first_output_by_block_index[sp_idx] + 0] == \
-           result.output_to_signal_map[result.first_output_by_block_index[engine_idx] + 0]
+        result.output_to_signal_map[result.first_output_by_block_index[engine_idx] + 0]
     # Check connection from voltage:0 to dcmotor:0
     assert result.output_to_signal_map[result.first_output_by_block_index[voltage_idx] + 0] == \
-           result.input_to_signal_map[result.first_input_by_block_index[dcm_idx] + 0]
+        result.input_to_signal_map[result.first_input_by_block_index[dcm_idx] + 0]
     # Check connection from density:0 to static_propeller:1
     assert result.output_to_signal_map[result.first_output_by_block_index[rho_idx] + 0] == \
-           result.input_to_signal_map[result.first_input_by_block_index[sp_idx] + 1]
+        result.input_to_signal_map[result.first_input_by_block_index[sp_idx] + 1]
 
     # Check execution order
     exec_seq = result.leaf_blocks_in_order

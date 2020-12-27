@@ -66,13 +66,13 @@ def get_controlled_integrator(T=1, gamma=0.5, x0=10):
                       feedthrough_inputs=[])
     # Determine control feedback for position
     ctrl = Gain(k=[[-gamma]], name="gain")
-    sys = NonLeafBlock(children=[integ, ctrl],num_outputs=1)
+    sys = NonLeafBlock(children=[integ, ctrl], num_outputs=1)
     sys.connect(integ, 0, ctrl, 0)
     sys.connect(ctrl, 0, integ, 0)
-    sys.connect_output(integ,0,0)
+    sys.connect_output(integ, 0, 0)
 
     def ref_function(t):
-        return (x0 * np.exp((1 / T - gamma) * t)).reshape(-1,1)
+        return (x0 * np.exp((1 / T - gamma) * t)).reshape(-1, 1)
 
     return sys, ref_function, 3 * T
 

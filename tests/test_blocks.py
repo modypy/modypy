@@ -3,9 +3,12 @@ from simtree.blocks import LeafBlock, NonLeafBlock
 from fixtures.models import dcmotor_model
 
 
-def test_multiple_block_addition(dcmotor_model):
+def test_multiple_block_addition():
+    child = LeafBlock()
+    sys = NonLeafBlock()
+    sys.add_block(child)
     with pytest.raises(ValueError):
-        dcmotor_model.system.add_block(dcmotor_model.voltage)
+        sys.add_block(child)
 
 
 def test_int_conn_invalid_source(dcmotor_model):
