@@ -38,9 +38,9 @@ def test_compile(dcmotor_model):
     compiler = Compiler(dcmotor_model.system)
     result = compiler.compile()
 
-    # Check counts of internal states and outputs
+    # Check counts of internal states and external outputs
     assert result.num_states == 2
-    assert result.num_outputs == 7
+    assert result.num_outputs == 0
 
     # Check leaf input connections
     sp_idx = result.block_index[dcmotor_model.static_propeller]
@@ -103,10 +103,10 @@ def test_compiled_system(dcmotor_model):
     compiler = Compiler(dcmotor_model.system)
     result = compiler.compile()
 
-    initial_output = result.output_function(0, result.initial_condition)
-    assert initial_output == pytest.approx(
+    initial_signals = result.signal_function(0, result.initial_condition)
+    assert initial_signals == pytest.approx(
         [4.44, 1.29, 0.0, 0.0, 0.0, 0.0, 0.0], abs=1.E-2)
 
     initial_state_update = result.state_update_function(
-        0, result.initial_condition, initial_output)
+        0, result.initial_condition)
     assert initial_state_update == pytest.approx([0.0, 2336.84], abs=1.E-2)

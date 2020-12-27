@@ -12,6 +12,7 @@ class CompiledSystem:
     """
 
     def __init__(self,
+                 root,
                  leaf_blocks_in_order,
                  leaf_block_index,
                  block_index,
@@ -26,8 +27,10 @@ class CompiledSystem:
                  input_to_signal_map,
                  output_to_signal_map):
         """
-        Constructor for the compiled system:
+        Constructor for the compiled system:.
 
+        root: block
+            Root block of this system.
         leaf_blocks_in_order: list
             List of the leaf blocks contained in this system, in the order they need to be executed.
         leaf_block_index: dictionary
@@ -35,21 +38,27 @@ class CompiledSystem:
         block_index: dictionary
             Dictionary mapping blocks to their block index.
         first_state_by_leaf_index: list-like of integer
-            List of the respective first state index for each of the leaf systems based on the leaf block index.
+            List of the respective first state index for each of the leaf systems
+            based on the leaf block index.
         first_event_by_leaf_index: list-like of integer
-            List of the respective first event index for each of the leaf systems based on the leaf block index.
+            List of the respective first event index for each of the leaf systems
+            based on the leaf block index.
         first_signal_by_leaf_index: list-like of integer
-            List of the respective first (output) signal index for each of the leaf systems based on the leaf block index.
+            List of the respective first (output) signal index for each of the
+            leaf systems based on the leaf block index.
         first_input_by_block_index: list-like of integer
-            List of the respective first input index for each of the leaf systems based on the block index.
+            List of the respective first input index for each of the leaf systems
+            based on the block index.
         first_output_by_block_index: list-like of integer
-            List of the respective first output index for each of the leaf systems based on the block index.
+            List of the respective first output index for each of the leaf systems
+            based on the block index.
         input_to_signal_map: list-like of integer
             List of the signals mapped to the inputs.
         output_to_signal_map: list-like of integer
             List of the signals mapped to the outputs.
         """
 
+        self.root = root
         self.leaf_blocks_in_order = leaf_blocks_in_order
         self.leaf_block_index = leaf_block_index
         self.block_index = block_index
@@ -64,10 +73,14 @@ class CompiledSystem:
         self.input_to_signal_map = input_to_signal_map
         self.output_to_signal_map = output_to_signal_map
 
-        # Set up information about the external interface
-        self.num_outputs = self.first_signal_by_leaf_index[-1]
+        # This combined system exposes the interface of the root block
+        self.num_inputs = self.root.num_inputs
+        self.num_outputs = self.root.num_outputs
+
+        # Set up information about the states and events
         self.num_states = self.first_state_by_leaf_index[-1]
         self.num_events = self.first_event_by_leaf_index[-1]
+        self.num_signals = self.first_signal_by_leaf_index[-1]
 
         # Initialise the global initial condition
         self.initial_condition = np.zeros(self.num_states)
@@ -76,28 +89,51 @@ class CompiledSystem:
             self.initial_condition[first_state_index:first_state_index + block.num_states] = \
                 block.initial_condition
 
-    def output_function(self, t, state):
+    def signal_function(self, t, *args):
         """
-        Combined output function of the compiled system.
+        Calculate the value of all signals in the system.
 
-        This calculates the output vector for all the leaf blocks contained in the system.
+        If the system has a state or inputs, accepts a state vector and/or an
+        input vector as additional parameters - in that order.
         """
 
-        signals = np.zeros(self.num_outputs)
-        # Calculate the output vector
+        if self.num_inputs > 0 and self.num_states > 0:
+            states, inputs = args
+        elif self.num_states > 0:
+            states = args[0]
+            inputs = []
+        elif self.num_inputs > 0:
+            states = []
+            inputs = args[0]
+        else:
+            states = []
+            inputs = []
+
+        signals = np.zeros(self.num_signals)
+
+        # The inputs are mapped to the signals representing the inputs to
+        # the root system
+        root_index = self.block_index[self.root]
+        first_root_input = self.first_input_by_block_index[root_index]
+        root_input_signals = \
+            self.input_to_signal_map[first_root_input:first_root_input + self.root.num_inputs]
+        signals[root_input_signals] = inputs
+
+        # Calculate the signal vector
         for block in self.leaf_blocks_in_order:
             # We also process blocks without outputs. These may be sinks.
             leaf_block_index = self.leaf_block_index[block]
             block_index = self.block_index[block]
 
+            # Gather the input vector for the block
             first_input = self.first_input_by_block_index[block_index]
-            first_state = self.first_state_by_leaf_index[leaf_block_index]
-            first_signal = self.first_signal_by_leaf_index[leaf_block_index]
             input_signals = \
                 self.input_to_signal_map[first_input:first_input + block.num_inputs]
-
             block_inputs = signals[input_signals]
-            block_states = state[first_state:first_state + block.num_states]
+
+            # Gather the state vector for the block
+            first_state = self.first_state_by_leaf_index[leaf_block_index]
+            block_states = states[first_state:first_state + block.num_states]
 
             if block.num_inputs > 0 and block.num_states > 0:
                 # This system has inputs and states
@@ -112,30 +148,63 @@ class CompiledSystem:
                 # This system neither has inputs nor states
                 block_outputs = block.output_function(t)
 
+            # Write the output of the block into the respective signals
+            first_signal = self.first_signal_by_leaf_index[leaf_block_index]
             signals[first_signal:first_signal + block.num_outputs] = block_outputs
 
         return signals
 
-    def state_update_function(self, t, state, outputs):
+    def output_function(self, t, *args):
+        """
+        Output function for the root system.
+
+        This calculates the output vector for the root system only.
+        """
+
+        if self.num_outputs == 0:
+            return []
+
+        signals = self.signal_function(t, *args)
+
+        # Determine the output signals for the root system
+        root_idx = self.block_index[self.root]
+        first_output_signal = self.first_output_by_block_index[root_idx];
+        output_signals = \
+            self.output_to_signal_map[first_output_signal:first_output_signal + self.root.num_outputs]
+        outputs = signals[output_signals]
+
+        return outputs
+
+    def state_update_function(self, t, *args):
         """
         Combined state update function of the compiled system.
 
         This calculates the state update vector for all the leaf blocks contained in the system.
         """
 
+        if self.num_states > 0:
+            states = args[0]
+        else:
+            states = []
+
+        # Calculate the values of all signals
+        signals = self.signal_function(t, *args)
+        # Calculate the value of the state derivatives
         state_derivative = np.zeros(self.num_states)
         for block, leaf_block_index in self.leaf_block_index.items():
             # We only consider blocks that have state
             if block.num_states > 0:
                 block_index = self.block_index[block]
 
+                # Gather the input vector for the block
                 first_input = self.first_input_by_block_index[block_index]
-                first_state = self.first_state_by_leaf_index[leaf_block_index]
                 input_signals = \
                     self.input_to_signal_map[first_input:first_input + block.num_inputs]
+                block_inputs = signals[input_signals]
 
-                block_inputs = outputs[input_signals]
-                block_states = state[first_state:first_state + block.num_states]
+                # Gather the state vector for the block
+                first_state = self.first_state_by_leaf_index[leaf_block_index]
+                block_states = states[first_state:first_state + block.num_states]
 
                 if block.num_inputs > 0:
                     # This system has inputs
@@ -146,32 +215,44 @@ class CompiledSystem:
                     block_state_derivative = \
                         block.state_update_function(t, block_states)
 
+                # Write the state derivative of the block into the respective
+                # elements of the state derivative vector
                 state_derivative[first_state:first_state + block.num_states] = \
                     block_state_derivative
 
         return state_derivative
 
-    def event_function(self, t, state, outputs):
+    def event_function(self, t, *args):
         """
         Combined event function for the compiled system.
 
         This calculates the event vector for all the leaf blocks contained in the system.
         """
 
+        if self.num_states > 0:
+            states = args[0]
+        else:
+            states = []
+
+        # Calculate the values of all signals
+        signals = self.signal_function(t, *args)
+
+        # Determine the value of the event vector
         event_values = np.zeros(self.num_events)
         for block, leaf_block_index in self.leaf_block_index.items():
             # We only consider blocks that have events
             if block.num_events > 0:
                 block_index = self.block_index[block]
 
+                # Gather the input vector for the block
                 first_input = self.first_input_by_block_index[block_index]
-                first_state = self.first_state_by_leaf_index[leaf_block_index]
-                first_event = self.first_event_by_leaf_index[leaf_block_index]
                 input_signals = \
                     self.input_to_signal_map[first_input:first_input + block.num_inputs]
+                block_inputs = signals[input_signals]
 
-                block_inputs = outputs[input_signals]
-                block_states = state[first_state:first_state + block.num_states]
+                # Gather the state vector for the block
+                first_state = self.first_state_by_leaf_index[leaf_block_index]
+                block_states = states[first_state:first_state + block.num_states]
 
                 if block.num_inputs > 0 and block.num_states > 0:
                     # This system has inputs and states
@@ -187,31 +268,44 @@ class CompiledSystem:
                     # This system neither has inputs nor states
                     block_event_values = block.event_function(t)
 
+                # Write the event values of the block to the global event vector
+                first_event = self.first_event_by_leaf_index[leaf_block_index]
                 event_values[first_event:first_event + block.num_events] = \
                     block_event_values
 
         return event_values
 
-    def update_state_function(self, t, state, outputs):
+    def update_state_function(self, t, *args):
         """
         Combined event handling function for the compiled system.
 
         This calculates the new state vector after a zero-crossing event.
         """
 
+        if self.num_states > 0:
+            states = args[0]
+        else:
+            states = []
+
+        # Calculate the values of all signals
+        signals = self.signal_function(t, *args)
+
+        # Determine the new state vector
         new_state = np.zeros(self.num_states)
         for block, leaf_block_index in self.leaf_block_index.items():
             # We only consider blocks that have events and states
             if block.num_events > 0 and block.num_states > 0:
                 block_index = self.block_index[block]
 
+                # Gather the input vector for the block
                 first_input = self.first_input_by_block_index[block_index]
-                first_state = self.first_state_by_leaf_index[leaf_block_index]
                 input_signals = \
                     self.input_to_signal_map[first_input:first_input + block.num_inputs]
+                block_inputs = signals[input_signals]
 
-                block_inputs = outputs[input_signals]
-                block_states = state[first_state:first_state + block.num_states]
+                # Gather the state vector for the block
+                first_state = self.first_state_by_leaf_index[leaf_block_index]
+                block_states = states[first_state:first_state + block.num_states]
 
                 if block.num_inputs > 0:
                     # This system has inputs and states
@@ -222,6 +316,7 @@ class CompiledSystem:
                     new_block_state = \
                         block.update_state_function(t, block_states)
 
+                # Write the new state into the global state vector
                 new_state[first_state:first_state + block.num_states] = \
                     new_block_state
 
@@ -292,7 +387,8 @@ class Compiler:
         # Establish execution order
         self.build_execution_order()
 
-        return CompiledSystem(leaf_blocks_in_order=self.execution_sequence,
+        return CompiledSystem(root=self.root,
+                              leaf_blocks_in_order=self.execution_sequence,
                               leaf_block_index=self.leaf_block_index,
                               block_index=self.block_index,
                               first_state_by_leaf_index=self.first_state_by_leaf_index,

@@ -100,6 +100,7 @@ class Simulator:
                  system,
                  t0, tbound,
                  initial_condition=None,
+                 input_callable=None,
                  integrator_constructor=DEFAULT_INTEGRATOR,
                  integrator_options=DEFAULT_INTEGRATOR_OPTIONS,
                  rootfinder_constructor=DEFAULT_ROOTFINDER,
@@ -108,28 +109,32 @@ class Simulator:
         Construct a simulator for a system.
 
         system
-          The system to be simulated. This can be the result of a compilation
-          using `simtree.compiler.Compiler`.
+            The system to be simulated. This can be the result of a compilation
+            using `simtree.compiler.Compiler`.
         t0: number
-          The start time of the simulation.
+            The start time of the simulation.
         tbound: number
-          The end time of the simulation. This also limits the maximum time
-          until which stepping is possible.
+            The end time of the simulation. This also limits the maximum time
+            until which stepping is possible.
         initial_condition: list-like of numbers, optional
-          The initial condition of the system state. If not set, the initial
-          condition specified in the system is used.
+            The initial condition of the system state. If not set, the initial
+            condition specified in the system is used.
+        input_callable: callable, optional
+            The callable used to provide the inputs for the system.
+            Must accept time as the single argument.
+            If not given, inputs are assumed to be zero.
         integrator_constructor: callable, optional
-          The constructor to be used to instantiate the integrator. If not
-          given, `DEFAULT_INTEGRATOR` is used.
+            The constructor to be used to instantiate the integrator. If not
+            given, `DEFAULT_INTEGRATOR` is used.
         integrator_options: dictionary, optional
-          Additional parameters to be passed to the integrator constructor. If
-          not given, `DEFAULT_INTEGRATOR_OPTIONS` is used.
+            Additional parameters to be passed to the integrator constructor. If
+            not given, `DEFAULT_INTEGRATOR_OPTIONS` is used.
         rootfinder_constructor: callable, optional
-          The constructor to be used to instantiate the rootfinder. If not
-          given, `DEFAULT_ROOTFINDER` is used.
+            The constructor to be used to instantiate the rootfinder. If not
+            given, `DEFAULT_ROOTFINDER` is used.
         rootfinder_options: dictionary, optional
-          Additional parameters to be passed to the rootfinder constructor. If
-          not given, `DEFAULT_ROOTFINDER_OPTIONS` is used.
+            Additional parameters to be passed to the rootfinder constructor. If
+            not given, `DEFAULT_ROOTFINDER_OPTIONS` is used.
 
         The simulator is written with the interface of
         `scipy.integrate.OdeSolver` in mind for the integrator, specifically
@@ -143,11 +148,13 @@ class Simulator:
 
         self.system = system
         self.tbound = tbound
-        self.result = SimulationResult(system)
+        self.input_callable = input_callable
         self.integrator_constructor = integrator_constructor
         self.integrator_options = integrator_options
         self.rootfinder_constructor = rootfinder_constructor
         self.rootfinder_options = rootfinder_options
+
+        self.result = SimulationResult(system)
 
         # Set up the integrator
         if initial_condition is None:
@@ -172,16 +179,28 @@ class Simulator:
         return self.integrator.y
 
     @property
+    def inputs(self):
+        """The current input vector for the simulated system."""
+
+        return self.input_function(self.t)
+
+    @property
+    def signals(self):
+        """The current signals in the simulated system."""
+
+        return self.signal_function(self.t, self.state)
+
+    @property
     def output(self):
         """The current outputs of the simulated system."""
 
-        return self.system.output_function(self.t, self.state)
+        return self.output_function(self.t, self.state)
 
     @property
     def event_values(self):
         """The current outputs of the event functions."""
 
-        return self.system.event_function(self.t, self.state, self.output)
+        return self.event_function(self.t, self.state)
 
     @property
     def status(self):
@@ -195,12 +214,63 @@ class Simulator:
 
         return self.integrator.status == "running"
 
+    def input_function(self, t):
+        """Determine the inputs for the system at the given time."""
+
+        if self.system.num_inputs > 0:
+            if self.input_callable is None:
+                inputs = np.zeros(self.system.num_inputs)
+            else:
+                inputs = self.input_callable(t)
+        else:
+            inputs = np.empty(0)
+        return inputs
+
     def state_derivative_function(self, t, state):
         """Combined state derivative function used for the integrator."""
 
-        outputs = self.system.output_function(t, state)
-        dxdt = self.system.state_update_function(t, state, outputs)
+        if self.system.num_inputs > 0:
+            inputs = self.input_function(t)
+            dxdt = self.system.state_update_function(t, state, inputs)
+        else:
+            dxdt = self.system.state_update_function(t, state)
         return dxdt
+
+    def signal_function(self, t, states=None):
+        """Combined signal vector for the system"""
+        inputs = self.input_function(t)
+        if self.system.num_inputs > 0 and self.system.num_states > 0:
+            return self.system.signal_function(t, states, inputs)
+        elif self.system.num_inputs > 0:
+            return self.system.signal_function(t, inputs)
+        elif self.system.num_states > 0:
+            return self.system.signal_function(t, states)
+        else:
+            return self.system.signal_function(t)
+
+    def output_function(self, t, states=None):
+        """Combined output vector for the system"""
+        inputs = self.input_function(t)
+        if self.system.num_inputs > 0 and self.system.num_states > 0:
+            return self.system.output_function(t, states, inputs)
+        elif self.system.num_inputs > 0:
+            return self.system.output_function(t, inputs)
+        elif self.system.num_states > 0:
+            return self.system.output_function(t, states)
+        else:
+            return self.system.output_function(t)
+
+    def event_function(self, t, states=None):
+        """Combined event vector for the system"""
+        inputs = self.input_function(t)
+        if self.system.num_inputs > 0 and self.system.num_states > 0:
+            return self.system.event_function(t, states, inputs)
+        elif self.system.num_inputs > 0:
+            return self.system.event_function(t, inputs)
+        elif self.system.num_states > 0:
+            return self.system.event_function(t, states)
+        else:
+            return self.system.event_function(t)
 
     def step(self):
         """Execute a single simulation step."""
@@ -228,9 +298,7 @@ class Simulator:
             # Function to interpolate the event function across the last integration step
             def event_interpolator(t):
                 state = interpolator(t)
-                outputs = self.system.output_function(t, state)
-                event_value = self.system.event_function(t, state, outputs)
-                return event_value
+                return self.event_function(t, state)
 
             # Go through all the events and find their exact time of occurrence
             tcross = []
@@ -249,7 +317,7 @@ class Simulator:
             # and the outputs using the system output function.
             event_idx, event_t = tcross[0]
             event_state = interpolator(event_t)
-            event_outputs = self.system.output_function(event_t, event_state)
+            event_outputs = self.output_function(event_t, event_state)
 
             # Add the event to the result collection
             self.result.append(event_t, event_state, event_outputs, event_idx)
@@ -259,11 +327,15 @@ class Simulator:
             # where we are properly on the other side to avoid endless event loops
             next_t = event_t+self.rootfinder_options["xtol"]/2
             next_state = interpolator(next_t)
-            next_outputs = self.system.output_function(next_t, next_state)
+            next_inputs = self.input_function(next_t)
 
             # Let the system handle the event by updating the state.
-            new_state = self.system.update_state_function(
-                next_t, next_state, next_outputs)
+            if self.system.num_inputs>0:
+                new_state = \
+                    self.system.update_state_function(next_t, next_state, next_inputs)
+            else:
+                new_state = \
+                    self.system.update_state_function(next_t, next_state)
 
             # We need to reset the integrator.
             # Ideally, we would want to just reset the time and the state, but proper behaviour of the integrator
