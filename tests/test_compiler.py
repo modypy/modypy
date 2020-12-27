@@ -43,33 +43,33 @@ def test_compile(dcmotor_model):
     assert result.num_outputs == 7
 
     # Check leaf input connections
-    sp_idx = result.global_block_index[dcmotor_model.static_propeller]
-    dcm_idx = result.global_block_index[dcmotor_model.dcmotor]
-    voltage_idx = result.global_block_index[dcmotor_model.voltage]
-    rho_idx = result.global_block_index[dcmotor_model.density]
-    engine_idx = result.global_block_index[dcmotor_model.engine]
+    sp_idx = result.block_index[dcmotor_model.static_propeller]
+    dcm_idx = result.block_index[dcmotor_model.dcmotor]
+    voltage_idx = result.block_index[dcmotor_model.voltage]
+    rho_idx = result.block_index[dcmotor_model.density]
+    engine_idx = result.block_index[dcmotor_model.engine]
 
     # Check connection from dcmotor:0 to static_propeller:0
-    assert result.global_output_index[result.global_first_output_index[dcm_idx] +
-                                      0] == result.global_input_index[result.global_first_input_index[sp_idx]+0]
+    assert result.output_to_signal_map[result.first_output_by_block_index[dcm_idx] + 0] == \
+           result.input_to_signal_map[result.first_input_by_block_index[sp_idx] + 0]
     # Check connection from dcmotor:1 to engine:1 (output)
-    assert result.global_output_index[result.global_first_output_index[dcm_idx] +
-                                      1] == result.global_output_index[result.global_first_output_index[engine_idx]+1]
+    assert result.output_to_signal_map[result.first_output_by_block_index[dcm_idx] + 1] == \
+           result.output_to_signal_map[result.first_output_by_block_index[engine_idx] + 1]
     # Check connection from static_propeller:1 to dcmotor:1
-    assert result.global_output_index[result.global_first_output_index[sp_idx] +
-                                      1] == result.global_input_index[result.global_first_input_index[dcm_idx]+1]
+    assert result.output_to_signal_map[result.first_output_by_block_index[sp_idx] + 1] == \
+           result.input_to_signal_map[result.first_input_by_block_index[dcm_idx] + 1]
     # Check connection from static_propeller:0 to engine:0 (output)
-    assert result.global_output_index[result.global_first_output_index[sp_idx] +
-                                      0] == result.global_output_index[result.global_first_output_index[engine_idx]+0]
+    assert result.output_to_signal_map[result.first_output_by_block_index[sp_idx] + 0] == \
+           result.output_to_signal_map[result.first_output_by_block_index[engine_idx] + 0]
     # Check connection from voltage:0 to dcmotor:0
-    assert result.global_output_index[result.global_first_output_index[voltage_idx] +
-                                      0] == result.global_input_index[result.global_first_input_index[dcm_idx]+0]
+    assert result.output_to_signal_map[result.first_output_by_block_index[voltage_idx] + 0] == \
+           result.input_to_signal_map[result.first_input_by_block_index[dcm_idx] + 0]
     # Check connection from density:0 to static_propeller:1
-    assert result.global_output_index[result.global_first_output_index[voltage_idx] +
-                                      0] == result.global_input_index[result.global_first_input_index[dcm_idx]+0]
+    assert result.output_to_signal_map[result.first_output_by_block_index[rho_idx] + 0] == \
+           result.input_to_signal_map[result.first_input_by_block_index[sp_idx] + 1]
 
     # Check execution order
-    exec_seq = result.blocks
+    exec_seq = result.leaf_blocks_in_order
     assert exec_seq.index(dcmotor_model.dcmotor) < exec_seq.index(
         dcmotor_model.static_propeller)
     assert exec_seq.index(dcmotor_model.density) < exec_seq.index(
