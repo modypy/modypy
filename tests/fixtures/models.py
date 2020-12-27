@@ -5,9 +5,22 @@ from simtree.blocks.sources import Constant;
 import math;
 import numpy as np;
 
+class BouncingBall(LeafBlock):
+   def __init__(self,g=-9.81,gamma=0.3,**kwargs):
+      LeafBlock.__init__(self,num_states=4,num_outputs=2,**kwargs);
+      self.g = g;
+      self.gamma = gamma;
+   
+   def output_function(self,t,state):
+      return [state[1]];
+   
+   def state_update_function(self,t,state):
+      return [state[2],state[3],
+              -self.gamma*state[2],self.g-self.gamma*state[3]];
+
 class StaticPropeller(LeafBlock):
    def __init__(self,ct,cp,D,**kwargs):
-      LeafBlock.__init__(self,num_inputs=2,num_outputs=3,num_events=1,**kwargs);
+      LeafBlock.__init__(self,num_inputs=2,num_outputs=3,**kwargs);
       self.cp = cp;
       self.ct = ct;
       self.D = D;
@@ -16,10 +29,6 @@ class StaticPropeller(LeafBlock):
       return [self.ct*inputs[1]*self.D**4*inputs[0]**2,
               self.cp*inputs[1]*self.D**5*inputs[0]**3,
               self.cp/(2*math.pi)*inputs[1]*self.D**5*inputs[0]**2];
-   
-   def event_function(self,t,inputs):
-      outputs = self.output_function(t,inputs);
-      return [outputs[1]-0.04];
 
 class DCMotor(LTISystem):
    def __init__(self,Kv,R,L,J,**kwargs):
@@ -29,11 +38,7 @@ class DCMotor(LTISystem):
                          C=[[1/(2*math.pi),0],[0,1]],
                          D=[[0,0],[0,0]],
                          feedthrough_inputs=[],
-                         num_events=2,
                          **kwargs);
-   
-   def event_function(self,t,states,inputs):
-      return [states[0]-101,states[1]-87.75];
 
 class DCMotorModel:
    def __init__(self):
@@ -66,23 +71,16 @@ class DCMotorModel:
 
 class ExponentialDecay(LTISystem):
    def __init__(self,T,**kwargs):
-      LTISystem.__init__(self,A=[[-1/T]],B=np.zeros((1,0)),C=[[1]],D=np.zeros((1,0)),num_events=1,**kwargs);
-   
-   def event_function(self,t,states):
-      return [states[0]/self.initial_condition[0]-0.1];
+      LTISystem.__init__(self,A=[[-1/T]],B=np.zeros((1,0)),C=[[1]],D=np.zeros((1,0)),**kwargs);
 
 class ExponentialDecayNoState(LeafBlock):
    def __init__(self,x0,T,**kwargs):
-      LeafBlock.__init__(self,num_outputs=1,num_events=1,**kwargs);
+      LeafBlock.__init__(self,num_outputs=1,**kwargs);
       self.x0 = x0;
       self.T = T;
    
    def output_function(self,t):
       return [math.exp(-t/self.T)*self.x0];
-   
-   def event_function(self,t):
-      outputs = self.output_function(t);
-      return [outputs[0]/self.x0-0.1];
 
 @pytest.fixture
 def decay_model():
@@ -98,3 +96,7 @@ def decay_model_no_state():
 @pytest.fixture
 def dcmotor_model():
    return DCMotorModel();
+
+@pytest.fixture
+def bouncing_ball_model():
+   return BouncingBall(initial_condition=[0,10.0,0,0]);

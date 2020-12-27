@@ -169,8 +169,34 @@ class CompiledSystem:
             event_values[first_event:first_event+block.num_events] = block_event_values;
       
       return event_values;
+   
+   """
+   Combined event handling function for the compiled system.
+   
+   This calculates the new state vector after a zero-crossing event.
+   """
+   def update_state_function(self,t,state,outputs):
+      new_state = np.zeros(self.num_states);
+      for block,block_index in self.block_index.items():
+         if block.num_events>0 and block.num_states>0:
+            # We only consider blocks that have events and states
+            first_input = self.first_input_index[block_index];
+            first_state = self.first_state_index[block_index];
+            input_indices = self.input_index[first_input:first_input+block.num_inputs];
+            
+            block_inputs = outputs[input_indices];
+            block_states = state[first_state:first_state+block.num_states];
+            
+            if block.num_inputs>0:
+               # This system has inputs and states
+               new_block_state = block.update_state_function(t,block_states,block_inputs);
+            else:
+               # This system has states, but no inputs
+               new_block_state = block.update_state_function(t,block_states);
+         
+            new_state[first_state:first_state+block.num_states] = new_block_state;
       
-      
+      return new_state;
 
 """
 Compiler for block trees.

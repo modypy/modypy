@@ -44,3 +44,17 @@ class LTISystem(LeafBlock):
          return np.matmul(self.C,states)+np.matmul(self.D,inputs);
       else:
          return np.matmul(self.C,states);
+
+"""
+A simple linear gain block.
+
+Provides the input scaled by the constant gain as output.
+"""
+class Gain(LeafBlock):
+   def __init__(self,k,**kwargs):
+      k = np.asarray(k);
+      LeafBlock.__init__(self,num_inputs=k.shape[1],num_outputs=k.shape[0],**kwargs);
+      self.k = k;
+   
+   def output_function(self,t,inputs):
+      return np.matmul(self.k,inputs);

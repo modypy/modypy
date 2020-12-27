@@ -7,13 +7,14 @@ RESULT_SIZE_EXTENSION = 16;
 
 DEFAULT_INTEGRATOR = scipy.integrate.DOP853;
 DEFAULT_INTEGRATOR_OPTIONS = {
-   'rtol': 1.E-6,
-   'atol': 1.E-6,
+   'rtol': 1.E-12,
+   'atol': 1.E-15,
 };
 
 DEFAULT_ROOTFINDER = scipy.optimize.brentq;
 DEFAULT_ROOTFINDER_OPTIONS = {
-   'xtol':1.E-6,
+   'xtol':1.E-12,
+   'maxiter': 1E3
 };
 
 """
@@ -188,10 +189,11 @@ class Simulator:
       old_event_signs = np.sign(old_event_values);
       new_event_signs = np.sign(new_event_values);
       events_occurred = np.flatnonzero((old_event_signs!=new_event_signs));
+      
       if len(events_occurred)>0:
-         # There was at least one event
-         # For each of the events that have occurred, find the time when they occurred.
-         # For that, we use the dense output of the integrator.
+         # At least one of the event functions has changed its sign, so there was at least one event.
+         # We need to identify the first event that occurred. To do that, we find the time
+         # of occurrence for each of the events using the dense output of the integrator and the root finder.
          interpolator = self.integrator.dense_output();
          
          # Function to interpolate the event function across the last integration step
@@ -201,6 +203,7 @@ class Simulator:
             event_value = self.system.event_function(t,state,outputs);
             return event_value;
          
+         # Go through all the events and find their exact time of occurrence
          tcross = [];
          for eventidx in events_occurred:
             tc = scipy.optimize.brentq(f=(lambda t: event_interpolator(t)[eventidx]),
@@ -212,7 +215,9 @@ class Simulator:
          # Sort the events by increasing time
          tcross.sort(key=(lambda entry: entry[1]));
          
-         # Process only the first event
+         # Process only the first event.
+         # We determine the state at the time of the event using the interpolator
+         # and the outputs using the system output function.
          event_idx, event_t = tcross[0];
          event_state = interpolator(event_t);
          event_outputs = self.system.output_function(event_t,event_state);
@@ -220,12 +225,19 @@ class Simulator:
          # Add the event to the result collection
          self.result.append(event_t,event_state,event_outputs,event_idx);
          
-         # We continue right of the event in order not to find the event again in the next loop.
+         # We continue right of the event in order to avoid finding the same event in the next step again.
+         # FIXME: We might want to try using the interpolator to find a time where we are properly on the other side to avoid endless event loops
          next_t = event_t+self.rootfinder_options["xtol"]/2;
          next_state = interpolator(next_t);
+         next_outputs = self.system.output_function(next_t,next_state);
          
-         # We need to reset the integrator
-         self.integrator = self.integrator_constructor(self.state_derivative_function,next_t,next_state,self.tbound,**self.integrator_options);
+         # Let the system handle the event by updating the state.
+         new_state = self.system.update_state_function(next_t,next_state,next_outputs);
+         
+         # We need to reset the integrator.
+         # Ideally, we would want to just reset the time and the state, but proper behaviour of the integrator
+         # in this case is not guaranteed, so we just create a new one.
+         self.integrator = self.integrator_constructor(self.state_derivative_function,next_t,new_state,self.tbound,**self.integrator_options);
       else:
          # No events to handle
          # Add the current status to the result collection

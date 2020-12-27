@@ -14,3 +14,11 @@ class Constant(LeafBlock):
    
    def output_function(self,t):
       return self.value;
+
+class SourceFromCallable(LeafBlock):
+   def __init__(self,callable,**kwargs):
+      LeafBlock.__init__(self,**kwargs);
+      self.callable = callable;
+   
+   def output_function(self,*args):
+      return self.callable(*args);
