@@ -352,17 +352,23 @@ class Compiler:
         # All inputs and the outputs of non-leaf blocks are then mapped to
         # signals.
         self.first_state_by_leaf_index = \
-            [0] + list(itertools.accumulate([block.num_states for block in self.leaf_blocks]))
+            list(itertools.accumulate([block.num_states for block in self.leaf_blocks],
+                                      initial=0))
         self.first_event_by_leaf_index = \
-            [0] + list(itertools.accumulate([block.num_events for block in self.leaf_blocks]))
+            list(itertools.accumulate([block.num_events for block in self.leaf_blocks],
+                                      initial=0))
+        # We need to allocate signals for the inputs of the root block
         self.first_signal_by_leaf_index = \
-            [0] + list(itertools.accumulate([block.num_outputs for block in self.leaf_blocks]))
+            list(itertools.accumulate([block.num_outputs for block in self.leaf_blocks],
+                                      initial=self.root.num_inputs))
 
         # Allocate input- and output-to-signal mappings for all blocks.
         self.first_input_by_block_index = \
-            [0] + list(itertools.accumulate([block.num_outputs for block in self.blocks]))
+            list(itertools.accumulate([block.num_outputs for block in self.blocks],
+                                      initial=0))
         self.first_output_by_block_index = \
-            [0] + list(itertools.accumulate([block.num_outputs for block in self.blocks]))
+            list(itertools.accumulate([block.num_outputs for block in self.blocks],
+                                      initial=0))
 
         # Set up input and output vector maps for all blocks.
         # For each input (adjusted by self.first_input_by_block_index)
@@ -412,6 +418,18 @@ class Compiler:
             output_offset = self.first_output_by_block_index[block_index]
             self.output_to_signal_map[output_offset:output_offset + block.num_outputs] = \
                 range(signal_offset, signal_offset + block.num_outputs)
+
+    def map_root_inputs(self):
+        """
+        Map the inputs of the root block to the signal vector.
+        """
+
+        # The first signals are reserved as inputs for the root block
+        root_idx = self.block_index[self.root]
+        root_input_start = self.first_input_by_block_index[root_idx]
+        self.input_to_signal_map[root_input_start:
+                                 root_input_start + self.root.num_inputs] = \
+            range(self.root.num_inputs)
 
     def map_nonleaf_block_outputs(self):
         """
@@ -482,6 +500,9 @@ class Compiler:
         # Pre-populate for leaf blocks
         self.map_leaf_block_outputs()
 
+        # Pre-populate for inputs of the root block
+        self.map_root_inputs();
+
         # Iterate over all non-leaf blocks and process outgoing connections
         self.map_nonleaf_block_outputs()
 
@@ -504,17 +525,8 @@ class Compiler:
         blocks_ready_to_fire = [block
                                 for block, num_in in zip(self.leaf_blocks, num_incoming)
                                 if num_in == 0]
-        # Initialize the execution sequence
-        execution_sequence = []
-        while len(blocks_ready_to_fire) > 0:
-            # Take one block that is ready to fire
-            src = blocks_ready_to_fire.pop()
-            # As it can fire now, we can append it to the execution sequence
-            execution_sequence.append(src)
-            # Consider the targets of all outgoing connections of src
-            src_leaf_index = self.leaf_block_index[src]
-            signal_index_start = self.first_signal_by_leaf_index[src_leaf_index]
-            signal_index_end = signal_index_start + src.num_outputs
+
+        def satisfy_signal_users(signal_index_start, signal_index_end):
             for dest, dest_leaf_index in self.leaf_block_index.items():
                 dest_index = self.block_index[dest]
                 dest_port_offset = self.first_input_by_block_index[dest_index]
@@ -533,6 +545,22 @@ class Compiler:
                         # are satisfied, that block is ready to fire.
                         if num_incoming[dest_leaf_index] == 0:
                             blocks_ready_to_fire.append(dest)
+
+        # The inputs of the root block are considered to be connected
+        satisfy_signal_users(0, self.root.num_inputs)
+
+        # Initialize the execution sequence
+        execution_sequence = []
+        while len(blocks_ready_to_fire) > 0:
+            # Take one block that is ready to fire
+            src = blocks_ready_to_fire.pop()
+            # As it can fire now, we can append it to the execution sequence
+            execution_sequence.append(src)
+            # Consider the targets of all outgoing connections of src
+            src_leaf_index = self.leaf_block_index[src]
+            signal_index_start = self.first_signal_by_leaf_index[src_leaf_index]
+            signal_index_end = signal_index_start + src.num_outputs
+            satisfy_signal_users(signal_index_start, signal_index_end)
 
         if sum(num_incoming) > 0:
             # There are unsatisfied inputs, which is probably due to cycles in
