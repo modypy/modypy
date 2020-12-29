@@ -84,15 +84,15 @@ class Simulator:
 
     Dynamic systems to be simulated using this class need to support a set of functions:
 
-    system.state_update_function(t,state,outputs)
-       Determine the derivative of the state vector of the system, given
+    block.state_update_function(t,state,outputs)
+       Determine the derivative of the state vector of the block, given
        the time `t`, state `state` and output vector `outputs`.
 
-    system.output_function(t,state)
-       Determine the value of the outputs of the system given time `t` and
+    block.output_function(t,state)
+       Determine the value of the outputs of the block given time `t` and
        state `state`.
 
-    system.initial_condition
+    block.initial_condition
        The initial value of the state vector.
     """
 
@@ -106,10 +106,10 @@ class Simulator:
                  rootfinder_constructor=DEFAULT_ROOTFINDER,
                  rootfinder_options=DEFAULT_ROOTFINDER_OPTIONS):
         """
-        Construct a simulator for a system.
+        Construct a simulator for a block.
 
-        system
-            The system to be simulated. This can be the result of a compilation
+        block
+            The block to be simulated. This can be the result of a compilation
             using `simtree.compiler.Compiler`.
         t0: number
             The start time of the simulation.
@@ -117,10 +117,10 @@ class Simulator:
             The end time of the simulation. This also limits the maximum time
             until which stepping is possible.
         initial_condition: list-like of numbers, optional
-            The initial condition of the system state. If not set, the initial
-            condition specified in the system is used.
+            The initial condition of the block state. If not set, the initial
+            condition specified in the block is used.
         input_callable: callable, optional
-            The callable used to provide the inputs for the system.
+            The callable used to provide the inputs for the block.
             Must accept time as the single argument.
             If not given, inputs are assumed to be zero.
         integrator_constructor: callable, optional
@@ -168,7 +168,9 @@ class Simulator:
                                         **self.integrator_options)
 
         # Store the initial state
-        self.result.append(self.t, self.state, self.output)
+        self.result.append(self.t,
+                           self.state,
+                           self.output_function(self.t, self.state))
 
     @property
     def t(self):
@@ -178,33 +180,9 @@ class Simulator:
 
     @property
     def state(self):
-        """The current state of the simulated system."""
+        """The current state of the simulated block."""
 
         return self.integrator.y
-
-    @property
-    def inputs(self):
-        """The current input vector for the simulated system."""
-
-        return self.input_function(self.t)
-
-    @property
-    def signals(self):
-        """The current signals in the simulated system."""
-
-        return self.signal_function(self.t, self.state)
-
-    @property
-    def output(self):
-        """The current outputs of the simulated system."""
-
-        return self.output_function(self.t, self.state)
-
-    @property
-    def event_values(self):
-        """The current outputs of the event functions."""
-
-        return self.event_function(self.t, self.state)
 
     @property
     def status(self):
@@ -220,7 +198,7 @@ class Simulator:
         return self.integrator.status == "running"
 
     def input_function(self, t):
-        """Determine the inputs for the system at the given time."""
+        """Determine the inputs for the block at the given time."""
 
         if self.system.num_inputs > 0:
             if self.input_callable is None:
@@ -231,24 +209,15 @@ class Simulator:
     def state_derivative_function(self, t, state):
         """Combined state derivative function used for the integrator."""
 
-        if self.system.num_inputs > 0:
-            inputs = self.input_function(t)
-            return self.system.state_update_function(t, state, inputs)
-        return self.system.state_update_function(t, state)
-
-    def signal_function(self, t, states=None):
-        """Combined signal vector for the system"""
-        inputs = self.input_function(t)
-        if self.system.num_inputs > 0 and self.system.num_states > 0:
-            return self.system.signal_function(t, states, inputs)
-        if self.system.num_inputs > 0:
-            return self.system.signal_function(t, inputs)
         if self.system.num_states > 0:
-            return self.system.signal_function(t, states)
-        return self.system.signal_function(t)
+            if self.system.num_inputs > 0:
+                inputs = self.input_function(t)
+                return self.system.state_update_function(t, state, inputs)
+            return self.system.state_update_function(t, state)
+        return [];
 
     def output_function(self, t, states=None):
-        """Combined output vector for the system"""
+        """Combined output vector for the block"""
         inputs = self.input_function(t)
         if self.system.num_inputs > 0 and self.system.num_states > 0:
             return self.system.output_function(t, states, inputs)
@@ -259,7 +228,7 @@ class Simulator:
         return self.system.output_function(t)
 
     def event_function(self, t, states=None):
-        """Combined event vector for the system"""
+        """Combined event vector for the block"""
         inputs = self.input_function(t)
         if self.system.num_inputs > 0 and self.system.num_states > 0:
             return self.system.event_function(t, states, inputs)
@@ -273,7 +242,7 @@ class Simulator:
         """Execute a single simulation step."""
 
         # Save the last event values
-        old_event_values = self.event_values
+        old_event_values = self.event_function(self.t, self.state)
         last_t = self.t
         message = self.integrator.step()
         if message is not None:
@@ -281,7 +250,7 @@ class Simulator:
             return message
 
         # Check for changes in event functions
-        new_event_values = self.event_values
+        new_event_values = self.event_function(self.t, self.state)
         old_event_signs = np.sign(old_event_values)
         new_event_signs = np.sign(new_event_values)
         events_occurred = np.flatnonzero((old_event_signs != new_event_signs))
@@ -312,7 +281,7 @@ class Simulator:
 
             # Process only the first event.
             # We determine the state at the time of the event using the interpolator
-            # and the outputs using the system output function.
+            # and the outputs using the block output function.
             event_idx, event_t = tcross[0]
             event_state = interpolator(event_t)
             event_outputs = self.output_function(event_t, event_state)
@@ -327,8 +296,8 @@ class Simulator:
             next_state = interpolator(next_t)
             next_inputs = self.input_function(next_t)
 
-            # Let the system handle the event by updating the state.
-            if self.system.num_inputs>0:
+            # Let the block handle the event by updating the state.
+            if self.system.num_inputs > 0:
                 new_state = \
                     self.system.update_state_function(next_t, next_state, next_inputs)
             else:
@@ -348,11 +317,13 @@ class Simulator:
         else:
             # No events to handle
             # Add the current status to the result collection
-            self.result.append(self.t, self.state, self.output)
+            self.result.append(self.t,
+                               self.state,
+                               self.output_function(self.t, self.state))
         return None
 
     def run(self):
-        """Simulate the system until the end time of the simulation."""
+        """Simulate the block until the end time of the simulation."""
 
         while self.running:
             message = self.step()

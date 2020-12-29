@@ -4,12 +4,12 @@ from simtree.blocks import LeafBlock
 
 class LTISystem(LeafBlock):
     """
-    Implementation of a linear, time-invariant system of the format
+    Implementation of a linear, time-invariant block of the format
 
       dx/dt = A*x+B*u
       y = C*x+D*u
 
-    The matrices A,B,C and D define the state and output behaviour of the system.
+    The matrices A,B,C and D define the state and output behaviour of the block.
     """
 
     def __init__(self, A, B, C, D, **kwargs):

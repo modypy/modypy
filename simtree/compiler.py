@@ -1,13 +1,13 @@
-import numpy as np
 import itertools
+import numpy as np
 
 
 class CompiledSystem:
     """
-    A system provided by the compiler.
+    A block provided by the compiler.
 
-    The system provides implementations of `output_function` and `state_update_function`
-    as well properties `num_outputs` and `num_states` for the compiled system.
+    The block provides implementations of `output_function` and `state_update_function`
+    as well properties `num_outputs` and `num_states` for the compiled block.
     It can be used as input for `simtree.simulator.Simulator`.
     """
 
@@ -27,12 +27,12 @@ class CompiledSystem:
                  input_to_signal_map,
                  output_to_signal_map):
         """
-        Constructor for the compiled system:.
+        Constructor for the compiled block:.
 
         root: block
-            Root block of this system.
+            Root block of this block.
         leaf_blocks_in_order: list
-            List of the leaf blocks contained in this system, in the order they need to be executed.
+            List of the leaf blocks contained in this block, in the order they need to be executed.
         leaf_block_index: dictionary
             Dictionary mapping leaf blocks to their leaf block index.
         block_index: dictionary
@@ -73,7 +73,7 @@ class CompiledSystem:
         self.input_to_signal_map = input_to_signal_map
         self.output_to_signal_map = output_to_signal_map
 
-        # This combined system exposes the interface of the root block
+        # This combined block exposes the interface of the root block
         self.num_inputs = self.root.num_inputs
         self.num_outputs = self.root.num_outputs
 
@@ -91,9 +91,9 @@ class CompiledSystem:
 
     def signal_function(self, t, *args):
         """
-        Calculate the value of all signals in the system.
+        Calculate the value of all signals in the block.
 
-        If the system has a state or inputs, accepts a state vector and/or an
+        If the block has a state or inputs, accepts a state vector and/or an
         input vector as additional parameters - in that order.
         """
 
@@ -112,7 +112,7 @@ class CompiledSystem:
         signals = np.zeros(self.num_signals)
 
         # The inputs are mapped to the signals representing the inputs to
-        # the root system
+        # the root block
         root_index = self.block_index[self.root]
         first_root_input = self.first_input_by_block_index[root_index]
         root_input_signals = \
@@ -136,16 +136,16 @@ class CompiledSystem:
             block_states = states[first_state:first_state + block.num_states]
 
             if block.num_inputs > 0 and block.num_states > 0:
-                # This system has inputs and states
+                # This block has inputs and states
                 block_outputs = block.output_function(t, block_states, block_inputs)
             elif block.num_states > 0:
-                # This system has states, but no inputs
+                # This block has states, but no inputs
                 block_outputs = block.output_function(t, block_states)
             elif block.num_inputs > 0:
-                # This system has inputs, but no states
+                # This block has inputs, but no states
                 block_outputs = block.output_function(t, block_inputs)
             else:
-                # This system neither has inputs nor states
+                # This block neither has inputs nor states
                 block_outputs = block.output_function(t)
 
             # Write the output of the block into the respective signals
@@ -156,9 +156,9 @@ class CompiledSystem:
 
     def output_function(self, t, *args):
         """
-        Output function for the root system.
+        Output function for the root block.
 
-        This calculates the output vector for the root system only.
+        This calculates the output vector for the root block only.
         """
 
         if self.num_outputs == 0:
@@ -166,20 +166,21 @@ class CompiledSystem:
 
         signals = self.signal_function(t, *args)
 
-        # Determine the output signals for the root system
+        # Determine the output signals for the root block
         root_idx = self.block_index[self.root]
-        first_output_signal = self.first_output_by_block_index[root_idx];
+        first_output_signal = self.first_output_by_block_index[root_idx]
         output_signals = \
-            self.output_to_signal_map[first_output_signal:first_output_signal + self.root.num_outputs]
+            self.output_to_signal_map[first_output_signal:
+                                      first_output_signal + self.root.num_outputs]
         outputs = signals[output_signals]
 
         return outputs
 
     def state_update_function(self, t, *args):
         """
-        Combined state update function of the compiled system.
+        Combined state update function of the compiled block.
 
-        This calculates the state update vector for all the leaf blocks contained in the system.
+        This calculates the state update vector for all the leaf blocks contained in the block.
         """
 
         if self.num_states > 0:
@@ -207,11 +208,11 @@ class CompiledSystem:
                 block_states = states[first_state:first_state + block.num_states]
 
                 if block.num_inputs > 0:
-                    # This system has inputs
+                    # This block has inputs
                     block_state_derivative = \
                         block.state_update_function(t, block_states, block_inputs)
                 else:
-                    # This system has no inputs
+                    # This block has no inputs
                     block_state_derivative = \
                         block.state_update_function(t, block_states)
 
@@ -224,9 +225,9 @@ class CompiledSystem:
 
     def event_function(self, t, *args):
         """
-        Combined event function for the compiled system.
+        Combined event function for the compiled block.
 
-        This calculates the event vector for all the leaf blocks contained in the system.
+        This calculates the event vector for all the leaf blocks contained in the block.
         """
 
         if self.num_states > 0:
@@ -255,17 +256,17 @@ class CompiledSystem:
                 block_states = states[first_state:first_state + block.num_states]
 
                 if block.num_inputs > 0 and block.num_states > 0:
-                    # This system has inputs and states
+                    # This block has inputs and states
                     block_event_values = \
                         block.event_function(t, block_states, block_inputs)
                 elif block.num_states > 0:
-                    # This system has states, but no inputs
+                    # This block has states, but no inputs
                     block_event_values = block.event_function(t, block_states)
                 elif block.num_inputs > 0:
-                    # This system has inputs, but no states
+                    # This block has inputs, but no states
                     block_event_values = block.event_function(t, block_inputs)
                 else:
-                    # This system neither has inputs nor states
+                    # This block neither has inputs nor states
                     block_event_values = block.event_function(t)
 
                 # Write the event values of the block to the global event vector
@@ -277,7 +278,7 @@ class CompiledSystem:
 
     def update_state_function(self, t, *args):
         """
-        Combined event handling function for the compiled system.
+        Combined event handling function for the compiled block.
 
         This calculates the new state vector after a zero-crossing event.
         """
@@ -308,11 +309,11 @@ class CompiledSystem:
                 block_states = states[first_state:first_state + block.num_states]
 
                 if block.num_inputs > 0:
-                    # This system has inputs and states
+                    # This block has inputs and states
                     new_block_state = \
                         block.update_state_function(t, block_states, block_inputs)
                 else:
-                    # This system has states, but no inputs
+                    # This block has states, but no inputs
                     new_block_state = \
                         block.update_state_function(t, block_states)
 
@@ -347,7 +348,7 @@ class Compiler:
         self.leaf_block_index = {block: index for index, block in
                                  zip(itertools.count(), self.leaf_blocks)}
 
-        # Allocate state, signal and event indices for the compiled system.
+        # Allocate state, signal and event indices for the compiled block.
         # There is exactly one signal for each output of a leaf block.
         # All inputs and the outputs of non-leaf blocks are then mapped to
         # signals.
@@ -501,7 +502,7 @@ class Compiler:
         self.map_leaf_block_outputs()
 
         # Pre-populate for inputs of the root block
-        self.map_root_inputs();
+        self.map_root_inputs()
 
         # Iterate over all non-leaf blocks and process outgoing connections
         self.map_nonleaf_block_outputs()
@@ -534,8 +535,7 @@ class Compiler:
                 for dest_port in dest.feedthrough_inputs:
                     dest_port_index = dest_port_offset + dest_port
                     src_signal_index = self.input_to_signal_map[dest_port_index]
-                    if (signal_index_start <= src_signal_index and
-                            src_signal_index < signal_index_end):
+                    if signal_index_start <= src_signal_index < signal_index_end:
                         # The destination port is connected to the source signal
                         # There is one less input to be fulfilled on the
                         # destination block
