@@ -5,7 +5,7 @@ import pytest
 from fixtures.models import \
     propeller_model, engine_model, dcmotor_model, dcmotor_model_cyclic, \
     bouncing_ball_model
-from simtree.blocks import NonLeafBlock, LeafBlock
+from simtree.blocks import NonLeafBlock
 from simtree.blocks.sources import Constant
 from simtree.compiler import Compiler, CompiledSystem
 
@@ -173,7 +173,8 @@ def assert_signal_vector_correct(result, t, state, inputs, signal_vector):
 
             # Get the state vector for the block
             first_state_index = result.first_state_by_leaf_index[leaf_block_index]
-            block_state = state[first_state_index:first_state_index + block.num_states]
+            block_state = state[first_state_index:first_state_index +
+                                block.num_states]
 
             # Get the input vector for the block
             # We use the signal vector as reported by the compiled system
@@ -203,7 +204,8 @@ def assert_signal_vector_correct(result, t, state, inputs, signal_vector):
             output_signals = \
                 result.output_to_signal_map[first_output_index:
                                             first_output_index + block.num_outputs]
-            npt.assert_almost_equal(block_outputs, signal_vector[output_signals])
+            npt.assert_almost_equal(
+                block_outputs, signal_vector[output_signals])
 
 
 def assert_state_update_vector_correct(result,
@@ -225,7 +227,8 @@ def assert_state_update_vector_correct(result,
 
             # Get the state vector for the block
             first_state_index = result.first_state_by_leaf_index[leaf_block_index]
-            block_state = state[first_state_index:first_state_index + block.num_states]
+            block_state = state[first_state_index:first_state_index +
+                                block.num_states]
 
             # Get the input vector for the block
             # We use the signal vector as reported by the compiled system
@@ -247,7 +250,8 @@ def assert_state_update_vector_correct(result,
             # Check whether the results of the block correspond to the
             # values in the value vector
             first_state_index = result.first_state_by_leaf_index[leaf_block_index]
-            states = range(first_state_index, first_state_index + block.num_states)
+            states = range(first_state_index,
+                           first_state_index + block.num_states)
             npt.assert_almost_equal(block_state_derivative,
                                     state_update_vector[states])
 
@@ -285,7 +289,8 @@ def assert_event_vector_correct(result, t, state, signal_vector, event_vector):
 
             # Get the state vector for the block
             first_state_index = result.first_state_by_leaf_index[leaf_block_index]
-            block_state = state[first_state_index:first_state_index + block.num_states]
+            block_state = state[first_state_index:first_state_index +
+                                block.num_states]
 
             # Get the input vector for the block
             # We use the signal vector as reported by the compiled system
@@ -333,7 +338,8 @@ def assert_event_update_correct(result, t, state, signal_vector, new_state_vecto
 
             # Get the state vector for the block
             first_state_index = result.first_state_by_leaf_index[leaf_block_index]
-            block_state = state[first_state_index:first_state_index + block.num_states]
+            block_state = state[first_state_index:first_state_index +
+                                block.num_states]
 
             # Get the input vector for the block
             # We use the signal vector as reported by the compiled system
@@ -364,6 +370,7 @@ def assert_event_update_correct(result, t, state, signal_vector, new_state_vecto
             npt.assert_almost_equal(new_block_state,
                                     new_state_vector[first_state_index:
                                                      first_state_index + block.num_states])
+
 
 def assert_vectors_correct(result, t, state, inputs):
     """
@@ -425,11 +432,11 @@ def assert_vectors_correct(result, t, state, inputs):
 @pytest.mark.parametrize(
     "model",
     [
-        Constant(value=10.0),   # a model with no inputs and states
-        propeller_model(),      # a model with inputs and no states
-        engine_model(),         # a model with inputs, outputs and states
-        dcmotor_model(),        # a model with no inputs, but outputs and states
-        bouncing_ball_model()   # a model with events
+        Constant(value=10.0),  # a model with no inputs and states
+        propeller_model(),  # a model with inputs and no states
+        engine_model(),  # a model with inputs, outputs and states
+        dcmotor_model(),  # a model with no inputs, but outputs and states
+        bouncing_ball_model()  # a model with events
     ],
     ids=[
         'Constant',
@@ -448,8 +455,8 @@ def test_compile(model):
         sum(block.num_states
             for block in model.enumerate_leaf_blocks())
     total_signals = model.num_inputs + \
-                    sum(block.num_outputs
-                        for block in model.enumerate_leaf_blocks())
+        sum(block.num_outputs
+            for block in model.enumerate_leaf_blocks())
     total_events = \
         sum(block.num_events
             for block in model.enumerate_leaf_blocks())

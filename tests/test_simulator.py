@@ -3,9 +3,7 @@ import pytest
 import numpy as np
 import numpy.testing as npt
 import scipy.signal as signal
-from simtree.blocks import NonLeafBlock
-from simtree.blocks.linear import LTISystem, Gain
-from simtree.blocks.sources import SourceFromCallable
+from simtree.blocks.linear import LTISystem
 from simtree.compiler import Compiler
 from simtree.simulator import Simulator
 from fixtures.models import \

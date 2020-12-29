@@ -214,7 +214,7 @@ class Simulator:
                 inputs = self.input_function(t)
                 return self.system.state_update_function(t, state, inputs)
             return self.system.state_update_function(t, state)
-        return [];
+        return []
 
     def output_function(self, t, states=None):
         """Combined output vector for the block"""

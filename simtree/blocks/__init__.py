@@ -1,5 +1,4 @@
 import bisect
-import itertools
 import numpy as np
 
 
@@ -163,7 +162,7 @@ class NonLeafBlock(Block):
          - dest_port being the index of the input on the destination block.
         """
 
-        for  dest_block, first_dest_index in \
+        for dest_block, first_dest_index in \
                 zip(self.children,
                     self.first_destination_index):
             for dest_port_index, src_index in \
