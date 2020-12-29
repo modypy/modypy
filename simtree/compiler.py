@@ -352,24 +352,20 @@ class Compiler:
         # There is exactly one signal for each output of a leaf block.
         # All inputs and the outputs of non-leaf blocks are then mapped to
         # signals.
-        self.first_state_by_leaf_index = \
-            list(itertools.accumulate([block.num_states for block in self.leaf_blocks],
-                                      initial=0))
-        self.first_event_by_leaf_index = \
-            list(itertools.accumulate([block.num_events for block in self.leaf_blocks],
-                                      initial=0))
+        self.first_state_by_leaf_index = [0] + \
+            list(itertools.accumulate([block.num_states for block in self.leaf_blocks]))
+        self.first_event_by_leaf_index = [0] + \
+            list(itertools.accumulate([block.num_events for block in self.leaf_blocks]))
         # We need to allocate signals for the inputs of the root block
         self.first_signal_by_leaf_index = \
-            list(itertools.accumulate([block.num_outputs for block in self.leaf_blocks],
-                                      initial=self.root.num_inputs))
+            list(itertools.accumulate([self.root.num_inputs] +
+                                      [block.num_outputs for block in self.leaf_blocks]))
 
         # Allocate input- and output-to-signal mappings for all blocks.
-        self.first_input_by_block_index = \
-            list(itertools.accumulate([block.num_outputs for block in self.blocks],
-                                      initial=0))
-        self.first_output_by_block_index = \
-            list(itertools.accumulate([block.num_outputs for block in self.blocks],
-                                      initial=0))
+        self.first_input_by_block_index = [0] + \
+            list(itertools.accumulate([block.num_outputs for block in self.blocks]))
+        self.first_output_by_block_index = [0] + \
+            list(itertools.accumulate([block.num_outputs for block in self.blocks]))
 
         # Set up input and output vector maps for all blocks.
         # For each input (adjusted by self.first_input_by_block_index)
