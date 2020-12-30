@@ -8,20 +8,20 @@ from simtree.blocks.sources import Constant, SourceFromCallable
 
 
 def first_order_lag(T=1, x0=10):
-    sys = LTISystem(A=[[-1 / T]],
-                    B=[[1]],
-                    C=[[1]],
-                    D=[[0]],
+    sys = LTISystem(A=-1 / T,
+                    B=1,
+                    C=1,
+                    D=0,
                     initial_condition=[x0])
 
     return sys, 3 * T
 
 
 def first_order_lag_no_input(T=1, x0=10):
-    sys = LTISystem(A=[[-1 / T]],
-                    B=[[]],
-                    C=[[1]],
-                    D=[[]],
+    sys = LTISystem(A=-1 / T,
+                    B=[],
+                    C=1,
+                    D=[],
                     initial_condition=[x0])
 
     return sys, 3 * T
@@ -71,14 +71,20 @@ def sine_input_with_gain(omega, *args, **kwargs):
     return sys, 10.0
 
 
+def lti_gain(gain):
+    sys = LTISystem(A=np.empty((0, 0)),
+                    B=np.empty((0, 1)),
+                    C=np.empty((1, 0)),
+                    D=gain)
+    return sys, 10.0
+
+
 def sine_source(omega):
     sin_scaled = (lambda t: np.sin(omega * t))
     sin_input = SourceFromCallable(fun=sin_scaled, num_outputs=1, num_events=1)
     sin_input.event_function = (lambda t: [sin_scaled(t)])
 
-    sys = NonLeafBlock(children=[sin_input])
-
-    return sys, 3*2*math.pi/omega
+    return sin_input, 3*2*math.pi/omega
 
 
 class StaticPropeller(LeafBlock):
