@@ -184,11 +184,12 @@ class NonLeafBlock(Block):
         """
 
         for dest_port_index, src_index in zip(range(self.num_outputs), self.connection_source):
-            src_block_index = bisect.bisect_right(
-                self.first_source_index, src_index)-1
-            src_block = self.children[src_block_index]
-            src_port_index = src_index-self.first_source_index[src_block_index]
-            yield src_block, src_port_index, dest_port_index
+            if src_index is not None:
+                src_block_index = bisect.bisect_right(
+                    self.first_source_index, src_index)-1
+                src_block = self.children[src_block_index]
+                src_port_index = src_index-self.first_source_index[src_block_index]
+                yield src_block, src_port_index, dest_port_index
 
     def enumerate_leaf_blocks(self):
         for child_block in self.children:

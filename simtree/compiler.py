@@ -341,7 +341,7 @@ class Compiler:
         # has index 0.
         self.blocks = list(Compiler.enumerate_blocks_pre_order(self.root))
         self.block_index = {block: index for index,
-                            block in zip(itertools.count(), self.blocks)}
+                                             block in zip(itertools.count(), self.blocks)}
 
         # Collect all leaf blocks in the graph and assign leaf block indices.
         self.leaf_blocks = list(self.root.enumerate_leaf_blocks())
@@ -353,9 +353,9 @@ class Compiler:
         # All inputs and the outputs of non-leaf blocks are then mapped to
         # signals.
         self.first_state_by_leaf_index = [0] + \
-            list(itertools.accumulate([block.num_states for block in self.leaf_blocks]))
+                                         list(itertools.accumulate([block.num_states for block in self.leaf_blocks]))
         self.first_event_by_leaf_index = [0] + \
-            list(itertools.accumulate([block.num_events for block in self.leaf_blocks]))
+                                         list(itertools.accumulate([block.num_events for block in self.leaf_blocks]))
         # We need to allocate signals for the inputs of the root block
         self.first_signal_by_leaf_index = \
             list(itertools.accumulate([self.root.num_inputs] +
@@ -363,9 +363,9 @@ class Compiler:
 
         # Allocate input- and output-to-signal mappings for all blocks.
         self.first_input_by_block_index = [0] + \
-            list(itertools.accumulate([block.num_outputs for block in self.blocks]))
+                                          list(itertools.accumulate([block.num_inputs for block in self.blocks]))
         self.first_output_by_block_index = [0] + \
-            list(itertools.accumulate([block.num_outputs for block in self.blocks]))
+                                           list(itertools.accumulate([block.num_outputs for block in self.blocks]))
 
         # Set up input and output vector maps for all blocks.
         # For each input (adjusted by self.first_input_by_block_index)
@@ -462,11 +462,11 @@ class Compiler:
         # by map_leaf_block_outputs and map_nonleaf_block_outputs.
         for block in Compiler.enumerate_blocks_post_order(self.root):
             if block not in self.leaf_block_index:
-                for src_block, src_port_index, dst_block, dest_port_index in \
+                for src_block, src_port_index, dest_block, dest_port_index in \
                         block.enumerate_internal_connections():
                     src_block_index = self.block_index[src_block]
                     src_port_offset = self.first_output_by_block_index[src_block_index]
-                    dest_block_index = self.block_index[dst_block]
+                    dest_block_index = self.block_index[dest_block]
                     dest_port_offset = self.first_input_by_block_index[dest_block_index]
                     self.input_to_signal_map[dest_port_offset + dest_port_index] = \
                         self.output_to_signal_map[src_port_offset + src_port_index]
@@ -483,8 +483,8 @@ class Compiler:
             if block not in self.leaf_block_index:
                 block_index = self.block_index[block]
                 src_port_offset = self.first_input_by_block_index[block_index]
-                for input_index, dst_block, dest_port_index in block.enumerate_input_connections():
-                    dest_block_index = self.block_index[dst_block]
+                for input_index, dest_block, dest_port_index in block.enumerate_input_connections():
+                    dest_block_index = self.block_index[dest_block]
                     dest_port_offset = self.first_input_by_block_index[dest_block_index]
                     self.input_to_signal_map[dest_port_offset + dest_port_index] = \
                         self.input_to_signal_map[src_port_offset + input_index]
@@ -508,6 +508,51 @@ class Compiler:
 
         # Iterate over all non-leaf blocks and process incoming connections
         self.map_nonleaf_block_inputs()
+
+        # Check whether all inputs of all leaf blocks are properly connected
+        self.check_leaf_block_inputs()
+
+        # Check whether all outputs of the root block are properly connected
+        self.check_root_outputs()
+
+    def check_leaf_block_inputs(self):
+        """
+        Check whether all inputs of all leaf blocks are properly connected.
+        """
+
+        for leaf_block in self.leaf_block_index.keys():
+            block_index = self.block_index[leaf_block]
+            first_input_index = self.first_input_by_block_index[block_index]
+            input_signals = \
+                self.input_to_signal_map[first_input_index:
+                                         first_input_index + leaf_block.num_inputs]
+            for idx, signal in zip(itertools.count(), input_signals):
+                if signal is None:
+                    raise ValueError("Input %d of block %s(%d) is not "
+                                     "connected" % (
+                                         idx,
+                                         leaf_block.name,
+                                         block_index
+                                     ))
+
+    def check_root_outputs(self):
+        """
+        Check whether all outputs of the root block are properly connected.
+        """
+        root_block_index = self.block_index[self.root]
+        first_output_signal = self.first_output_by_block_index[root_block_index]
+        output_signals = \
+            self.output_to_signal_map[first_output_signal:
+                                      first_output_signal + self.root.num_outputs]
+        for idx, signal in zip(itertools.count(), output_signals):
+            if signal is None:
+                raise ValueError("Output %d of block %s(%d) is not "
+                                 "connected" % (
+                                     idx,
+                                     self.root.name,
+                                     root_block_index
+                                 ))
+
 
     def build_execution_order(self):
         """
@@ -535,7 +580,7 @@ class Compiler:
                         # The destination port is connected to the source signal
                         # There is one less input to be fulfilled on the
                         # destination block
-                        num_incoming[dest_leaf_index] = num_incoming[dest_leaf_index] - 1
+                        num_incoming[dest_leaf_index] -= 1
 
                         # If all feed-through inputs on the destination block
                         # are satisfied, that block is ready to fire.
