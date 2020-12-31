@@ -144,5 +144,5 @@ def _system_function(system, time, x_ref):
         assert system.num_inputs > 0
         dxdt = np.empty(0)
         outputs = system.output_function(time, x_ref)
-    out =  np.concatenate((dxdt.flatten(), outputs.flatten()))
+    out = np.concatenate((dxdt.flatten(), outputs.flatten()))
     return out

@@ -340,8 +340,9 @@ class Compiler:
         # We do the enumeration in pre-order, so that the root block
         # has index 0.
         self.blocks = list(Compiler.enumerate_blocks_pre_order(self.root))
-        self.block_index = {block: index for index,
-                                             block in zip(itertools.count(), self.blocks)}
+        self.block_index = {block: index
+                            for index, block
+                            in zip(itertools.count(), self.blocks)}
 
         # Collect all leaf blocks in the graph and assign leaf block indices.
         self.leaf_blocks = list(self.root.enumerate_leaf_blocks())
@@ -353,9 +354,9 @@ class Compiler:
         # All inputs and the outputs of non-leaf blocks are then mapped to
         # signals.
         self.first_state_by_leaf_index = [0] + \
-            list(itertools.accumulate([block.num_states for block in self.leaf_blocks]))
+                                         list(itertools.accumulate([block.num_states for block in self.leaf_blocks]))
         self.first_event_by_leaf_index = [0] + \
-            list(itertools.accumulate([block.num_events for block in self.leaf_blocks]))
+                                         list(itertools.accumulate([block.num_events for block in self.leaf_blocks]))
         # We need to allocate signals for the inputs of the root block
         self.first_signal_by_leaf_index = \
             list(itertools.accumulate([self.root.num_inputs] +
@@ -363,9 +364,9 @@ class Compiler:
 
         # Allocate input- and output-to-signal mappings for all blocks.
         self.first_input_by_block_index = [0] + \
-            list(itertools.accumulate([block.num_inputs for block in self.blocks]))
+                                          list(itertools.accumulate([block.num_inputs for block in self.blocks]))
         self.first_output_by_block_index = [0] + \
-            list(itertools.accumulate([block.num_outputs for block in self.blocks]))
+                                           list(itertools.accumulate([block.num_outputs for block in self.blocks]))
 
         # Set up input and output vector maps for all blocks.
         # For each input (adjusted by self.first_input_by_block_index)
@@ -552,7 +553,6 @@ class Compiler:
                                      self.root.name,
                                      root_block_index
                                  ))
-
 
     def build_execution_order(self):
         """
