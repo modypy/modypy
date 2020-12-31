@@ -56,6 +56,7 @@ def test_lti_no_states():
     state_update = sys.state_update_function(0, [1])
     assert state_update.size == 0
 
+
 def test_lti_empty():
     sys = LTISystem(system_matrix=np.empty((0, 0)),
                     input_matrix=np.empty((0, 0)),

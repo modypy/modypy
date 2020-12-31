@@ -67,6 +67,22 @@ def test_steady_state_linearisation(param, x0, u0, interpolation_order):
     npt.assert_almost_equal(C, system.output_matrix)
     npt.assert_almost_equal(D, system.feed_through_matrix)
 
+    # Get the full jacobian
+    jac = system_jacobian(system,
+                          0,
+                          x0,
+                          u0,
+                          single_matrix=True,
+                          order=interpolation_order)
+    A=jac[:system.num_states, :system.num_states]
+    B=jac[:system.num_states, system.num_states:]
+    C=jac[system.num_states:, :system.num_states]
+    D=jac[system.num_states:, system.num_states:]
+    npt.assert_almost_equal(A, system.system_matrix)
+    npt.assert_almost_equal(B, system.input_matrix)
+    npt.assert_almost_equal(C, system.output_matrix)
+    npt.assert_almost_equal(D, system.feed_through_matrix)
+
 
 def test_output_only():
     system = LeafBlock(num_outputs=1)

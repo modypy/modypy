@@ -109,11 +109,9 @@ class Sum(LeafBlock):
     """
 
     def __init__(self,
-                 channel_weights=None,
+                 channel_weights,
                  channel_dim=1,
                  **kwargs):
-        if channel_weights is None:
-            channel_weights = np.ones(channel_dim)
         channel_weights = np.asarray(channel_weights)
         LeafBlock.__init__(self,
                            num_inputs=channel_weights.size * channel_dim,
