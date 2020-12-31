@@ -1,4 +1,6 @@
 import bisect
+import itertools
+
 import numpy as np
 
 
@@ -70,59 +72,93 @@ class NonLeafBlock(Block):
             self.first_destination_index[-1]+child.num_inputs)
         self.connection_source.extend([None]*child.num_inputs)
 
-    def connect(self, src, src_output_index, dest, dest_input_index):
+    def connect(self, src, src_ports, dest, dest_ports):
         """
-        Connect the output of one block to an input of another block.
+        Connect ports of internal blocks to each other.
+
+        :param src: The source block.
+        :param src_ports: The source port index or iterable of source port indices.
+        :param dest: The destination block.
+        :param dest_ports: The destination port index or iterable of destination
+            port indices.
         """
+
+        if isinstance(src_ports, int):
+            src_ports = [src_ports]
+        if isinstance(dest_ports, int):
+            dest_ports = [dest_ports]
 
         src_block_index = self.child_index[src]
         dest_block_index = self.child_index[dest]
 
-        if not 0 <= src_output_index < src.num_outputs:
-            raise ValueError("Invalid source output index")
-        if not 0 <= dest_input_index < dest.num_inputs:
-            raise ValueError("Invalid destination input index")
+        for src_port, dest_port in zip(src_ports, dest_ports):
+            if not 0 <= src_port < src.num_outputs:
+                raise ValueError("Invalid source output index %d" % src_port)
+            if not 0 <= dest_port < dest.num_inputs:
+                raise ValueError("Invalid destination input index %d" % dest_port)
 
-        src_port_index = self.first_source_index[src_block_index] + \
-            src_output_index
-        dest_port_index = self.first_destination_index[dest_block_index] + \
-            dest_input_index
+            src_port_index = self.first_source_index[src_block_index] + \
+                src_port
+            dest_port_index = self.first_destination_index[dest_block_index] + \
+                dest_port
 
-        self.connection_source[dest_port_index] = src_port_index
+            self.connection_source[dest_port_index] = src_port_index
 
-    def connect_input(self, input_index, dest, dest_input_index):
+    def connect_input(self, input_ports, dest, dest_ports):
         """
-        Connect an input of this virtual block to an input of a contained block.
+        Connect inputs of this block to inputs of a contained block.
+
+        :param input_ports: The input port index or iterable of input port indices.
+        :param dest: The destination block.
+        :param dest_ports: The destination port index or iterable of destination
+            port indices.
         """
+
+        if isinstance(input_ports, int):
+            input_ports = [input_ports]
+        if isinstance(dest_ports, int):
+            dest_ports = [dest_ports]
 
         dest_block_index = self.child_index[dest]
 
-        if not 0 <= input_index < self.num_inputs:
-            raise ValueError("Invalid source input index")
-        if not 0 <= dest_input_index < dest.num_inputs:
-            raise ValueError("Invalid destination input index")
+        for input_port, dest_port in zip(input_ports, dest_ports):
+            if not 0 <= input_port < self.num_inputs:
+                raise ValueError("Invalid source input index %d" % input_port)
+            if not 0 <= dest_port < dest.num_inputs:
+                raise ValueError("Invalid destination input index %d" % dest_port)
 
-        dest_port_index = self.first_destination_index[dest_block_index] + \
-            dest_input_index
+            print("%d -> %s(%d):%d" % (input_port, dest.name, dest_block_index, dest_port))
+            dest_port_index = self.first_destination_index[dest_block_index] + \
+                dest_port
 
-        self.connection_source[dest_port_index] = input_index
+            self.connection_source[dest_port_index] = input_port
 
-    def connect_output(self, src, src_output_index, output_index):
+    def connect_output(self, src, src_ports, output_ports):
         """
-        Connect an output of a contained block to an output of this virtual block.
+        Connect outputs of a contained block to outputs of this block.
+
+        :param src: The source block.
+        :param src_ports: The source port index or iterable of source port indices.
+        :param output_ports: The output port index or iterable of output port indices.
         """
+
+        if isinstance(src_ports, int):
+            src_ports = [src_ports]
+        if isinstance(output_ports, int):
+            output_ports = [output_ports]
 
         src_block_index = self.child_index[src]
 
-        if not 0 <= src_output_index < src.num_outputs:
-            raise ValueError("Invalid source output index")
-        if not 0 <= output_index < self.num_outputs:
-            raise ValueError("Invalid destination output index")
+        for src_port, output_port in zip(src_ports, output_ports):
+            if not 0 <= src_port < src.num_outputs:
+                raise ValueError("Invalid source output index %d" % src_port)
+            if not 0 <= output_port < self.num_outputs:
+                raise ValueError("Invalid destination output index %d" % output_port)
 
-        src_port_index = self.first_source_index[src_block_index] + \
-            src_output_index
+            src_port_index = self.first_source_index[src_block_index] + \
+                src_port
 
-        self.connection_source[output_index] = src_port_index
+            self.connection_source[output_port] = src_port_index
 
     def enumerate_internal_connections(self):
         """
