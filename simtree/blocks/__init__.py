@@ -127,7 +127,6 @@ class NonLeafBlock(Block):
             if not 0 <= dest_port < dest.num_inputs:
                 raise ValueError("Invalid destination input index %d" % dest_port)
 
-            print("%d -> %s(%d):%d" % (input_port, dest.name, dest_block_index, dest_port))
             dest_port_index = self.first_destination_index[dest_block_index] + \
                 dest_port
 
