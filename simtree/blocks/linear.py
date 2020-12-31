@@ -78,3 +78,36 @@ class Gain(LeafBlock):
 
     def output_function(self, t, inputs):
         return np.matmul(self.k, inputs)
+
+
+class Sum(LeafBlock):
+    """
+    A linear weighted sum block.
+
+    This block may have a number of inputs which are interpreted a vectors of
+    common dimension. The output of the block is calculated as the weighted
+    sum of the inputs.
+
+    The block has `channel_dim` outputs, which represent the elements of the
+    weighted vector sum of the inputs.
+    In that case, inputs `0:channel_dim` represent the first vector, inputs
+    `channel_dim:2*channel_dim` represent the second vector, etc.
+
+    The `channel_weights` give the factors by which the individual channels are
+    weighted in the sum.
+    """
+    def __init__(self,
+                 channel_weights=[1, 1],
+                 channel_dim=1,
+                 **kwargs):
+        channel_weights = np.asarray(channel_weights)
+        LeafBlock.__init__(self,
+                           num_inputs=channel_weights.size * channel_dim,
+                           num_outputs=channel_dim,
+                           **kwargs)
+        self.channel_weights = channel_weights
+        self.channel_dim = channel_dim
+
+    def output_function(self, time, inputs):
+        inputs = np.asarray(inputs).reshape(-1, self.channel_dim)
+        return np.matmul(self.channel_weights, inputs)

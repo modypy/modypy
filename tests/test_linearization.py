@@ -34,7 +34,11 @@ def test_steady_state_linearisation(param, x0, u0, interpolation_order):
     system, sim_time = param
 
     # Find the steady x_ref of the system
-    sol, x0, u0 = find_steady_state(system, time=0, x_start=x0, u_start=u0)
+    sol, x0, u0 = find_steady_state(system,
+                                    time=0,
+                                    x_start=x0,
+                                    u_start=u0,
+                                    method="lm")
 
     assert sol.success
     assert x0.size == system.num_states

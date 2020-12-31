@@ -5,7 +5,7 @@ import pytest
 from fixtures.models import \
     propeller_model, engine_model, dcmotor_model, dcmotor_model_cyclic, \
     bouncing_ball_model
-from simtree.blocks import NonLeafBlock
+from simtree.blocks import NonLeafBlock, LeafBlock
 from simtree.blocks.sources import Constant
 from simtree.compiler import Compiler, CompiledSystem
 
@@ -501,3 +501,30 @@ def test_compile_cyclic(model):
     compiler = Compiler(model)
     with pytest.raises(ValueError):
         compiler.compile()
+
+
+def test_missing_input():
+    # Create a system with missing connections for the root output and the
+    # child block input
+    block_a = LeafBlock(num_inputs=1, num_outputs=1)
+    sys = NonLeafBlock(num_inputs=1, num_outputs=1)
+    sys.add_block(block_a)
+
+    compiler = Compiler(sys)
+
+    # Try to compile
+    with pytest.raises(ValueError):
+        compiler.compile()
+
+    # Connect the child input to the root input
+    sys.connect_input(0, block_a, 0)
+
+    # Try again
+    with pytest.raises(ValueError):
+        compiler.compile()
+
+    # Connect the child output to the root output
+    sys.connect_output(block_a, 0, 0)
+
+    # Try again - this time it should succeed
+    compiler.compile()

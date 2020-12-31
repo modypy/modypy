@@ -8,7 +8,8 @@ def find_steady_state(system,
                       x_start=None,
                       u_start=None,
                       method="lm",
-                      solver_options=None):
+                      solver_options=None,
+                      **kwargs):
     """
     Find the constrained steady x_ref of a system.
 
@@ -55,12 +56,19 @@ def find_steady_state(system,
     sol = root((lambda x: _system_function(system, time, x)),
                initial_x,
                method=method,
-               options=solver_options)
+               options=solver_options,
+               **kwargs)
 
     return sol, sol.x[:system.num_states], sol.x[system.num_states:]
 
 
-def system_jacobian(system, time, x_ref, u_ref, step=0.1, order=3):
+def system_jacobian(system,
+                    time,
+                    x_ref,
+                    u_ref,
+                    step=0.1,
+                    order=3,
+                    single_matrix=False):
     """
     Numerically determine the jacobian of the system at the given state and
     input setting.
@@ -78,8 +86,11 @@ def system_jacobian(system, time, x_ref, u_ref, step=0.1, order=3):
     :param u_ref: The input vector for which the jacobian shall be determined
     :param step: The step size for numerical differentiation
     :param order: The order of the interpolating polynomial
-    :return: A, B, C, D - The matrices representing the LTI system at the given
-            state and input.
+    :param single_matrix: Flag indicating whether a single matrix shall be
+        returned. The default is `False`.
+    :return: jac - The jacobian, if `single_matrix` is `True`.
+             A, B, C, D - Otherwise, the matrices representing the LTI system at the given
+        state and input.
     """
 
     if system.num_states + system.num_inputs == 0:
@@ -103,9 +114,9 @@ def system_jacobian(system, time, x_ref, u_ref, step=0.1, order=3):
     for var_ind in range(num_invars):
         x_step = step * np.eye(N=1, M=num_invars, k=var_ind).flatten()
         for k in range(order):
-            x_k = x_ref0 + (k-half_offset) * x_step
-            der = _system_function(system, time, x_k)
-            jac[:, var_ind] += weights[k] * der
+            x_k = x_ref0 + (k - half_offset) * x_step
+            y_k = _system_function(system, time, x_k)
+            jac[:, var_ind] += weights[k] * y_k
         jac[:, var_ind] /= step
 
     return jac[:system.num_states, :system.num_states], \
@@ -127,4 +138,5 @@ def _system_function(system, time, x_ref):
         assert system.num_inputs > 0
         dxdt = np.empty(0)
         outputs = system.output_function(time, x_ref)
-    return np.concatenate((dxdt.flatten(), outputs.flatten()))
+    out =  np.concatenate((dxdt.flatten(), outputs.flatten()))
+    return out

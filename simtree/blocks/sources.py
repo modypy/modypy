@@ -10,9 +10,10 @@ class Constant(LeafBlock):
     """
 
     def __init__(self, value, **kwargs):
-        LeafBlock.__init__(self, **kwargs)
-        self.value = np.asarray(value).flatten()
-        self.num_outputs = self.value.size
+        value = np.asarray(value).flatten()
+
+        LeafBlock.__init__(self, num_outputs=value.size, **kwargs)
+        self.value = value
 
     def output_function(self, t):
         return self.value

@@ -3,6 +3,7 @@ import math
 import numpy as np
 
 from simtree.blocks import LeafBlock, NonLeafBlock
+from simtree.blocks.elmech import DCMotor
 from simtree.blocks.linear import LTISystem, Gain
 from simtree.blocks.sources import Constant, SourceFromCallable
 
@@ -98,17 +99,6 @@ class StaticPropeller(LeafBlock):
         return [self.ct * inputs[1] * self.D ** 4 * inputs[0] ** 2,
                 self.cp * inputs[1] * self.D ** 5 * inputs[0] ** 3,
                 self.cp / (2 * math.pi) * inputs[1] * self.D ** 5 * inputs[0] ** 2]
-
-
-class DCMotor(LTISystem):
-    def __init__(self, Kv, R, L, J, **kwargs):
-        LTISystem.__init__(self,
-                           A=[[0, Kv / J], [-Kv / L, -R / L]],
-                           B=[[0, -1 / J], [1 / L, 0]],
-                           C=[[1 / (2 * math.pi), 0], [0, 1]],
-                           D=[[0, 0], [0, 0]],
-                           feedthrough_inputs=[],
-                           **kwargs)
 
 
 def propeller_model(ct=0.09,
