@@ -15,7 +15,8 @@ class Constant(LeafBlock):
         LeafBlock.__init__(self, num_outputs=value.size, **kwargs)
         self.value = value
 
-    def output_function(self, t):
+    def output_function(self, time):
+        del time  # unused
         return self.value
 
 

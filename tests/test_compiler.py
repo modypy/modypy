@@ -154,7 +154,7 @@ def assert_initial_condition_correct(result):
                                     block.initial_condition)
 
 
-def assert_signal_vector_correct(result, t, state, inputs, signal_vector):
+def assert_signal_vector_correct(result, time, state, inputs, signal_vector):
     """
     Raises an AssertionError if the signal vector as reported by the compilation
     result does not conform to the signal vector as expected given the time,
@@ -186,17 +186,17 @@ def assert_signal_vector_correct(result, t, state, inputs, signal_vector):
 
             # Determine the block outputs
             if block.num_states > 0 and block.num_inputs > 0:
-                block_outputs = block.output_function(t,
+                block_outputs = block.output_function(time,
                                                       block_state,
                                                       block_inputs)
             elif block.num_inputs > 0:
-                block_outputs = block.output_function(t,
+                block_outputs = block.output_function(time,
                                                       block_inputs)
             elif block.num_states > 0:
-                block_outputs = block.output_function(t,
+                block_outputs = block.output_function(time,
                                                       block_state)
             else:
-                block_outputs = block.output_function(t)
+                block_outputs = block.output_function(time)
 
             # Check whether the outputs of the block correspond to the
             # signals in the signals vector
@@ -209,7 +209,7 @@ def assert_signal_vector_correct(result, t, state, inputs, signal_vector):
 
 
 def assert_state_update_vector_correct(result,
-                                       t,
+                                       time,
                                        state,
                                        signal_vector,
                                        state_update_vector):
@@ -240,11 +240,11 @@ def assert_state_update_vector_correct(result,
 
             # Determine the block state update vectors
             if block.num_inputs > 0:
-                block_state_derivative = block.state_update_function(t,
+                block_state_derivative = block.state_update_function(time,
                                                                      block_state,
                                                                      block_inputs)
             else:
-                block_state_derivative = block.state_update_function(t,
+                block_state_derivative = block.state_update_function(time,
                                                                      block_state)
 
             # Check whether the results of the block correspond to the
@@ -274,7 +274,7 @@ def assert_output_vector_correct(result,
                             signal_vector[output_signals])
 
 
-def assert_event_vector_correct(result, t, state, signal_vector, event_vector):
+def assert_event_vector_correct(result, time, state, signal_vector, event_vector):
     """
     Raises an AssertionError if the event vector as reported by the compilation
     result does not conform to the respective elements of the event vector as
@@ -302,17 +302,17 @@ def assert_event_vector_correct(result, t, state, signal_vector, event_vector):
 
             # Determine the block event values
             if block.num_states > 0 and block.num_inputs > 0:
-                block_events = block.event_function(t,
+                block_events = block.event_function(time,
                                                     block_state,
                                                     block_inputs)
             elif block.num_inputs > 0:
-                block_events = block.event_function(t,
+                block_events = block.event_function(time,
                                                     block_inputs)
             elif block.num_states > 0:
-                block_events = block.event_function(t,
+                block_events = block.event_function(time,
                                                     block_state)
             else:
-                block_events = block.event_function(t)
+                block_events = block.event_function(time)
 
             # Check whether the event of the block correspond to the
             # values in the global event vector
@@ -323,7 +323,7 @@ def assert_event_vector_correct(result, t, state, signal_vector, event_vector):
                                                  first_event_index + block.num_events])
 
 
-def assert_event_update_correct(result, t, state, signal_vector, new_state_vector):
+def assert_event_update_correct(result, time, state, signal_vector, new_state_vector):
     """
     Raises an AssertionError if the updated state vector as reported by the
     compilation result does not conform to the respective elements of the
@@ -351,17 +351,17 @@ def assert_event_update_correct(result, t, state, signal_vector, new_state_vecto
 
             # Determine the block event values
             if block.num_states > 0 and block.num_inputs > 0:
-                new_block_state = block.update_state_function(t,
+                new_block_state = block.update_state_function(time,
                                                               block_state,
                                                               block_inputs)
             elif block.num_inputs > 0:
-                new_block_state = block.update_state_function(t,
+                new_block_state = block.update_state_function(time,
                                                               block_inputs)
             elif block.num_states > 0:
-                new_block_state = block.update_state_function(t,
+                new_block_state = block.update_state_function(time,
                                                               block_state)
             else:
-                new_block_state = block.update_state_function(t)
+                new_block_state = block.update_state_function(time)
 
             # Check whether the event of the block correspond to the
             # values in the global event vector
@@ -372,7 +372,7 @@ def assert_event_update_correct(result, t, state, signal_vector, new_state_vecto
                                                      first_state_index + block.num_states])
 
 
-def assert_vectors_correct(result, t, state, inputs):
+def assert_vectors_correct(result, time, state, inputs):
     """
     Raises an AssertionError if and of the vectors as reported by the
     compilation result does not conform to the respective elements of the
@@ -380,37 +380,37 @@ def assert_vectors_correct(result, t, state, inputs):
     """
 
     if result.num_inputs > 0 and result.num_states > 0:
-        signal_vector = result.signal_function(t, state, inputs)
-        state_update_vector = result.state_update_function(t, state, inputs)
-        output_vector = result.output_function(t, state, inputs)
-        event_vector = result.event_function(t, state, inputs)
-        new_state_vector = result.update_state_function(t, state, inputs)
+        signal_vector = result.signal_function(time, state, inputs)
+        state_update_vector = result.state_update_function(time, state, inputs)
+        output_vector = result.output_function(time, state, inputs)
+        event_vector = result.event_function(time, state, inputs)
+        new_state_vector = result.update_state_function(time, state, inputs)
     elif result.num_inputs > 0:
-        signal_vector = result.signal_function(t, inputs)
-        state_update_vector = result.state_update_function(t, inputs)
-        output_vector = result.output_function(t, inputs)
-        event_vector = result.event_function(t, inputs)
-        new_state_vector = result.update_state_function(t, inputs)
+        signal_vector = result.signal_function(time, inputs)
+        state_update_vector = result.state_update_function(time, inputs)
+        output_vector = result.output_function(time, inputs)
+        event_vector = result.event_function(time, inputs)
+        new_state_vector = result.update_state_function(time, inputs)
     elif result.num_states > 0:
-        signal_vector = result.signal_function(t, state)
-        state_update_vector = result.state_update_function(t, state)
-        output_vector = result.output_function(t, state)
-        event_vector = result.event_function(t, state)
-        new_state_vector = result.update_state_function(t, state)
+        signal_vector = result.signal_function(time, state)
+        state_update_vector = result.state_update_function(time, state)
+        output_vector = result.output_function(time, state)
+        event_vector = result.event_function(time, state)
+        new_state_vector = result.update_state_function(time, state)
     else:
-        signal_vector = result.signal_function(t)
-        state_update_vector = result.state_update_function(t)
-        output_vector = result.output_function(t)
-        event_vector = result.event_function(t)
-        new_state_vector = result.update_state_function(t)
+        signal_vector = result.signal_function(time)
+        state_update_vector = result.state_update_function(time)
+        output_vector = result.output_function(time)
+        event_vector = result.event_function(time)
+        new_state_vector = result.update_state_function(time)
 
     assert_signal_vector_correct(result,
-                                 t,
+                                 time,
                                  state,
                                  inputs,
                                  signal_vector)
     assert_state_update_vector_correct(result,
-                                       t,
+                                       time,
                                        state,
                                        signal_vector,
                                        state_update_vector)
@@ -418,12 +418,12 @@ def assert_vectors_correct(result, t, state, inputs):
                                  signal_vector,
                                  output_vector)
     assert_event_vector_correct(result,
-                                t,
+                                time,
                                 state,
                                 signal_vector,
                                 event_vector)
     assert_event_update_correct(result,
-                                t,
+                                time,
                                 state,
                                 signal_vector,
                                 new_state_vector)
@@ -485,11 +485,11 @@ def test_compile(model):
     # equality.
     rng = np_rand.default_rng()
     for test_idx in range(100):
-        t = rng.standard_normal()
+        time = rng.standard_normal()
         state = rng.standard_normal(result.num_states)
         inputs = rng.standard_normal(result.num_inputs)
 
-        assert_vectors_correct(result, t, state, inputs)
+        assert_vectors_correct(result, time, state, inputs)
 
 
 @pytest.mark.parametrize(

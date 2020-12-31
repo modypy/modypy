@@ -1,10 +1,10 @@
-import math
-
-from simtree.blocks.linear import LTISystem
-
 """
 A collection fo electro-mechanical blocks.
 """
+
+import math
+
+from simtree.blocks.linear import LTISystem
 
 
 class DCMotor(LTISystem):
@@ -38,15 +38,15 @@ class DCMotor(LTISystem):
     """
     def __init__(self, Kv, R, L, J, **kwargs):
         LTISystem.__init__(self,
-                           A=[[0, Kv / J],
-                              [-Kv / L, -R / L]],
-                           B=[[0, -1 / J],
-                              [1 / L, 0]],
-                           C=[[1 / (2 * math.pi), 0],
-                              [0, 1],
-                              [0, Kv]],
-                           D=[[0, 0],
-                              [0, 0],
-                              [0, 0]],
+                           system_matrix=[[0, Kv / J],
+                                          [-Kv / L, -R / L]],
+                           input_matrix=[[0, -1 / J],
+                                         [1 / L, 0]],
+                           output_matrix=[[1 / (2 * math.pi), 0],
+                                          [0, 1],
+                                          [0, Kv]],
+                           feed_through_matrix=[[0, 0],
+                                                [0, 0],
+                                                [0, 0]],
                            feedthrough_inputs=[],
                            **kwargs)

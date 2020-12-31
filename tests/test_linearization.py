@@ -18,17 +18,17 @@ def interpolation_order(request):
         (lti_gain(1), None, None),                    # 1 input, 1 output, no x_ref
 
         # 1 input, 1 output, 1 x_ref
-        (first_order_lag(T=1, x0=10), None, None),
-        (first_order_lag(T=1, x0=10), 10, None),
-        (first_order_lag(T=1, x0=10), None, 10),
+        (first_order_lag(time_constant=1, initial_value=10), None, None),
+        (first_order_lag(time_constant=1, initial_value=10), 10, None),
+        (first_order_lag(time_constant=1, initial_value=10), None, 10),
 
         # no input, with x_ref
-        (first_order_lag_no_input(T=1, x0=10), None, None),
+        (first_order_lag_no_input(time_constant=1, initial_value=10), None, None),
 
         # 1 input, 2 states, 1 output
-        (damped_oscillator(m=100, k=1., d=20), None, None),  # critically damped
-        (damped_oscillator(m=100, k=0.5, d=20), None, None),  # overdamped
-        (damped_oscillator(m=100, k=2., d=20), None, None),  # underdamped
+        (damped_oscillator(mass=100, spring_coefficient=1., damping_coefficient=20), None, None),  # critically damped
+        (damped_oscillator(mass=100, spring_coefficient=0.5, damping_coefficient=20), None, None),  # overdamped
+        (damped_oscillator(mass=100, spring_coefficient=2., damping_coefficient=20), None, None),  # underdamped
     ])
 def test_steady_state_linearisation(param, x0, u0, interpolation_order):
     system, sim_time = param
@@ -62,10 +62,10 @@ def test_steady_state_linearisation(param, x0, u0, interpolation_order):
 
     # Linearize the system
     A, B, C, D = system_jacobian(system, 0, x0, u0, order=interpolation_order)
-    npt.assert_almost_equal(A, system.A)
-    npt.assert_almost_equal(B, system.B)
-    npt.assert_almost_equal(C, system.C)
-    npt.assert_almost_equal(D, system.D)
+    npt.assert_almost_equal(A, system.system_matrix)
+    npt.assert_almost_equal(B, system.input_matrix)
+    npt.assert_almost_equal(C, system.output_matrix)
+    npt.assert_almost_equal(D, system.feed_through_matrix)
 
 
 def test_output_only():

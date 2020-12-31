@@ -8,35 +8,40 @@ from simtree.blocks.linear import LTISystem, Gain
 from simtree.blocks.sources import Constant, SourceFromCallable
 
 
-def first_order_lag(T=1, x0=10):
-    sys = LTISystem(A=-1 / T,
-                    B=1,
-                    C=1,
-                    D=0,
-                    initial_condition=[x0])
+def first_order_lag(time_constant=1, initial_value=10):
+    sys = LTISystem(system_matrix=-1 / time_constant,
+                    input_matrix=1,
+                    output_matrix=1,
+                    feed_through_matrix=0,
+                    initial_condition=[initial_value])
 
-    return sys, 3 * T
-
-
-def first_order_lag_no_input(T=1, x0=10):
-    sys = LTISystem(A=-1 / T,
-                    B=[],
-                    C=1,
-                    D=[],
-                    initial_condition=[x0])
-
-    return sys, 3 * T
+    return sys, 3 * time_constant
 
 
-def damped_oscillator(m=100., d=50., k=1., x0=10.):
-    osc = LTISystem(A=[[0, 1], [-k / m, -d / m]],
-                    B=[[-1 / m], [0]],
-                    C=[[1, 0]],
-                    D=np.zeros((1, 1)),
-                    initial_condition=[x0, 0],
+def first_order_lag_no_input(time_constant=1, initial_value=10):
+    sys = LTISystem(system_matrix=-1 / time_constant,
+                    input_matrix=[],
+                    output_matrix=1,
+                    feed_through_matrix=[],
+                    initial_condition=[initial_value])
+
+    return sys, 3 * time_constant
+
+
+def damped_oscillator(mass=100.,
+                      damping_coefficient=50.,
+                      spring_coefficient=1.,
+                      initial_value=10.):
+    osc = LTISystem(system_matrix=[[0, 1],
+                                   [-spring_coefficient / mass,
+                                    -damping_coefficient / mass]],
+                    input_matrix=[[-1 / mass], [0]],
+                    output_matrix=[[1, 0]],
+                    feed_through_matrix=np.zeros((1, 1)),
+                    initial_condition=[initial_value, 0],
                     feedthrough_inputs=[])
-    T = 2 * m / d
-    return osc, 3 * T
+    time_constant = 2 * mass / damping_coefficient
+    return osc, 3 * time_constant
 
 
 def damped_oscillator_with_events(*args, **kwargs):
@@ -61,7 +66,7 @@ def oscillator_with_sine_input(omega, *args, **kwargs):
     return sys, sim_time
 
 
-def sine_input_with_gain(omega, *args, **kwargs):
+def sine_input_with_gain(omega):
     gain = Gain([[1.0]], num_events=1)
     gain.event_function = (lambda t, inputs: [inputs[0]])
     sin_scaled = (lambda t: np.sin(omega * t))
@@ -73,10 +78,10 @@ def sine_input_with_gain(omega, *args, **kwargs):
 
 
 def lti_gain(gain):
-    sys = LTISystem(A=np.empty((0, 0)),
-                    B=np.empty((0, 1)),
-                    C=np.empty((1, 0)),
-                    D=gain)
+    sys = LTISystem(system_matrix=np.empty((0, 0)),
+                    input_matrix=np.empty((0, 1)),
+                    output_matrix=np.empty((1, 0)),
+                    feed_through_matrix=gain)
     return sys, 10.0
 
 
@@ -89,22 +94,26 @@ def sine_source(omega):
 
 
 class StaticPropeller(LeafBlock):
-    def __init__(self, ct, cp, D, **kwargs):
+    def __init__(self, thrust_coefficient, power_coefficient, diameter, **kwargs):
         LeafBlock.__init__(self, num_inputs=2, num_outputs=3, **kwargs)
-        self.cp = cp
-        self.ct = ct
-        self.D = D
+        self.thrust_coefficient = thrust_coefficient
+        self.power_coefficient = power_coefficient
+        self.diameter = diameter
 
-    def output_function(self, t, inputs):
-        return [self.ct * inputs[1] * self.D ** 4 * inputs[0] ** 2,
-                self.cp * inputs[1] * self.D ** 5 * inputs[0] ** 3,
-                self.cp / (2 * math.pi) * inputs[1] * self.D ** 5 * inputs[0] ** 2]
+    def output_function(self, time, inputs):
+        del time  # unused
+        return [self.thrust_coefficient * inputs[1] * self.diameter ** 4 * inputs[0] ** 2,
+                self.power_coefficient * inputs[1] * self.diameter ** 5 * inputs[0] ** 3,
+                self.power_coefficient / (2 * math.pi) * inputs[1] * self.diameter ** 5 * inputs[0] ** 2]
 
 
-def propeller_model(ct=0.09,
-                    cp=0.04,
-                    D=8 * 25.4E-3):
-    return StaticPropeller(ct, cp, D, name="static_propeller")
+def propeller_model(thrust_coefficient=0.09,
+                    power_coefficient=0.04,
+                    diameter=8 * 25.4E-3):
+    return StaticPropeller(thrust_coefficient,
+                           power_coefficient,
+                           diameter,
+                           name="static_propeller")
 
 
 def engine_model(Kv=789.E-6,

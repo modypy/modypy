@@ -38,7 +38,7 @@ class SimulationResult:
         self.current_idx = 0
 
     @property
-    def t(self):
+    def time(self):
         return self._t[0:self.current_idx]
 
     @property
@@ -53,14 +53,14 @@ class SimulationResult:
     def events(self):
         return self._events[0:self.current_idx]
 
-    def append(self, t, state, output, event=None):
+    def append(self, time, state, output, event=None):
         """
         Append a sample to the result.
         """
 
         if self.current_idx >= self._t.size:
             self.extend_space()
-        self._t[self.current_idx] = t
+        self._t[self.current_idx] = time
         self._state[self.current_idx] = state
         self._output[self.current_idx] = output
         if event is not None:
@@ -84,12 +84,12 @@ class Simulator:
 
     Dynamic systems to be simulated using this class need to support a set of functions:
 
-    block.state_update_function(t,state,outputs)
+    block.state_update_function(time,state,outputs)
        Determine the derivative of the state vector of the block, given
-       the time `t`, state `state` and output vector `outputs`.
+       the time `time`, state `state` and output vector `outputs`.
 
-    block.output_function(t,state)
-       Determine the value of the outputs of the block given time `t` and
+    block.output_function(time,state)
+       Determine the value of the outputs of the block given time `time` and
        state `state`.
 
     block.initial_condition
@@ -98,7 +98,7 @@ class Simulator:
 
     def __init__(self,
                  system,
-                 t0, tbound,
+                 t0, t_bound,
                  initial_condition=None,
                  input_callable=None,
                  integrator_constructor=DEFAULT_INTEGRATOR,
@@ -113,7 +113,7 @@ class Simulator:
             using `simtree.compiler.Compiler`.
         t0: number
             The start time of the simulation.
-        tbound: number
+        t_bound: number
             The end time of the simulation. This also limits the maximum time
             until which stepping is possible.
         initial_condition: list-like of numbers, optional
@@ -147,7 +147,7 @@ class Simulator:
         """
 
         self.system = system
-        self.tbound = tbound
+        self.t_bound = t_bound
         self.input_callable = input_callable
         self.integrator_constructor = integrator_constructor
         self.integrator_options = integrator_options
@@ -164,16 +164,16 @@ class Simulator:
             self.integrator_constructor(self.state_derivative_function,
                                         t0,
                                         initial_condition,
-                                        tbound,
+                                        t_bound,
                                         **self.integrator_options)
 
         # Store the initial state
-        self.result.append(self.t,
+        self.result.append(self.time,
                            self.state,
-                           self.output_function(self.t, self.state))
+                           self.output_function(self.time, self.state))
 
     @property
-    def t(self):
+    def time(self):
         """The current simulation time."""
 
         return self.integrator.t
@@ -197,60 +197,60 @@ class Simulator:
 
         return self.integrator.status == "running"
 
-    def input_function(self, t):
+    def input_function(self, time):
         """Determine the inputs for the block at the given time."""
 
         if self.system.num_inputs > 0:
             if self.input_callable is None:
                 return np.zeros(self.system.num_inputs)
-            return self.input_callable(t)
+            return self.input_callable(time)
         return np.empty(0)
 
-    def state_derivative_function(self, t, state):
+    def state_derivative_function(self, time, state):
         """Combined state derivative function used for the integrator."""
 
         if self.system.num_states > 0:
             if self.system.num_inputs > 0:
-                inputs = self.input_function(t)
-                return self.system.state_update_function(t, state, inputs)
-            return self.system.state_update_function(t, state)
+                inputs = self.input_function(time)
+                return self.system.state_update_function(time, state, inputs)
+            return self.system.state_update_function(time, state)
         return []
 
-    def output_function(self, t, states=None):
+    def output_function(self, time, states=None):
         """Combined output vector for the block"""
-        inputs = self.input_function(t)
+        inputs = self.input_function(time)
         if self.system.num_inputs > 0 and self.system.num_states > 0:
-            return self.system.output_function(t, states, inputs)
+            return self.system.output_function(time, states, inputs)
         if self.system.num_inputs > 0:
-            return self.system.output_function(t, inputs)
+            return self.system.output_function(time, inputs)
         if self.system.num_states > 0:
-            return self.system.output_function(t, states)
-        return self.system.output_function(t)
+            return self.system.output_function(time, states)
+        return self.system.output_function(time)
 
-    def event_function(self, t, states=None):
+    def event_function(self, time, states=None):
         """Combined event vector for the block"""
-        inputs = self.input_function(t)
+        inputs = self.input_function(time)
         if self.system.num_inputs > 0 and self.system.num_states > 0:
-            return self.system.event_function(t, states, inputs)
+            return self.system.event_function(time, states, inputs)
         if self.system.num_inputs > 0:
-            return self.system.event_function(t, inputs)
+            return self.system.event_function(time, inputs)
         if self.system.num_states > 0:
-            return self.system.event_function(t, states)
-        return self.system.event_function(t)
+            return self.system.event_function(time, states)
+        return self.system.event_function(time)
 
     def step(self):
         """Execute a single simulation step."""
 
         # Save the last event values
-        old_event_values = self.event_function(self.t, self.state)
-        last_t = self.t
+        old_event_values = self.event_function(self.time, self.state)
+        last_t = self.time
         message = self.integrator.step()
         if message is not None:
             # The last integration step failed
             return message
 
         # Check for changes in event functions
-        new_event_values = self.event_function(self.t, self.state)
+        new_event_values = self.event_function(self.time, self.state)
         old_event_signs = np.sign(old_event_values)
         new_event_signs = np.sign(new_event_values)
         events_occurred = np.flatnonzero((old_event_signs != new_event_signs))
@@ -263,26 +263,27 @@ class Simulator:
             interpolator = self.integrator.dense_output()
 
             # Function to interpolate the event function across the last integration step
-            def event_interpolator(t):
-                state = interpolator(t)
-                return self.event_function(t, state)
+            def event_interpolator(time):
+                state = interpolator(time)
+                return self.event_function(time, state)
 
             # Go through all the events and find their exact time of occurrence
-            tcross = []
+            occurrence_times = []
             for eventidx in events_occurred:
-                tc = scipy.optimize.brentq(f=(lambda t: event_interpolator(t)[eventidx]),
-                                           a=last_t,
-                                           b=self.t)
-                assert last_t <= tc <= self.t
-                tcross.append((eventidx, tc))
+                t_occ = scipy.optimize.brentq(
+                    f=(lambda t: event_interpolator(t)[eventidx]),
+                    a=last_t,
+                    b=self.time)
+                assert last_t <= t_occ <= self.time
+                occurrence_times.append((eventidx, t_occ))
 
             # Sort the events by increasing time
-            tcross.sort(key=(lambda entry: entry[1]))
+            occurrence_times.sort(key=(lambda entry: entry[1]))
 
             # Process only the first event.
             # We determine the state at the time of the event using the interpolator
             # and the outputs using the block output function.
-            event_idx, event_t = tcross[0]
+            event_idx, event_t = occurrence_times[0]
             event_state = interpolator(event_t)
             event_outputs = self.output_function(event_t, event_state)
 
@@ -291,7 +292,8 @@ class Simulator:
 
             # We continue right of the event in order to avoid finding the same
             # event in the next step again.
-            # FIXME: We might want to try to find a time where the event value is safely on the other side
+            # FIXME: We might want to try to find a time where the event value
+            #       is safely on the other side
             next_t = event_t+self.rootfinder_options["xtol"]/2
             next_state = interpolator(next_t)
             next_inputs = self.input_function(next_t)
@@ -312,14 +314,14 @@ class Simulator:
                 self.integrator_constructor(self.state_derivative_function,
                                             next_t,
                                             new_state,
-                                            self.tbound,
+                                            self.t_bound,
                                             **self.integrator_options)
         else:
             # No events to handle
             # Add the current status to the result collection
-            self.result.append(self.t,
+            self.result.append(self.time,
                                self.state,
-                               self.output_function(self.t, self.state))
+                               self.output_function(self.time, self.state))
         return None
 
     def run(self):

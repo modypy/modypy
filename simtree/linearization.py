@@ -89,7 +89,11 @@ def system_jacobian(system,
     :param single_matrix: Flag indicating whether a single matrix shall be
         returned. The default is `False`.
     :return: jac - The jacobian, if `single_matrix` is `True`.
-             A, B, C, D - Otherwise, the matrices representing the LTI system at the given
+             system_matrix,
+                input_matrix,
+                output_matrix,
+                feed_through_matrix - Otherwise, the matrices representing the
+                    LTI system at the given
         state and input.
     """
 
@@ -119,6 +123,8 @@ def system_jacobian(system,
             jac[:, var_ind] += weights[k] * y_k
         jac[:, var_ind] /= step
 
+    if single_matrix:
+        return jac
     return jac[:system.num_states, :system.num_states], \
         jac[:system.num_states, system.num_states:], \
         jac[system.num_states:, :system.num_states], \

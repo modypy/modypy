@@ -89,7 +89,7 @@ class CompiledSystem:
             self.initial_condition[first_state_index:first_state_index + block.num_states] = \
                 block.initial_condition
 
-    def signal_function(self, t, *args):
+    def signal_function(self, time, *args):
         """
         Calculate the value of all signals in the block.
 
@@ -137,16 +137,16 @@ class CompiledSystem:
 
             if block.num_inputs > 0 and block.num_states > 0:
                 # This block has inputs and states
-                block_outputs = block.output_function(t, block_states, block_inputs)
+                block_outputs = block.output_function(time, block_states, block_inputs)
             elif block.num_states > 0:
                 # This block has states, but no inputs
-                block_outputs = block.output_function(t, block_states)
+                block_outputs = block.output_function(time, block_states)
             elif block.num_inputs > 0:
                 # This block has inputs, but no states
-                block_outputs = block.output_function(t, block_inputs)
+                block_outputs = block.output_function(time, block_inputs)
             else:
                 # This block neither has inputs nor states
-                block_outputs = block.output_function(t)
+                block_outputs = block.output_function(time)
 
             # Write the output of the block into the respective signals
             first_signal = self.first_signal_by_leaf_index[leaf_block_index]
@@ -154,7 +154,7 @@ class CompiledSystem:
 
         return signals
 
-    def output_function(self, t, *args):
+    def output_function(self, time, *args):
         """
         Output function for the root block.
 
@@ -164,7 +164,7 @@ class CompiledSystem:
         if self.num_outputs == 0:
             return []
 
-        signals = self.signal_function(t, *args)
+        signals = self.signal_function(time, *args)
 
         # Determine the output signals for the root block
         root_idx = self.block_index[self.root]
@@ -176,7 +176,7 @@ class CompiledSystem:
 
         return outputs
 
-    def state_update_function(self, t, *args):
+    def state_update_function(self, time, *args):
         """
         Combined state update function of the compiled block.
 
@@ -189,7 +189,7 @@ class CompiledSystem:
             states = []
 
         # Calculate the values of all signals
-        signals = self.signal_function(t, *args)
+        signals = self.signal_function(time, *args)
         # Calculate the value of the state derivatives
         state_derivative = np.zeros(self.num_states)
         for block, leaf_block_index in self.leaf_block_index.items():
@@ -210,11 +210,11 @@ class CompiledSystem:
                 if block.num_inputs > 0:
                     # This block has inputs
                     block_state_derivative = \
-                        block.state_update_function(t, block_states, block_inputs)
+                        block.state_update_function(time, block_states, block_inputs)
                 else:
                     # This block has no inputs
                     block_state_derivative = \
-                        block.state_update_function(t, block_states)
+                        block.state_update_function(time, block_states)
 
                 # Write the state derivative of the block into the respective
                 # elements of the state derivative vector
@@ -223,7 +223,7 @@ class CompiledSystem:
 
         return state_derivative
 
-    def event_function(self, t, *args):
+    def event_function(self, time, *args):
         """
         Combined event function for the compiled block.
 
@@ -236,7 +236,7 @@ class CompiledSystem:
             states = []
 
         # Calculate the values of all signals
-        signals = self.signal_function(t, *args)
+        signals = self.signal_function(time, *args)
 
         # Determine the value of the event vector
         event_values = np.zeros(self.num_events)
@@ -258,16 +258,16 @@ class CompiledSystem:
                 if block.num_inputs > 0 and block.num_states > 0:
                     # This block has inputs and states
                     block_event_values = \
-                        block.event_function(t, block_states, block_inputs)
+                        block.event_function(time, block_states, block_inputs)
                 elif block.num_states > 0:
                     # This block has states, but no inputs
-                    block_event_values = block.event_function(t, block_states)
+                    block_event_values = block.event_function(time, block_states)
                 elif block.num_inputs > 0:
                     # This block has inputs, but no states
-                    block_event_values = block.event_function(t, block_inputs)
+                    block_event_values = block.event_function(time, block_inputs)
                 else:
                     # This block neither has inputs nor states
-                    block_event_values = block.event_function(t)
+                    block_event_values = block.event_function(time)
 
                 # Write the event values of the block to the global event vector
                 first_event = self.first_event_by_leaf_index[leaf_block_index]
@@ -276,7 +276,7 @@ class CompiledSystem:
 
         return event_values
 
-    def update_state_function(self, t, *args):
+    def update_state_function(self, time, *args):
         """
         Combined event handling function for the compiled block.
 
@@ -289,7 +289,7 @@ class CompiledSystem:
             states = []
 
         # Calculate the values of all signals
-        signals = self.signal_function(t, *args)
+        signals = self.signal_function(time, *args)
 
         # Determine the new state vector
         new_state = np.zeros(self.num_states)
@@ -311,11 +311,11 @@ class CompiledSystem:
                 if block.num_inputs > 0:
                     # This block has inputs and states
                     new_block_state = \
-                        block.update_state_function(t, block_states, block_inputs)
+                        block.update_state_function(time, block_states, block_inputs)
                 else:
                     # This block has states, but no inputs
                     new_block_state = \
-                        block.update_state_function(t, block_states)
+                        block.update_state_function(time, block_states)
 
                 # Write the new state into the global state vector
                 new_state[first_state:first_state + block.num_states] = \
@@ -353,9 +353,9 @@ class Compiler:
         # All inputs and the outputs of non-leaf blocks are then mapped to
         # signals.
         self.first_state_by_leaf_index = [0] + \
-                                         list(itertools.accumulate([block.num_states for block in self.leaf_blocks]))
+            list(itertools.accumulate([block.num_states for block in self.leaf_blocks]))
         self.first_event_by_leaf_index = [0] + \
-                                         list(itertools.accumulate([block.num_events for block in self.leaf_blocks]))
+            list(itertools.accumulate([block.num_events for block in self.leaf_blocks]))
         # We need to allocate signals for the inputs of the root block
         self.first_signal_by_leaf_index = \
             list(itertools.accumulate([self.root.num_inputs] +
@@ -363,9 +363,9 @@ class Compiler:
 
         # Allocate input- and output-to-signal mappings for all blocks.
         self.first_input_by_block_index = [0] + \
-                                          list(itertools.accumulate([block.num_inputs for block in self.blocks]))
+            list(itertools.accumulate([block.num_inputs for block in self.blocks]))
         self.first_output_by_block_index = [0] + \
-                                           list(itertools.accumulate([block.num_outputs for block in self.blocks]))
+            list(itertools.accumulate([block.num_outputs for block in self.blocks]))
 
         # Set up input and output vector maps for all blocks.
         # For each input (adjusted by self.first_input_by_block_index)
