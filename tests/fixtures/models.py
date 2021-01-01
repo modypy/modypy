@@ -3,6 +3,7 @@ import math
 import numpy as np
 
 from simtree.blocks import LeafBlock, NonLeafBlock
+from simtree.blocks.aerodyn import Propeller
 from simtree.blocks.elmech import DCMotor
 from simtree.blocks.linear import LTISystem, Gain
 from simtree.blocks.sources import Constant, SourceFromCallable
@@ -93,27 +94,13 @@ def sine_source(omega):
     return sin_input, 3*2*math.pi/omega
 
 
-class StaticPropeller(LeafBlock):
-    def __init__(self, thrust_coefficient, power_coefficient, diameter, **kwargs):
-        LeafBlock.__init__(self, num_inputs=2, num_outputs=3, **kwargs)
-        self.thrust_coefficient = thrust_coefficient
-        self.power_coefficient = power_coefficient
-        self.diameter = diameter
-
-    def output_function(self, time, inputs):
-        del time  # unused
-        return [self.thrust_coefficient * inputs[1] * self.diameter ** 4 * inputs[0] ** 2,
-                self.power_coefficient * inputs[1] * self.diameter ** 5 * inputs[0] ** 3,
-                self.power_coefficient / (2 * math.pi) * inputs[1] * self.diameter ** 5 * inputs[0] ** 2]
-
-
 def propeller_model(thrust_coefficient=0.09,
                     power_coefficient=0.04,
                     diameter=8 * 25.4E-3):
-    return StaticPropeller(thrust_coefficient,
-                           power_coefficient,
-                           diameter,
-                           name="static_propeller")
+    return Propeller(thrust_coeff=thrust_coefficient,
+                     power_coeff=power_coefficient,
+                     diameter=diameter,
+                     name="static_propeller")
 
 
 def engine_model(Kv=789.E-6,

@@ -56,8 +56,8 @@ class Propeller(LeafBlock):
         rho = inputs[1]
 
         thrust = self.thrust_coeff(n) * rho * self.diameter**4 * n**2
+        torque = self.power_coeff(n)/(2*math.pi) * rho * self.diameter**5 * n**2
         power = self.power_coeff(n) * rho * self.diameter**5 * n**3
-        torque = np.sign(n) * power/(2*math.pi*n)
 
         return np.c_[thrust, torque, power]
 
@@ -92,19 +92,14 @@ class Thruster(LeafBlock):
     thruster turns clockwise, torque acts counter-clockwise.
     """
     def __init__(self,
-                 vector=None,
-                 arm=None,
+                 vector,
+                 arm,
                  direction=1,
                  **kwargs):
         LeafBlock.__init__(self,
                            num_inputs=2,
                            num_outputs=6,
                            **kwargs)
-        if vector is None:
-            vector = np.c_[0, 0, -1]
-        if arm is None:
-            arm = np.zeros(3)
-
         self.vector = vector
         self.arm = arm
         self.direction = direction

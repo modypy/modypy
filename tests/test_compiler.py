@@ -1,4 +1,5 @@
 import itertools
+import numpy as np
 import numpy.testing as npt
 import numpy.random as np_rand
 import pytest
@@ -197,6 +198,7 @@ def assert_signal_vector_correct(result, time, state, inputs, signal_vector):
                                                       block_state)
             else:
                 block_outputs = block.output_function(time)
+            block_outputs = np.asarray(block_outputs).flatten()
 
             # Check whether the outputs of the block correspond to the
             # signals in the signals vector

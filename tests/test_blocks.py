@@ -1,8 +1,5 @@
 import pytest
-import numpy as np
-import numpy.testing as npt
 from simtree.blocks import LeafBlock, NonLeafBlock
-from simtree.blocks.linear import Sum
 
 def test_block_interface():
     child_a = LeafBlock(num_inputs=3,
@@ -104,21 +101,3 @@ def test_block_interface():
             (child_b, 1, 1),
             (child_b, 2, 2)}
 
-
-@pytest.mark.parametrize(
-    "block, inputs, expected_output",
-    [
-        (Sum(channel_weights=[1, 1], channel_dim=1),
-         [1, -1],
-         [0]),
-        (Sum(channel_weights=[1, 2], channel_dim=2),
-         [1, 2, 3, 4],
-         [7, 10]),
-        (Sum(channel_weights=[1, 2, 3], channel_dim=3),
-         np.r_[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-         [30, 36, 42])
-    ]
-)
-def test_sum_block(block, inputs, expected_output):
-    actual_output = block.output_function(0, inputs)
-    npt.assert_almost_equal(actual_output, expected_output)
