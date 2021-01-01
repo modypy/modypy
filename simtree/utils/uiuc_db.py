@@ -26,7 +26,6 @@ def load_static_propeller(path,
     interp_options = interp_options or {}
 
     full_url = parse.urljoin(UIUC_PROP_DB, path)
-    print(full_url)
 
     with request.urlopen(full_url, **urlopen_options) as req:
         data = np.loadtxt(req, skiprows=1)
