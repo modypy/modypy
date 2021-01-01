@@ -12,8 +12,13 @@ from simtree.compiler import Compiler
 from simtree.linearization import find_steady_state, system_jacobian
 from simtree.utils.uiuc_db import load_static_propeller
 
+
 class Engine(NonLeafBlock):
-    def __init__(self, ct, cp, D, Kv, R, L, J, direction, vector, arm, **kwargs):
+    def __init__(self,
+                 ct, cp, diameter,
+                 Kv, R, L, J,
+                 direction, vector, arm,
+                 **kwargs):
         NonLeafBlock.__init__(self,
                               num_inputs=2,
                               num_outputs=6,
@@ -21,7 +26,7 @@ class Engine(NonLeafBlock):
         self.dcmotor = DCMotor(Kv, R, L, J, name="dcmotor")
         self.propeller = Propeller(thrust_coeff=ct,
                                    power_coeff=cp,
-                                   diameter=D,
+                                   diameter=diameter,
                                    name="propeller")
         self.thruster = Thruster(direction=direction,
                                  vector=vector,
@@ -48,7 +53,7 @@ class Engine(NonLeafBlock):
 
 thrust_coeff, torque_coeff = \
     load_static_propeller('volume-1/data/apcsf_8x3.8_static_2777rd.txt',
-                          interp_options={"bounds_error":False,
+                          interp_options={"bounds_error": False,
                                           "fill_value": "extrapolate"})
 
 parameters = {
@@ -61,21 +66,21 @@ parameters = {
     'D': 8*25.4E-3
 }
 
-rx = 0.25
-ry = 0.25
+RADIUS_X = 0.25
+RADIUS_Y = 0.25
 
 engines = [
     Engine(name="engine1",
-           vector=np.c_[0, 0, -1], arm=np.c_[+rx, +ry, 0], direction=1,
+           vector=np.c_[0, 0, -1], arm=np.c_[+RADIUS_X, +RADIUS_Y, 0], direction=1,
            **parameters),
     Engine(name="engine2",
-           vector=np.c_[0, 0, -1], arm=np.c_[+rx, -ry, 0], direction=-1,
+           vector=np.c_[0, 0, -1], arm=np.c_[+RADIUS_X, -RADIUS_Y, 0], direction=-1,
            **parameters),
     Engine(name="engine3",
-           vector=np.c_[0, 0, -1], arm=np.c_[-rx, -ry, 0], direction=1,
+           vector=np.c_[0, 0, -1], arm=np.c_[-RADIUS_X, -RADIUS_Y, 0], direction=1,
            **parameters),
     Engine(name="engine4",
-           vector=np.c_[0, 0, -1], arm=np.c_[-rx, +ry, 0], direction=-1,
+           vector=np.c_[0, 0, -1], arm=np.c_[-RADIUS_X, +RADIUS_Y, 0], direction=-1,
            **parameters),
 ]
 
@@ -103,7 +108,8 @@ for idx, engine in zip(itertools.count(), engines):
     # Connect the torque output to the thrust sum
     frame.connect(engine, range(3, 6), torque_sum, range(3*idx, 3*idx+3))
 # Connect the gravity to the thrust sum
-frame.connect(gravity_source, range(3), thrust_sum, range(3*len(engines), 3*len(engines)+3))
+frame.connect(gravity_source, range(3), thrust_sum,
+              range(3*len(engines), 3*len(engines)+3))
 # Connect the thrust and torque sums to the outputs
 frame.connect_output(thrust_sum, range(3), range(3))
 frame.connect_output(torque_sum, range(3), range(3, 6))
