@@ -8,7 +8,7 @@ from fixtures.models import \
     bouncing_ball_model
 from simtree.blocks import NonLeafBlock, LeafBlock
 from simtree.blocks.sources import Constant
-from simtree.compiler import Compiler, CompiledSystem
+from simtree.compiler import compile, CompiledSystem
 
 
 def assert_input_connections_correct(block: NonLeafBlock,
@@ -449,8 +449,7 @@ def assert_vectors_correct(result, time, state, inputs):
     ]
 )
 def test_compile(model):
-    compiler = Compiler(model)
-    result = compiler.compile()
+    result = compile(model)
 
     # Check counts of internal states, events and signals
     total_states = \
@@ -500,9 +499,8 @@ def test_compile(model):
 )
 def test_compile_cyclic(model):
     # Enforce a cyclic dependency
-    compiler = Compiler(model)
     with pytest.raises(ValueError):
-        compiler.compile()
+        compile(model)
 
 
 def test_missing_input():
@@ -512,21 +510,19 @@ def test_missing_input():
     sys = NonLeafBlock(num_inputs=1, num_outputs=1)
     sys.add_block(block_a)
 
-    compiler = Compiler(sys)
-
     # Try to compile
     with pytest.raises(ValueError):
-        compiler.compile()
+        compile(sys)
 
     # Connect the child input to the root input
     sys.connect_input(0, block_a, 0)
 
     # Try again
     with pytest.raises(ValueError):
-        compiler.compile()
+        compile(sys)
 
     # Connect the child output to the root output
     sys.connect_output(block_a, 0, 0)
 
     # Try again - this time it should succeed
-    compiler.compile()
+    compile(sys)

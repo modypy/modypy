@@ -10,7 +10,7 @@ from simtree.blocks.elmech import DCMotor
 from simtree.blocks.linear import Sum
 from simtree.blocks.sources import Constant
 from simtree.blocks.rigid import RigidBody6DOFFlatEarth, DirectCosineToEuler
-from simtree.compiler import Compiler
+from simtree.compiler import compile
 from simtree.linearization import find_steady_state
 from simtree.simulator import Simulator
 
@@ -82,8 +82,7 @@ def test_aerodyn_blocks(propeller):
     model.connect_output(thrust_sum, range(3), range(3))
 
     # Compile the model
-    compiler = Compiler(model)
-    compiled_model = compiler.compile()
+    compiled_model = compile(model)
 
     # Define the initial state and input
     x_initial = np.r_[1, 0]
@@ -128,8 +127,7 @@ def test_rigidbody_movement():
     sys.connect_output(dcm_to_euler, range(3), range(3))
     sys.connect_output(rb_6dof, range(3, 6), range(3, 6))
 
-    compiler = Compiler(sys)
-    sys_compiled = compiler.compile()
+    sys_compiled = compile(sys)
 
     sim = Simulator(sys_compiled, 0, 30.0)
     message = sim.run()
@@ -157,8 +155,7 @@ def test_rigidbody_defaults():
     sys.connect_output(dcm_to_euler, range(3), range(3))
     sys.connect_output(rb_6dof, range(3, 6), range(3, 6))
 
-    compiler = Compiler(sys)
-    sys_compiled = compiler.compile()
+    sys_compiled = compile(sys)
 
     sim = Simulator(sys_compiled, 0, 30.0)
     message = sim.run()

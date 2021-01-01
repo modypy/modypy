@@ -8,7 +8,7 @@ from simtree.blocks.aerodyn import Propeller, Thruster
 from simtree.blocks.elmech import DCMotor
 from simtree.blocks.sources import Constant
 from simtree.blocks.linear import Sum
-from simtree.compiler import Compiler
+from simtree.compiler import compile
 from simtree.linearization import find_steady_state, system_jacobian
 from simtree.utils.uiuc_db import load_static_propeller
 
@@ -115,8 +115,7 @@ frame.connect_output(thrust_sum, range(3), range(3))
 frame.connect_output(torque_sum, range(3), range(3, 6))
 
 # Compile the frame
-compiler = Compiler(frame)
-compiled_system = compiler.compile()
+compiled_system = compile(frame)
 
 # solution: omega=855, i=66.77, v=3.565
 

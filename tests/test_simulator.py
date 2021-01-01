@@ -13,7 +13,7 @@ from fixtures.models import \
     sine_source
 
 from simtree.blocks.linear import LTISystem
-from simtree.compiler import Compiler
+from simtree.compiler import compile
 from simtree.simulator import Simulator
 
 
@@ -42,8 +42,7 @@ def test_lti_simulation(lti_system_with_reference):
     sys, ref_system, ref_time = lti_system_with_reference
 
     # Compile and run the block
-    compiler = Compiler(sys)
-    sys_compiled = compiler.compile()
+    sys_compiled = compile(sys)
 
     simulator = Simulator(sys_compiled, t0=0, t_bound=ref_time,
                           initial_condition=sys_compiled.initial_condition)
@@ -92,8 +91,7 @@ def test_lti_simulation_failure(lti_system_with_reference):
     del ref_function  # unused
 
     # Compile and run the block
-    compiler = Compiler(sys)
-    sys_compiled = compiler.compile()
+    sys_compiled = compile(sys)
 
     simulator = Simulator(sys_compiled,
                           t0=0,
@@ -124,8 +122,7 @@ def test_events(params):
     del sim_time  # unused
 
     # Compile and run the block
-    compiler = Compiler(sys)
-    sys_compiled = compiler.compile()
+    sys_compiled = compile(sys)
 
     simulator = Simulator(sys_compiled, t0=0, t_bound=10.0)
     message = simulator.run()
@@ -170,8 +167,7 @@ def test_input_function(system, input_function):
     sysroot, sim_time = system
 
     # Compile and run the block
-    compiler = Compiler(sysroot)
-    sys_compiled = compiler.compile()
+    sys_compiled = compile(sysroot)
 
     simulator = Simulator(sys_compiled, t0=0, t_bound=sim_time, input_callable=input_function)
     message = simulator.run()

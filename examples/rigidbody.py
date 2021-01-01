@@ -3,7 +3,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
-from simtree.compiler import Compiler
+from simtree.compiler import compile
 from simtree.blocks.sources import Constant
 from simtree.blocks.rigid import RigidBody6DOFFlatEarth, DirectCosineToEuler
 from simtree.blocks import NonLeafBlock
@@ -33,8 +33,7 @@ sys.connect(rb_6dof, range(6, 15), dcm_to_euler, range(9))
 sys.connect_output(dcm_to_euler, range(3), range(3))
 sys.connect_output(rb_6dof, range(3, 6), range(3, 6))
 
-compiler = Compiler(sys)
-sys_compiled = compiler.compile()
+sys_compiled = compile(sys)
 
 sim = Simulator(sys_compiled, 0, 120.0)
 message = sim.run()

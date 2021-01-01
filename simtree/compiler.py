@@ -640,3 +640,10 @@ class Compiler:
             # Ignore this, the root is not a non-leaf node
             pass
         yield root
+
+
+def compile(block):
+    """Compile a block"""
+
+    compiler = Compiler(block)
+    return compiler.compile()

@@ -1,5 +1,5 @@
 from simtree.blocks import LeafBlock
-from simtree.compiler import Compiler
+from simtree.compiler import compile
 from simtree.simulator import Simulator, DEFAULT_INTEGRATOR_OPTIONS
 import matplotlib.pyplot as plt
 
@@ -36,8 +36,7 @@ DEFAULT_INTEGRATOR_OPTIONS['max_step'] = 0.05
 
 sys = BouncingBall(initial_condition=[0, 10, 1, 0])
 
-compiler = Compiler(sys)
-sys_compiled = compiler.compile()
+sys_compiled = compile(sys)
 
 simulator = Simulator(sys_compiled, t0=0., t_bound=10.0)
 simulator.run()
