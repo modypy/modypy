@@ -10,7 +10,7 @@ from simtree.blocks.sources import Constant
 from simtree.blocks.linear import Sum
 from simtree.compiler import Compiler
 from simtree.linearization import find_steady_state, system_jacobian
-
+from simtree.utils.uiuc_db import load_static_propeller
 
 class Engine(NonLeafBlock):
     def __init__(self, ct, cp, D, Kv, R, L, J, direction, vector, arm, **kwargs):
@@ -45,13 +45,18 @@ class Engine(NonLeafBlock):
         # Connect the thrust and torque of the thruster to outputs 0:6
         self.connect_output(self.thruster, range(6), range(6))
 
+thrust_coeff, torque_coeff = \
+    load_static_propeller('volume-1/data/apcsf_8x3.8_static_2777rd.txt',
+                          interp_options={"bounds_error":False,
+                                          "fill_value":"extrapolate"})
+
 parameters = {
     'Kv': 789.E-6,
     'R': 43.3E-3,
     'L': 1.9E-3,
     'J': 5.284E-6,
-    'ct': 0.09,
-    'cp': 0.04,
+    'ct': thrust_coeff,
+    'cp': torque_coeff,
     'D': 8*25.4E-3
 }
 
