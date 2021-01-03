@@ -1,9 +1,16 @@
 """
 Provides class ``ModelContext`` for representing the context of a system model
 """
+from abc import ABC, abstractmethod
 
 
-class ModelContext:
+class BlockContainer(ABC):
+    @abstractmethod
+    def register_block(self, block):
+        pass
+
+
+class ModelContext(BlockContainer):
     """
     This class represents the context for a system model.
 
@@ -11,7 +18,10 @@ class ModelContext:
     signal and state vector.
     """
     def __init__(self):
+        BlockContainer.__init__(self)
+        self.signal_instances = set()
         self.signal_line_count = 0
+        self.state_instances = set()
         self.state_line_count = 0
 
     @property
@@ -19,24 +29,22 @@ class ModelContext:
         """The model context itself"""
         return self
 
-    def allocate_states(self, state_count):
+    def register_state_instance(self, state_instance):
         """
-        Allocate a number of states for the state vector.
+        Register a state instance and allocate a number of state lines for it.
 
-        :param state_count: The number of states to allocate
-        :return: The index of the first state allocated
+        :param state_instance: The state instance to register
         """
-        state_line_index = self.state_line_count
-        self.state_line_count += state_count
-        return state_line_index
+        state_instance.state_index = self.state_line_count
+        self.state_line_count += state_instance.size
+        self.state_instances.add(state_instance)
 
-    def allocate_signals(self, signal_count):
+    def register_signal_instance(self, signal_instance):
         """
-        Allocate a number of signals for the signal vector.
+        Register a signal instance and allocate a number of signal lines for it.
 
-        :param signal_count: The number of signals to allocate
-        :return: The index of the first signal allocated
+        :param signal_instance: The signal instance to register
         """
-        signal_line_index = self.signal_line_count
-        self.signal_line_count += signal_count
-        return signal_line_index
+        signal_instance.signal_index = self.signal_line_count
+        self.signal_line_count += signal_instance.size
+        self.signal_instances.add(signal_instance)

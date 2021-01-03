@@ -5,7 +5,8 @@ Defines meta-properties for ports and signals.
 from typing import Union, Iterable
 import math
 
-from .block import MetaProperty
+from .blocks import MetaProperty
+
 
 class PortConnectionError(RuntimeError):
     """
@@ -51,14 +52,16 @@ class Port(MetaProperty):
         port_instance = self.get_instance(block)
         port_instance.connect(other)
 
+    def instantiate_for_block(self, block):
+        instance = self.create_instance(block)
+        block.context.register_signal_instance(instance)
+        setattr(block, "_port_%s" % self.name, instance)
+
     def create_instance(self, block):
         return PortInstance(block, self)
 
     def get_instance(self, block):
         return getattr(block, "_port_%s" % self.name)
-
-    def register_instance(self, block, instance):
-        setattr(block, "_port_%s" % self.name, instance)
 
 
 class PortInstance:
@@ -69,6 +72,10 @@ class PortInstance:
         self.block = block
         self.port = port
         self.reference = self
+
+    @property
+    def size(self):
+        return self.port.size
 
     @property
     def signal(self):
@@ -113,17 +120,16 @@ class Signal(Port):
         Port.__init__(self, *args, **kwargs)
 
     def create_instance(self, block):
-        signal_index = block.context.allocate_signals(self.size)
-        return SignalInstance(block, self, signal_index)
+        return SignalInstance(block, self)
 
 
 class SignalInstance(PortInstance):
     """
     An instance of a signal.
     """
-    def __init__(self, block, port, signal_index):
+    def __init__(self, block, port):
         PortInstance.__init__(self, block, port)
-        self.signal_index = signal_index
+        self.signal_index = None
 
     @property
     def signal(self):
@@ -143,9 +149,9 @@ class OutputSignal(Signal):
     An output signal can be easily created using the ``output_signal``
     decorator on the respective function.
     """
-    def __init__(self, method, *args, **kwargs):
+    def __init__(self, function, *args, **kwargs):
         Signal.__init__(self, *args, **kwargs)
-        self.method = method
+        self.function = function
 
 
 def output_signal(shape=1):
@@ -159,5 +165,3 @@ def output_signal(shape=1):
     def output_signal_wrapper(function):
         return OutputSignal(function, shape)
     return output_signal_wrapper
-
-# TODO: InputSignal for signals generated from trajectories

@@ -5,8 +5,10 @@ graph.
 import inspect
 from abc import ABC, abstractmethod
 
+from .model_context import BlockContainer
 
-class Block:
+
+class Block(BlockContainer):
     """
     This class represents a block in a model.
 
@@ -17,6 +19,8 @@ class Block:
         self.parent = parent
         self.context = parent.context
 
+        self.parent.register_block(self)
+
         self.create_meta_property_instances()
 
     def create_meta_property_instances(self):
@@ -25,8 +29,7 @@ class Block:
                 inspect.getmembers(type(self),
                                    (lambda obj: isinstance(obj, MetaProperty))):
 
-            instance = value.create_instance(self)
-            value.register_instance(self, instance)
+            value.instantiate_for_block(self)
 
 
 class MetaProperty(ABC):
@@ -41,9 +44,5 @@ class MetaProperty(ABC):
         self.name = name
 
     @abstractmethod
-    def create_instance(self, block):
-        """Create an instance of this meta-property for the specific block."""
-
-    @abstractmethod
-    def register_instance(self, block, instance):
-        """Register the instance with the instance"""
+    def instantiate_for_block(self, block):
+        """Instantiate this meta-property for the given block."""
