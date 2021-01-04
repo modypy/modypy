@@ -1,4 +1,3 @@
-from .blocks import Block
-from .model_context import ModelContext
-from .ports import Port, output_signal
-from .states import State, StateSignal
+from .system import System, Block
+from .ports import Port, Signal
+from .states import State

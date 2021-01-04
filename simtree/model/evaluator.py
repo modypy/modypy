@@ -4,9 +4,9 @@ aspects (signals, state derivatives, ...) at any given point in time.
 """
 import numpy as np
 
-from .model_context import ModelContext
-from .ports import PortInstance
-from .states import StateInstance
+from .system import System
+from .ports import Port
+from .states import State
 
 
 class AlgebraicLoopException(RuntimeError):
@@ -18,17 +18,17 @@ class Evaluator:
     This class allows to evaluate the individual aspects (signals, state
     derivatives, ...) of a system at any given time.
     """
-    def __init__(self, time, context: ModelContext, state_vector=None):
+    def __init__(self, time, system: System, state_vector=None):
         self.time = time
-        self.context = context
+        self.system = system
 
         if state_vector is None:
-            state_vector = np.zeros(context.state_line_count)
+            state_vector = np.zeros(system.state_line_count)
         self.state_vector = state_vector
-        self._state_derivative = np.empty(context.state_line_count)
+        self._state_derivative = np.empty(system.state_line_count)
         self.valid_state_derivatives = set()
 
-        self._signal_vector = np.zeros(context.signal_line_count)
+        self._signal_vector = np.zeros(system.signal_line_count)
         self.valid_signals = set()
 
         self.signal_evaluation_stack = list()
@@ -36,134 +36,125 @@ class Evaluator:
 
     @property
     def state_derivative(self):
-        """
-        The state derivative vector for the complete system.
-        """
-        for state_instance in self.context.state_instances:
+        """The state derivative vector for the complete system"""
+        for state_instance in self.system.states:
             # Trigger calculation of the derivative
             self.get_state_derivative(state_instance)
         return self._state_derivative
 
     @property
     def signal_vector(self):
-        """
-        The signal vector for the complete system.
-        """
-        for signal_instance in self.context.signal_instances:
+        """The signal vector for the complete system."""
+        for signal_instance in self.system.signals:
             # Trigger calculation of the signal
             self.get_port_value(signal_instance)
         return self._signal_vector
 
-    def get_item_value(self, item):
+    def get_state_value(self, state: State):
         """
-        Determine the value of a specific item (state instance, port instance,
-        ...).
+        Determine the value of a given state.
 
-        :param item: The item of which shall be determined
-        :return: The value of the item
+        :param state: The state
+        :return:  The value of the state
         """
-        if isinstance(item, StateInstance):
-            return self.get_state_value(item)
-        if isinstance(item, PortInstance):
-            return self.get_port_value(item)
-        raise AttributeError()
-
-    def get_state_value(self, state_instance):
-        """
-        Determine the value of a given state instance.
-
-        :param state_instance: The state instance
-        :return:  The value of the state instance
-        """
-        state = state_instance.state
-        start_index = state_instance.state_index
+        start_index = state.state_index
         end_index = start_index + state.size
-        shape = state.shape
-        return self.state_vector[start_index:end_index].reshape(shape)
+        return self.state_vector[start_index:end_index].reshape(state.shape)
 
-    def get_port_value(self, port_instance):
+    def get_port_value(self, port: Port):
         """
-        Determine the value of the given port instance.
+        Determine the value of the given port.
 
         If the value has not yet been calculated, it will be calculated before
         this method returns. If an algebraic loop is encountered during
         calculation, an ``AlgebraicLoopException`` will be raised.
 
-        :param port_instance: The port instance for which the value shall be
-            determined
-        :return: The value of the port instance
+        :param port: The port for which the value shall be determined
+        :return: The value of the port
         :raises AlgebraicLoopException: if an algebraic loop is encountered
             while evaluating the value of the signal
         """
-        signal_instance = port_instance.signal
-        signal = signal_instance.port
-        start_index = signal_instance.signal_index
+        signal = port.signal
+        start_index = signal.signal_index
         end_index = start_index + signal.size
 
-        if signal_instance in self.valid_signals:
+        if signal in self.valid_signals:
             # That signal was already evaluated, so just return the value in
             # proper shape.
             return self._signal_vector[start_index:end_index]\
                 .reshape(signal.shape)
 
         # The signal has not yet been evaluated, so we try to do that now
-        if signal_instance in self.signal_evaluation_set:
+        if signal in self.signal_evaluation_set:
             # The signal is currently being evaluated, but we got here again,
             # so there must be an algebraic loop.
             raise AlgebraicLoopException()
 
         # Start evaluation of the signal
-        self.signal_evaluation_set.add(signal_instance)
-        self.signal_evaluation_stack.append(signal_instance)
+        self.signal_evaluation_set.add(signal)
+        self.signal_evaluation_stack.append(signal)
 
         # Perform evaluation
-        block = signal_instance.block
-        vector_wrapper = VectorWrapper(block, self)
-        signal_value = signal.function(block, self.time, vector_wrapper)
+        data = DataProvider(self.time,
+                            StateProvider(self),
+                            PortProvider(self))
+        signal_value = signal.function(data)
 
         # Ensure that the signal has the correct shape
         signal_value = np.asarray(signal_value).reshape(signal.shape)
         # Assign the value to the signal_vector
         self._signal_vector[start_index:end_index] = signal_value.flatten()
         # Mark the signal as valid
-        self.valid_signals.add(signal_instance)
+        self.valid_signals.add(signal)
 
         # End evaluation of the signal
-        self.signal_evaluation_set.remove(signal_instance)
+        self.signal_evaluation_set.remove(signal)
         self.signal_evaluation_stack.pop()
 
         # Return the value of the signal
         return signal_value.reshape(signal.shape)
 
-    def get_state_derivative(self, state_instance):
+    def get_state_derivative(self, state):
         """
-        Get the state derivative of the given state instance.
+        Get the state derivative of the given state.
 
-        :param state_instance: The state instance for which the derivative shall
-            be determined
+        :param state: The state for which the derivative shall be determined
         :return: The state derivative
         :raises AlgebraicLoopException: if an algebraic loop is encountered
             while evaluating the derivative of the state instance
         """
-        block = state_instance.block
-        vector_wrapper = VectorWrapper(block, self)
-        state = state_instance.state
-        state_derivative = state.derivative_function(block,
-                                                     self.time,
-                                                     vector_wrapper)
+        start_index = state.state_index
+        end_index = start_index + state.size
+        if state in self.valid_state_derivatives:
+            return self._state_derivative[start_index:end_index].reshape(state.shape)
+        data = DataProvider(self.time,
+                            StateProvider(self),
+                            PortProvider(self))
+        state_derivative = state.derivative_function(data)
         state_derivative = np.asarray(state_derivative).reshape(state.shape)
+        self._state_derivative[start_index:end_index] = state_derivative.flatten()
+        self.valid_state_derivatives.add(state)
         return state_derivative
 
 
-class VectorWrapper:
-    """
-    A helper class to pass accesses to states or signals on to the ``Evaluator``
-    object.
-    """
-    def __init__(self, block, evaluator):
-        self.block = block
+class DataProvider:
+    def __init__(self, time, states, inputs):
+        self.time = time
+        self.states = states
+        self.inputs = inputs
+
+
+class StateProvider:
+    def __init__(self, evaluator):
         self.evaluator = evaluator
 
-    def __getattr__(self, name):
-        item = getattr(self.block, name)
-        return self.evaluator.get_item_value(item)
+    def __getitem__(self, state):
+        return self.evaluator.get_state_value(state)
+
+
+class PortProvider:
+    def __init__(self, evaluator):
+        self.evaluator = evaluator
+
+    def __getitem__(self, port):
+        return self.evaluator.get_port_value(port)

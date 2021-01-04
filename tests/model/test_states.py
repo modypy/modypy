@@ -1,28 +1,29 @@
 """Tests for the simtree.model.states module"""
 import numpy as np
 
-from simtree.model import ModelContext, Block
+from simtree.model import System, Block, Port
 from simtree.model.states import State
 
 
 class SimpleBlock(Block):
     """A simple block with a few states"""
-    omega = State(shape=3)
-    dcm_matrix = State(shape=(3, 3), initial_value=np.eye(3))
+    def __init__(self, parent):
+        Block.__init__(self, parent)
+        self.omega_dot = Port(self, shape=3)
+        self.omega = State(self, shape=3, derivative_function=self.omega_dot)
+        self.dcm = State(self, shape=(3, 3), derivative_function=self.dcm_dot, initial_condition=np.eye(3))
 
-    @omega.derivative
-    def omega_dot(self, time, state, inputs):
-        return inputs[0]
+    def omega_dot(self):
+        pass
+
+    def dcm_dot(self):
+        pass
 
 
 def test_state_basics():
     """Test some basic functionality of states and state instances"""
-    context = ModelContext()
+    system = System()
+    block = SimpleBlock(system)
 
-    assert SimpleBlock.omega.size == 3
-    assert SimpleBlock.dcm_matrix.size == 9
-    assert SimpleBlock.omega.derivative_function == SimpleBlock.omega_dot
-
-    block = SimpleBlock(context)
-    assert block.omega.state_index is not None
-    assert block.omega.state == SimpleBlock.omega
+    assert block.omega.size == 3
+    assert block.dcm.size == 9
