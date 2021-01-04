@@ -33,8 +33,9 @@ class SimulationResult:
     def __init__(self, system: System):
         self.system = system
         self._t = np.empty(INITIAL_RESULT_SIZE)
-        self._state = np.empty((INITIAL_RESULT_SIZE, self.system.state_line_count))
-        self._signals = np.empty((INITIAL_RESULT_SIZE, self.system.signal_line_count))
+        self._state = np.empty((INITIAL_RESULT_SIZE, self.system.num_states))
+        self._signals = np.empty((INITIAL_RESULT_SIZE, self.system.num_signals))
+        self._events = np.empty((INITIAL_RESULT_SIZE, self.system.num_events))
 
         self.current_idx = 0
 
@@ -50,21 +51,28 @@ class SimulationResult:
     def signals(self):
         return self._signals[0:self.current_idx]
 
-    def append(self, time, state, signals):
+    @property
+    def events(self):
+        return self._events[0:self.current_idx]
+
+    def append(self, time, state, signals, events):
         if self.current_idx >= self._t.size:
             self.extend_space()
         self._t[self.current_idx] = time
         self._state[self.current_idx] = state
         self._signals[self.current_idx] = signals
+        self._events[self.current_idx] = events
 
         self.current_idx += 1
 
     def extend_space(self):
         self._t = np.r_[self._t,      np.empty(RESULT_SIZE_EXTENSION)]
         self._state = np.r_[self._state,  np.empty(
-            (RESULT_SIZE_EXTENSION, self.system.state_line_count))]
+            (RESULT_SIZE_EXTENSION, self.system.num_states))]
         self._signals = np.r_[self._signals, np.empty(
-            (RESULT_SIZE_EXTENSION, self.system.signal_line_count))]
+            (RESULT_SIZE_EXTENSION, self.system.num_signals))]
+        self._events = np.r_[self._events, np.empty(
+            (RESULT_SIZE_EXTENSION, self.system.num_events))]
 
 
 class Simulator:
@@ -128,12 +136,15 @@ class Simulator:
 
         evaluator = Evaluator(system=self.system,
                               time=self.current_time,
-                              state_vector=self.current_state)
+                              state=self.current_state)
+        self.current_signals = evaluator.signal_vector
+        self.current_event_values = evaluator.event_values
 
         # Store the initial state
         self.result.append(time=self.current_time,
                            state=self.current_state,
-                           signals=evaluator.signal_vector)
+                           signals=self.current_signals,
+                           events=self.current_event_values)
 
     def step(self, t_bound=None):
         """
@@ -141,6 +152,9 @@ class Simulator:
 
         :param t_bound: The maximum time until which the simulation may proceed.
         """
+
+        last_event_values = self.current_event_values
+
         integrator = self.integrator_constructor(fun=self.state_derivative,
                                                  t0=self.current_time,
                                                  y0=self.current_state,
@@ -150,14 +164,24 @@ class Simulator:
         if message is not None:
             return message
 
+        evaluator = Evaluator(system=self.system,
+                              time=integrator.t,
+                              state=integrator.y)
+        events_crossed = np.flatnonzero(np.sign(last_event_values) !=
+                                        np.sign(evaluator.event_values))
+        if len(events_crossed)>0:
+            # TODO: Handle events
+            pass
+
         self.current_time = integrator.t
         self.current_state = integrator.y
-        evaluator = Evaluator(system=self.system,
-                              time=self.current_time,
-                              state_vector=self.current_state)
+        self.current_signals = evaluator.signal_vector
+        self.current_event_values = evaluator.event_values
+
         self.result.append(time=self.current_time,
                            state=self.current_state,
-                           signals=evaluator.signal_vector)
+                           signals=self.current_signals,
+                           events=self.current_event_values)
         return None
 
     def run_until(self, t_bound):
@@ -168,6 +192,6 @@ class Simulator:
         return None
 
     def state_derivative(self, time, state):
-        evaluator = Evaluator(system=self.system, time=time, state_vector=state)
+        evaluator = Evaluator(system=self.system, time=time, state=state)
         state_derivative = evaluator.state_derivative
         return state_derivative

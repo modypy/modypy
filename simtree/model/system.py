@@ -11,10 +11,12 @@ class System:
     A system is a group of interacting ``Block`` instances.
     """
     def __init__(self):
-        self.signal_line_count = 0
+        self.num_signals = 0
         self.signals = set()
-        self.state_line_count = 0
+        self.num_states = 0
         self.states = set()
+        self.num_events = 0
+        self.events = set()
 
     @property
     def system(self):
@@ -24,7 +26,7 @@ class System:
     @property
     def initial_condition(self):
         """The initial condition vector for the state of this system"""
-        initial = np.zeros(self.state_line_count)
+        initial = np.zeros(self.num_states)
         for state in self.states:
             start_index = state.state_index
             end_index = start_index + state.size
@@ -38,8 +40,8 @@ class System:
         :param count: The number of signal lines to allocate
         :return: The index of the first signal line allocated
         """
-        start_index = self.signal_line_count
-        self.signal_line_count += count
+        start_index = self.num_signals
+        self.num_signals += count
         return start_index
 
     def allocate_state_lines(self, count):
@@ -49,8 +51,18 @@ class System:
         :param count: The number of state lines to allocate
         :return: The index of the first state line allocated
         """
-        start_index = self.state_line_count
-        self.state_line_count += count
+        start_index = self.num_states
+        self.num_states += count
+        return start_index
+
+    def allocate_event_line(self):
+        """
+        Allocate a single event line.
+
+        :return: The index of the event line allocated
+        """
+        start_index = self.num_events
+        self.num_events += 1
         return start_index
 
 

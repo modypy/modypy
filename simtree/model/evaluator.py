@@ -18,21 +18,24 @@ class Evaluator:
     This class allows to evaluate the individual aspects (signals, state
     derivatives, ...) of a system at any given time.
     """
-    def __init__(self, time, system: System, state_vector=None):
+    def __init__(self, time, system: System, state=None):
         self.time = time
         self.system = system
 
-        if state_vector is None:
-            state_vector = np.zeros(system.state_line_count)
-        self.state_vector = state_vector
-        self._state_derivative = np.empty(system.state_line_count)
+        if state is None:
+            state = np.zeros(system.num_states)
+        self._state = state
+
+        self._state_derivative = np.empty(system.num_states)
         self.valid_state_derivatives = set()
 
-        self._signal_vector = np.zeros(system.signal_line_count)
+        self._signals = np.zeros(system.num_signals)
         self.valid_signals = set()
-
         self.signal_evaluation_stack = list()
         self.signal_evaluation_set = set()
+
+        self._events = np.zeros(system.num_events)
+        self.valid_events = set()
 
     @property
     def state_derivative(self):
@@ -48,7 +51,15 @@ class Evaluator:
         for signal_instance in self.system.signals:
             # Trigger calculation of the signal
             self.get_port_value(signal_instance)
-        return self._signal_vector
+        return self._signals
+
+    @property
+    def event_values(self):
+        """The event vector for the complete system."""
+        for event_instance in self.system.events:
+            # Trigger calculation of the event function
+            self.get_event_value(event_instance)
+        return self._events
 
     def get_state_value(self, state: State):
         """
@@ -59,7 +70,7 @@ class Evaluator:
         """
         start_index = state.state_index
         end_index = start_index + state.size
-        return self.state_vector[start_index:end_index].reshape(state.shape)
+        return self._state[start_index:end_index].reshape(state.shape)
 
     def get_port_value(self, port: Port):
         """
@@ -81,7 +92,7 @@ class Evaluator:
         if signal in self.valid_signals:
             # That signal was already evaluated, so just return the value in
             # proper shape.
-            return self._signal_vector[start_index:end_index]\
+            return self._signals[start_index:end_index]\
                 .reshape(signal.shape)
 
         # The signal has not yet been evaluated, so we try to do that now
@@ -103,7 +114,7 @@ class Evaluator:
         # Ensure that the signal has the correct shape
         signal_value = np.asarray(signal_value).reshape(signal.shape)
         # Assign the value to the signal_vector
-        self._signal_vector[start_index:end_index] = signal_value.flatten()
+        self._signals[start_index:end_index] = signal_value.flatten()
         # Mark the signal as valid
         self.valid_signals.add(signal)
 
@@ -135,6 +146,25 @@ class Evaluator:
         self._state_derivative[start_index:end_index] = state_derivative.flatten()
         self.valid_state_derivatives.add(state)
         return state_derivative
+
+    def get_event_value(self, event):
+        """
+        Get the value of the event function of the given event
+
+        :param event: The event for which to calculate the value
+        :return: The value of the event function
+        :raises AlgebraicLoopException: if an algebraic loop is encountered
+            while evaluating the value of the event function
+        """
+        if event in self.valid_events:
+            return self._events[event.event_index]
+        data = DataProvider(self.time,
+                            StateProvider(self),
+                            PortProvider(self))
+        event_value = event.event_function(data)
+        self._events[event.event_index] = event_value
+        self.valid_events.add(event)
+        return event_value
 
 
 class DataProvider:

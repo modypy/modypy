@@ -1,5 +1,5 @@
 """
-Defines meta-properties for states.
+Provides classes for defining states.
 """
 from functools import cached_property
 import math
