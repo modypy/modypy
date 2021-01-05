@@ -14,7 +14,7 @@ from fixtures.models import \
 
 from simtree.blocks.linear import LTISystem
 from simtree.compiler import compile
-from simtree.simulator import Simulator
+from simtree.simulation import Simulator
 
 
 @pytest.fixture(params=[

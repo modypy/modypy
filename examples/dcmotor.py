@@ -4,7 +4,7 @@ from simtree.blocks.aerodyn import Propeller
 from simtree.blocks.elmech import DCMotor
 from simtree.blocks.sources import constant
 from simtree.model import System
-from simtree.simulator import Simulator
+from simtree.simulation import Simulator
 from simtree.utils.uiuc_db import load_static_propeller
 
 # Import propeller data from UIUC database

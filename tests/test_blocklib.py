@@ -12,7 +12,7 @@ from simtree.blocks.sources import Constant
 from simtree.blocks.rigid import RigidBody6DOFFlatEarth, DirectCosineToEuler
 from simtree.compiler import compile
 from simtree.linearization import find_steady_state
-from simtree.simulator import Simulator
+from simtree.simulation import Simulator
 
 @pytest.mark.parametrize(
     "block, inputs, expected_output",

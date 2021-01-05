@@ -1,5 +1,5 @@
 from simtree.model import System, Block, State, Signal, Event
-from simtree.simulator import Simulator, DEFAULT_INTEGRATOR_OPTIONS
+from simtree.simulation import Simulator, DEFAULT_INTEGRATOR_OPTIONS
 import numpy as np
 import matplotlib.pyplot as plt
 

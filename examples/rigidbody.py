@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from simtree.model import System
 from simtree.blocks.sources import constant
 from simtree.blocks.rigid import RigidBody6DOFFlatEarth, DirectCosineToEuler
-from simtree.simulator import Simulator
+from simtree.simulation import Simulator
 
 MASS = 1.5
 OMEGA = 2 * math.pi / 120
