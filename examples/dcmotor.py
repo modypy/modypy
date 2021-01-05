@@ -46,7 +46,7 @@ simulator = Simulator(system=system, start_time=0)
 simulator.run_until(t_bound=0.5)
 
 # Plot the results
-plt.plot(simulator.result.time, simulator.result.signals[:, propeller.thrust.slice])
+plt.plot(simulator.result.time, simulator.result.signals[:, propeller.thrust.signal_slice])
 plt.title("Propeller Simulation")
 plt.xlabel("Time (s)")
 plt.ylabel("Thrust (N)")

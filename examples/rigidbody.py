@@ -35,14 +35,14 @@ message = sim.run_until(t_bound=120.0)
 assert message is None
 
 fig_euler, (ax_yaw, ax_pitch, ax_roll) = plt.subplots(nrows=3, sharex='row')
-ax_yaw.plot(sim.result.time, np.rad2deg(sim.result.signals[:, dcm_to_euler.yaw.slice]))
-ax_pitch.plot(sim.result.time, np.rad2deg(sim.result.signals[:, dcm_to_euler.pitch.slice]))
-ax_roll.plot(sim.result.time, np.rad2deg(sim.result.signals[:, dcm_to_euler.roll.slice]))
+ax_yaw.plot(sim.result.time, np.rad2deg(sim.result.signals[:, dcm_to_euler.yaw.signal_slice]))
+ax_pitch.plot(sim.result.time, np.rad2deg(sim.result.signals[:, dcm_to_euler.pitch.signal_slice]))
+ax_roll.plot(sim.result.time, np.rad2deg(sim.result.signals[:, dcm_to_euler.roll.signal_slice]))
 ax_yaw.set_title("Yaw")
 ax_pitch.set_title("Pitch")
 ax_roll.set_title("Roll")
 
 fig_top_view, ax = plt.subplots()
-position = sim.result.signals[:, rb_6dof.position_earth.slice]
+position = sim.result.signals[:, rb_6dof.position_earth.signal_slice]
 ax.plot(position[:, 0], position[:, 1])
 plt.show()

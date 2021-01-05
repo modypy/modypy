@@ -3,12 +3,13 @@ import itertools
 import numpy as np
 import scipy.linalg as la
 
-from simtree.model import Block, Port, System
+from simtree.model import Block, Port, System, InputSignal, OutputPort
+from simtree.model.evaluator import Evaluator
 from simtree.blocks.aerodyn import Propeller, Thruster
 from simtree.blocks.elmech import DCMotor
 from simtree.blocks.sources import constant
 from simtree.blocks.linear import Sum
-from simtree.linearization import find_steady_state, system_jacobian
+from simtree.linearization import find_steady_state, system_jacobian, InputSignal
 from simtree.utils.uiuc_db import load_static_propeller
 
 
@@ -23,7 +24,7 @@ class Engine(Block):
         self.voltage = Port(self, shape=1)
         self.density = Port(self, shape=1)
 
-        self.dcmotor = DCMotor(self, Kv, R, L, J)
+        self.dcmotor = DCMotor(self, Kv, R, L, J, initial_omega=1)
         self.propeller = Propeller(self,
                                    thrust_coeff=ct,
                                    power_coeff=cp,
@@ -73,53 +74,62 @@ engines = [
            vector=np.c_[0, 0, -1], arm=np.c_[+RADIUS_X, +RADIUS_Y, 0], direction=1,
            **parameters),
     Engine(system,
-           vector=np.c_[0, 0, -1], arm=np.c_[+RADIUS_X, -RADIUS_Y, 0], direction=-1,
+           vector=np.c_[0, 0, -1], arm=np.c_[-RADIUS_X, +RADIUS_Y, 0], direction=-1,
            **parameters),
     Engine(system,
            vector=np.c_[0, 0, -1], arm=np.c_[-RADIUS_X, -RADIUS_Y, 0], direction=1,
            **parameters),
     Engine(system,
-           vector=np.c_[0, 0, -1], arm=np.c_[-RADIUS_X, +RADIUS_Y, 0], direction=-1,
+           vector=np.c_[0, 0, -1], arm=np.c_[+RADIUS_X, -RADIUS_Y, 0], direction=-1,
            **parameters),
 ]
 
+voltages = [
+    InputSignal(system, value=0),
+    InputSignal(system, value=0),
+    InputSignal(system, value=0),
+    InputSignal(system, value=0),
+]
+
 gravity_source = constant(system, value=np.r_[0, 0, 1.5*9.81])
+counter_torque = constant(system, value=np.r_[0, 0, 0])
 density = constant(system, value=1.29)
-thrust_sum = Sum(system, channel_weights=[1, 1, 1, 1, 1], output_size=3)
-torque_sum = Sum(system, channel_weights=[1, 1, 1, 1], output_size=3)
+force_sum = Sum(system, channel_weights=np.ones(5), output_size=3)
+torque_sum = Sum(system, channel_weights=np.ones(5), output_size=3)
+current_sum = Sum(system, channel_weights=np.ones(4))
 
 for idx, engine in zip(itertools.count(), engines):
+    voltages[idx].connect(engine.voltage)
     engine.density.connect(density)
-    engine.thrust_vector.connect(thrust_sum.inputs[idx])
+    engine.thrust_vector.connect(force_sum.inputs[idx])
     engine.torque_vector.connect(torque_sum.inputs[idx])
+    engine.dcmotor.current.connect(current_sum.inputs[idx])
 
-gravity_source.connect(thrust_sum.inputs[-1])
+gravity_source.connect(force_sum.inputs[-1])
+counter_torque.connect(torque_sum.inputs[-1])
 
-# solution: omega=855, i=66.77, v=3.565
+force_output = OutputPort(system, shape=3)
+torque_output = OutputPort(system, shape=3)
 
-omega0, i0, v0 = 1, 0, 0
-
-x_start = 4 * [omega0, i0]
-u_start = 4 * [v0]
+force_output.connect(force_sum.output)
+torque_output.connect(torque_sum.output)
 
 # Find the steady state of the system
 sol, x0, u0 = find_steady_state(system,
                                 time=0,
-                                x_start=x_start,
-                                u_start=u_start,
                                 solver_options={
-                                    'maxiter': 500*(12+1)
+                                    'maxiter': 500 * (12 + 1),
+                                    'xtol': 1E-15
                                 })
-dxdt0 = system.state_update_function(0, x0, u0)
-y0 = system.output_function(0, x0, u0)
-A, B, C, D = system_jacobian(system, 0, x0, u0)
 
-print("success=%s nfev=%d" % (sol.success, sol.nfev))
 if sol.success:
-    print("\tx0  =%s" % x0)
-    print("\tu0  =%s" % u0)
-    print("\tdxdt=%s" % dxdt0)
-    print("\ty0  =%s" % y0)
+    evaluator = Evaluator(system=system, time=0, state=x0, inputs=u0)
+    print("\tx0     =%s" % x0)
+    print("\tu0     =%s" % x0)
+    print("\tdxdt   =%s" % evaluator.state_derivative)
+    print("\tforce  =%s" % evaluator.get_port_value(force_sum.output))
+    print("\ttorque =%s" % evaluator.get_port_value(torque_sum.output))
+    A, B, C, D = system_jacobian(system, 0, x0, u0)
     print("A:")
     print(A)
     print("B:")
@@ -131,5 +141,6 @@ if sol.success:
 
     w, vr = la.eig(A)
     print("Eigenvalues:%s" % w)
+    print("Eigenvectors:%s" % vr)
 else:
     print("message=%s" % sol.message)

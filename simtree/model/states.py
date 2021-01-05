@@ -26,7 +26,7 @@ class State:
             self.initial_condition = np.asarray(initial_condition)
 
         self.state_index = self.owner.system.allocate_state_lines(self.size)
-        self.owner.system.states.add(self)
+        self.owner.system.states.append(self)
 
     @cached_property
     def size(self):
@@ -35,7 +35,7 @@ class State:
         return math.prod(self.shape)
 
     @property
-    def slice(self):
+    def state_slice(self):
         """A slice that can be used to index state vectors"""
         return slice(self.state_index,
                      self.state_index + self.size)

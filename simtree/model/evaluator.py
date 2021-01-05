@@ -18,7 +18,7 @@ class Evaluator:
     This class allows to evaluate the individual aspects (signals, state
     derivatives, ...) of a system at any given time.
     """
-    def __init__(self, time, system: System, state=None):
+    def __init__(self, time, system: System, state=None, inputs=None):
         self.time = time
         self.system = system
 
@@ -37,6 +37,11 @@ class Evaluator:
         self._event_values = np.zeros(system.num_events)
         self.valid_event_values = set()
 
+        if inputs is not None:
+            for signal in self.system.inputs:
+                self._signals[signal.signal_slice] = inputs[signal.input_slice]
+                self.valid_signals.add(signal)
+
     @property
     def state(self):
         """The current state"""
@@ -51,6 +56,15 @@ class Evaluator:
         return self._state_derivative
 
     @property
+    def inputs(self):
+        """The input vector for the complete system"""
+        input_vector = np.empty(self.system.num_outputs)
+        for signal in self.system.inputs:
+            signal_value = self.get_port_value(signal)
+            input_vector[signal.input_slice] = signal_value.flatten()
+        return input_vector
+
+    @property
     def signals(self):
         """The signal vector for the complete system."""
         for signal_instance in self.system.signals:
@@ -59,8 +73,17 @@ class Evaluator:
         return self._signals
 
     @property
+    def outputs(self):
+        """The output vector for the complete system"""
+        output_vector = np.empty(self.system.num_outputs)
+        for port in self.system.outputs:
+            port_value = self.get_port_value(port)
+            output_vector[port.output_slice] = port_value.flatten()
+        return output_vector
+
+    @property
     def event_values(self):
-        """The event vector for the complete system."""
+        """The event vector for the complete system"""
         for event_instance in self.system.events:
             # Trigger calculation of the event value
             self.get_event_value(event_instance)
@@ -73,7 +96,7 @@ class Evaluator:
         :param state: The state
         :return:  The value of the state
         """
-        return self._state[state.slice].reshape(state.shape)
+        return self._state[state.state_slice].reshape(state.shape)
 
     def get_port_value(self, port: Port):
         """
@@ -93,7 +116,7 @@ class Evaluator:
         if signal in self.valid_signals:
             # That signal was already evaluated, so just return the value in
             # proper shape.
-            return self._signals[signal.slice]\
+            return self._signals[signal.signal_slice]\
                 .reshape(signal.shape)
 
         # The signal has not yet been evaluated, so we try to do that now
@@ -118,7 +141,7 @@ class Evaluator:
         # Ensure that the signal has the correct shape
         signal_value = np.asarray(signal_value).reshape(signal.shape)
         # Assign the value to the signal_vector
-        self._signals[signal.slice] = signal_value.flatten()
+        self._signals[signal.signal_slice] = signal_value.flatten()
         # Mark the signal as valid
         self.valid_signals.add(signal)
 
@@ -139,13 +162,13 @@ class Evaluator:
             while evaluating the derivative of the state instance
         """
         if state in self.valid_state_derivatives:
-            return self._state_derivative[state.slice].reshape(state.shape)
+            return self._state_derivative[state.state_slice].reshape(state.shape)
         data = DataProvider(self.time,
                             StateProvider(self),
                             PortProvider(self))
         state_derivative = state.derivative_function(data)
         state_derivative = np.asarray(state_derivative).reshape(state.shape)
-        self._state_derivative[state.slice] = state_derivative.flatten()
+        self._state_derivative[state.state_slice] = state_derivative.flatten()
         self.valid_state_derivatives.add(state)
         return state_derivative
 

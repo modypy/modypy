@@ -5,6 +5,8 @@ from functools import cached_property
 import math
 from typing import Union, Sequence
 
+import numpy as np
+
 
 ShapeType = Union[int, Sequence[int]]
 
@@ -38,7 +40,7 @@ class Port:
         return self.reference.signal
 
     @property
-    def slice(self):
+    def signal_slice(self):
         """A slice object that can be used to index signal vectors"""
         return self.signal.indices
 
@@ -80,16 +82,30 @@ class ShapeMismatchError(RuntimeError):
     connected to each other."""
 
 
+class OutputPort(Port):
+    def __init__(self, owner, shape=1):
+        Port.__init__(self, owner, shape)
+        self.output_index = self.owner.system.allocate_output_lines(self.size)
+        self.owner.system.outputs.append(self)
+
+    @property
+    def output_slice(self):
+        return slice(self.output_index,
+                     self.output_index+self.size)
+
 class Signal(Port):
     """
     A signal provides the value for all ports connected to it.
     """
 
-    def __init__(self, owner, shape: ShapeType, value: callable):
+    def __init__(self, owner, shape: ShapeType, value):
         Port.__init__(self, owner, shape)
         self.signal_index = self.owner.system.allocate_signal_lines(self.size)
-        self.owner.system.signals.add(self)
-        self.value = value
+        self.owner.system.signals.append(self)
+        if callable(value):
+            self.value = value
+        else:
+            self.value = np.atleast_1d(value)
 
     @property
     def signal(self):
@@ -98,7 +114,19 @@ class Signal(Port):
         return self
 
     @property
-    def slice(self):
+    def signal_slice(self):
         """A slice object that can be used to index signal vectors"""
         return slice(self.signal_index,
                      self.signal_index+self.size)
+
+
+class InputSignal(Signal):
+    def __init__(self, owner, shape: ShapeType = 1, value=0):
+        Signal.__init__(self, owner, shape, value)
+        self.input_index = self.owner.system.allocate_input_lines(self.size)
+        self.owner.system.inputs.append(self)
+
+    @property
+    def input_slice(self):
+        return slice(self.input_index,
+                     self.input_index+self.size)

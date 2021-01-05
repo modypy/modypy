@@ -122,7 +122,7 @@ class Sum(Block):
 
     def output_function(self, data):
         """Calculates the output for the system"""
-        inputs = np.array(shape=(self.output_size, len(self.inputs)))
+        inputs = np.empty((len(self.inputs), self.output_size))
         for port_idx in range(len(self.inputs)):
-            inputs[:, port_idx] = data.inputs[self.inputs[port_idx]]
+            inputs[port_idx] = data.inputs[self.inputs[port_idx]]
         return self.channel_weights @ inputs

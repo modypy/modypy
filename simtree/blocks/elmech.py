@@ -4,7 +4,7 @@ A collection fo electro-mechanical blocks.
 
 import math
 
-from simtree.model import Block, Port, State, Signal
+from simtree.model import Block, Port, State, SignalState, Signal
 
 
 class DCMotor(Block):
@@ -41,7 +41,8 @@ class DCMotor(Block):
         U(t)    = Kv*omega(t) + R*i(t) + L*di(t)/dt
         Kv*I(t) = J*domega(t)/dt + tau_ext(t)
     """
-    def __init__(self, parent, Kv, R, L, J):
+    def __init__(self, parent, Kv, R, L, J,
+                 initial_omega=0, initial_current=0):
         Block.__init__(self, parent)
 
         self.Kv = Kv
@@ -52,8 +53,14 @@ class DCMotor(Block):
         self.voltage = Port(self, shape=1)
         self.external_torque = Port(self, shape=1)
 
-        self.omega = State(self, shape=1, derivative_function=self.omega_dot)
-        self.current = State(self, shape=1, derivative_function=self.current_dot)
+        self.omega = State(self,
+                           shape=1,
+                           derivative_function=self.omega_dot,
+                           initial_condition=initial_omega)
+        self.current = SignalState(self,
+                             shape=1,
+                             derivative_function=self.current_dot,
+                             initial_condition=initial_current)
 
         self.speed_rps = Signal(self, shape=1, value=self.speed_rps_output)
         self.torque = Signal(self, shape=1, value=self.torque_output)

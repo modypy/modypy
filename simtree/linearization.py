@@ -1,65 +1,83 @@
+from itertools import accumulate
+
 import numpy as np
 from scipy.optimize import root
 from scipy.misc import central_diff_weights
 
+from simtree.model import Signal, InputSignal, OutputPort
+from simtree.model.evaluator import Evaluator
+
 
 def find_steady_state(system,
                       time,
-                      x_start=None,
-                      u_start=None,
                       method="lm",
                       solver_options=None,
                       **kwargs):
     """
-    Find the constrained steady x_ref of a system.
+    Find the constrained steady state of a system.
 
-    The constrained steady x_ref of a system is the tuple (u,x_ref)
-    where the derivative of the x_ref `dx/dt` and all outputs `y` become 0.
-    Here, `u` is the input vector, `x_ref` is the x_ref vector and `y` is the output
-    vector.
+    A system is said to be in a *steady state* if its state does not change over
+    time. As there maybe multiple steady states, additional constraints may be
+    required.
 
-    The number of outputs must be at least as large as the number of u_ref.
+    These constraints are expressed by enforcing the value of specified signals
+    to be zero. Inputs can be specified by using the ``InputSignal`` class.
 
-    Note that for time-dependent systems, `find_steady_state` can only identify
-    the steady x_ref at a specific time `time`.
+    The search begins at the initial values of signals and states.
 
-    This function uses `scipy.optimize.root` for finding the location of the
-    root of the x_ref derivative.
+    Note that for time-dependent systems, ``find_steady_state`` can only identify
+    the steady state at a specific time.
+
+    This function uses ``scipy.optimize.root`` for finding the root of the
+    constraint functions.
+
+    If the search is successful, the values of all input signals in the system
+    will be set to the respective input value identified for the steady state.
 
     :param system: The system to analyze.
-    :param time: The time at which to determine the steady x_ref. Default: 0
-    :param x_start: The initial x_ref. Default: zeros
-    :param u_start: The initial input vector. Default: zeros
+    :param time: The time at which to determine the steady state. Default: 0
+    :param constrained_ports: The list of ports that are constrained to 0.
+        Default: empty list
     :param method: The solver method to use. Refer to the documentation for
         `scipy.optimize.root` for more information on the available methods.
-    :param solver_options:
-    :return: sol, x0, u0 -
+    :param solver_options: The options to pass to the solver.
+    :return: sol, x0 -
         sol: An `scipy.optimize.OptimizeResult` object
-        x0: The x_ref vector at which the steady x_ref occurs
-        u0: The input vector at which the steady x_ref occurs
+        x0: The state vector at which the steady state occurs
     """
+
     if system.num_inputs > system.num_outputs:
         raise ValueError(
-            "The system must have at least as many outputs as u_ref")
+            "The system must have at least as many constraints as inputs")
+
     if system.num_states + system.num_inputs == 0:
         raise ValueError(
-            "Cannot find steady-x_ref in system without states and u_ref")
-    if u_start is None:
-        u_start = np.zeros(system.num_inputs)
-    if x_start is None:
-        x_start = np.zeros(system.num_states)
+            "Cannot find steady-state in system without states and inputs")
 
-    u_start = np.atleast_1d(u_start)
-    x_start = np.atleast_1d(x_start)
+    initial_value = np.concatenate((system.initial_condition,
+                                    system.initial_input))
 
-    initial_x = np.concatenate((x_start, u_start))
-    sol = root((lambda x: _system_function(system, time, x)),
-               initial_x,
+    def system_constraint_function(x):
+        state = x[:system.num_states]
+        inputs = x[system.num_states:]
+
+        evaluator = Evaluator(time=time, system=system, state=state, inputs=inputs)
+
+        state_derivative = evaluator.state_derivative
+        output_vector = evaluator.outputs
+
+        return np.concatenate((state_derivative, output_vector))
+
+    sol = root(fun=system_constraint_function,
+               x0=initial_value,
                method=method,
                options=solver_options,
                **kwargs)
 
-    return sol, sol.x[:system.num_states], sol.x[system.num_states:]
+    states = sol.x[:system.num_states]
+    inputs = sol.x[system.num_states:]
+
+    return sol, states, inputs
 
 
 def system_jacobian(system,
@@ -98,7 +116,7 @@ def system_jacobian(system,
     """
 
     if system.num_states + system.num_inputs == 0:
-        raise ValueError("Cannot linearize system without states and u_ref")
+        raise ValueError("Cannot linearize system without states and inputs")
     if order == 3:
         weights = np.array([-1, 0, 1]) / 2.0
     elif order == 5:
@@ -113,8 +131,10 @@ def system_jacobian(system,
     num_invars = system.num_states + system.num_inputs
     num_outvars = system.num_states + system.num_outputs
     half_offset = order >> 1
+
     jac = np.zeros((num_outvars, num_invars))
     x_ref0 = np.concatenate((x_ref, u_ref), axis=None)
+
     for var_ind in range(num_invars):
         x_step = step * np.eye(N=1, M=num_invars, k=var_ind).flatten()
         for k in range(order):
@@ -132,17 +152,9 @@ def system_jacobian(system,
 
 
 def _system_function(system, time, x_ref):
-    if system.num_states > 0 and system.num_inputs > 0:
-        states = x_ref[:system.num_states]
-        inputs = x_ref[system.num_states:]
-        dxdt = system.state_update_function(time, states, inputs)
-        outputs = system.output_function(time, states, inputs)
-    elif system.num_states > 0:
-        dxdt = system.state_update_function(time, x_ref)
-        outputs = system.output_function(time, x_ref)
-    else:
-        assert system.num_inputs > 0
-        dxdt = np.empty(0)
-        outputs = system.output_function(time, x_ref)
-    out = np.concatenate((dxdt.flatten(), outputs.flatten()))
-    return out
+    states = x_ref[:system.num_states]
+    inputs = x_ref[system.num_states:]
+
+    evaluator = Evaluator(time=time, system=system, state=states, inputs=inputs)
+
+    return np.concatenate((evaluator.state_derivative, evaluator.outputs))
