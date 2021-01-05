@@ -15,8 +15,7 @@ class System:
         self.signals = set()
         self.num_states = 0
         self.states = set()
-        self.num_events = 0
-        self.events = set()
+        self.events = list()
 
     @property
     def system(self):
@@ -55,15 +54,20 @@ class System:
         self.num_states += count
         return start_index
 
-    def allocate_event_line(self):
+    def register_event(self, event):
         """
-        Allocate a single event line.
+        Register an event.
 
-        :return: The index of the event line allocated
+        :return: The index of the event line allocated for the event
         """
-        start_index = self.num_events
-        self.num_events += 1
-        return start_index
+        event_index = len(self.events)
+        self.events.append(event)
+        return event_index
+
+    @property
+    def num_events(self):
+        """The number of events registered with this system"""
+        return len(self.events)
 
 
 class Block:

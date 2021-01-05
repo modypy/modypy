@@ -8,5 +8,4 @@ class Event:
         self.owner = owner
         self.event_function = event_function
         self.update_function = update_function
-        self.event_index = self.owner.system.allocate_event_line()
-        self.owner.system.events.add(self)
+        self.event_index = self.owner.system.register_event(self)

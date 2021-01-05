@@ -1,45 +1,44 @@
-from simtree.blocks import LeafBlock
-from simtree.compiler import compile
+from simtree.model import System, Block, State, Signal, Event
 from simtree.simulator import Simulator, DEFAULT_INTEGRATOR_OPTIONS
+import numpy as np
 import matplotlib.pyplot as plt
 
 
-class BouncingBall(LeafBlock):
-    def __init__(self, gravity=-9.81, gamma=0.3, **kwargs):
-        LeafBlock.__init__(self, num_states=4, num_events=1,
-                           num_outputs=2, **kwargs)
+class BouncingBall(Block):
+    def __init__(self, parent, gravity=-9.81, gamma=0.3, initial_velocity=None, initial_position=None):
+        Block.__init__(self, parent)
+        self.position = State(self, shape=2, derivative_function=self.position_derivative, initial_condition=initial_position)
+        self.velocity = State(self, shape=2, derivative_function=self.velocity_derivative, initial_condition=initial_velocity)
+        self.posy = Signal(self, shape=1, function=self.posy_output)
+        self.ground = Event(self, event_function=self.ground_event, update_function=self.on_ground_event)
         self.gravity = gravity
         self.gamma = gamma
 
-    @staticmethod
-    def output_function(time, state):
-        del time  # unused
-        return [state[1]]
+    def position_derivative(self, data):
+        return data.states[self.velocity]
 
-    def state_update_function(self, time, state):
-        del time  # unused
-        return [state[2], state[3],
-                -self.gamma * state[2], self.gravity - self.gamma * state[3]]
+    def velocity_derivative(self, data):
+        velocity = data.states[self.velocity]
+        return np.r_[-self.gamma * velocity[0], self.gravity - self.gamma * velocity[1]]
 
-    @staticmethod
-    def event_function(time, state):
-        del time  # unused
-        return [state[1]]
+    def posy_output(self, data):
+        return data.states[self.position][1]
 
-    @staticmethod
-    def update_state_function(time, state):
-        del time  # unused
-        return [state[0], abs(state[1]), state[2], -state[3]]
+    def ground_event(self, data):
+        return data.states[self.position][1]
+
+    def on_ground_event(self, data):
+        data.states[self.position][1] = abs(data.states[self.position][1])
+        data.states[self.velocity][1] = - data.states[self.velocity][1]
 
 
 DEFAULT_INTEGRATOR_OPTIONS['max_step'] = 0.05
 
-sys = BouncingBall(initial_condition=[0, 10, 1, 0])
+system = System()
+block = BouncingBall(system, initial_velocity=[1,0], initial_position=[0, 10])
 
-sys_compiled = compile(sys)
-
-simulator = Simulator(sys_compiled, t0=0., t_bound=10.0)
-simulator.run()
+simulator = Simulator(system, start_time=0.0)
+simulator.run_until(10.0)
 
 plt.plot(simulator.result.state[:, 0], simulator.result.state[:, 1])
 plt.show()

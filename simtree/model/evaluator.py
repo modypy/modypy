@@ -34,8 +34,13 @@ class Evaluator:
         self.signal_evaluation_stack = list()
         self.signal_evaluation_set = set()
 
-        self._events = np.zeros(system.num_events)
-        self.valid_events = set()
+        self._event_values = np.zeros(system.num_events)
+        self.valid_event_values = set()
+
+    @property
+    def state(self):
+        """The current state"""
+        return self._state
 
     @property
     def state_derivative(self):
@@ -46,7 +51,7 @@ class Evaluator:
         return self._state_derivative
 
     @property
-    def signal_vector(self):
+    def signals(self):
         """The signal vector for the complete system."""
         for signal_instance in self.system.signals:
             # Trigger calculation of the signal
@@ -59,7 +64,7 @@ class Evaluator:
         for event_instance in self.system.events:
             # Trigger calculation of the event function
             self.get_event_value(event_instance)
-        return self._events
+        return self._event_values
 
     def get_state_value(self, state: State):
         """
@@ -156,14 +161,14 @@ class Evaluator:
         :raises AlgebraicLoopException: if an algebraic loop is encountered
             while evaluating the value of the event function
         """
-        if event in self.valid_events:
-            return self._events[event.event_index]
+        if event in self.valid_event_values:
+            return self._event_values[event.event_index]
         data = DataProvider(self.time,
                             StateProvider(self),
                             PortProvider(self))
         event_value = event.event_function(data)
-        self._events[event.event_index] = event_value
-        self.valid_events.add(event)
+        self._event_values[event.event_index] = event_value
+        self.valid_event_values.add(event)
         return event_value
 
 
@@ -181,6 +186,20 @@ class StateProvider:
     def __getitem__(self, state):
         return self.evaluator.get_state_value(state)
 
+
+class StateUpdater:
+    def __init__(self, evaluator):
+        self.new_state = evaluator.state.copy()
+
+    def __setitem__(self, state, value):
+        start_index = state.state_index
+        end_index = start_index + state.size
+        self.new_state[start_index:end_index] = np.asarray(value).flatten()
+
+    def __getitem__(self, state):
+        start_index = state.state_index
+        end_index = start_index + state.size
+        return self.new_state[start_index:end_index].reshape(state.shape)
 
 class PortProvider:
     def __init__(self, evaluator):

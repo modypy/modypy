@@ -21,7 +21,7 @@ class State:
         if initial_condition is None:
             self.initial_condition = np.zeros(self.shape)
         else:
-            self.initial_condition = initial_condition
+            self.initial_condition = np.asarray(initial_condition)
 
         self.state_index = self.owner.system.allocate_state_lines(self.size)
         self.owner.system.states.add(self)

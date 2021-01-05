@@ -1,9 +1,11 @@
+import itertools
+
 import numpy as np
 import scipy.integrate
 import scipy.optimize
 
 from simtree.model.system import System
-from simtree.model.evaluator import Evaluator
+from simtree.model.evaluator import Evaluator, DataProvider, StateUpdater, PortProvider
 
 INITIAL_RESULT_SIZE = 16
 RESULT_SIZE_EXTENSION = 16
@@ -17,7 +19,7 @@ DEFAULT_INTEGRATOR_OPTIONS = {
 DEFAULT_ROOTFINDER = scipy.optimize.brentq
 DEFAULT_ROOTFINDER_OPTIONS = {
     'xtol': 1.E-12,
-    'maxiter': 1E3
+    'maxiter': 1000
 }
 
 
@@ -93,7 +95,7 @@ class Simulator:
 
         The simulator is written with the interface of
         `scipy.integrate.OdeSolver` in mind for the integrator, specifically
-        using the constructor, the `step` and the `dense_output` functions as
+        using the constructor, the `step` and the `state_trajectory` functions as
         well as the `status` property. However, it is possible to use other
         integrators if they honor this interface.
 
@@ -137,7 +139,7 @@ class Simulator:
         evaluator = Evaluator(system=self.system,
                               time=self.current_time,
                               state=self.current_state)
-        self.current_signals = evaluator.signal_vector
+        self.current_signals = evaluator.signals
         self.current_event_values = evaluator.event_values
 
         # Store the initial state
@@ -153,6 +155,7 @@ class Simulator:
         :param t_bound: The maximum time until which the simulation may proceed.
         """
 
+        last_time = self.current_time
         last_event_values = self.current_event_values
 
         integrator = self.integrator_constructor(fun=self.state_derivative,
@@ -167,15 +170,55 @@ class Simulator:
         evaluator = Evaluator(system=self.system,
                               time=integrator.t,
                               state=integrator.y)
-        events_crossed = np.flatnonzero(np.sign(last_event_values) !=
-                                        np.sign(evaluator.event_values))
-        if len(events_crossed)>0:
-            # TODO: Handle events
-            pass
 
+        # Check for events
+        event_indices = np.flatnonzero(np.sign(last_event_values) !=
+                                       np.sign(evaluator.event_values))
+        if len(event_indices) > 0:
+            events_occurred = [self.system.events[idx] for idx in event_indices]
+            state_interpolator = integrator.dense_output()
+            start_time = last_time
+            end_time = integrator.t
+
+            first_event, first_event_time = \
+                self.find_first_event(state_interpolator,
+                                      start_time,
+                                      end_time,
+                                      events_occurred)
+
+            self.current_time = first_event_time + 1.E-3
+            self.current_state = state_interpolator(self.current_time)
+
+            if first_event.update_function is not None:
+                # Call the event handler function to update the state
+                update_evaluator = Evaluator(system=self.system,
+                                             time=self.current_time,
+                                             state=self.current_state)
+                state_updater = StateUpdater(update_evaluator)
+                port_provider = PortProvider(update_evaluator)
+                data = DataProvider(time=self.current_time,
+                                    states=state_updater,
+                                    inputs=port_provider)
+                first_event.update_function(data)
+                self.current_state = state_updater.new_state
+
+            evaluator = Evaluator(system=self.system,
+                                  time=self.current_time,
+                                  state=self.current_state)
+            self.current_signals = evaluator.signals
+            self.current_event_values = evaluator.event_values
+
+            self.result.append(time=self.current_time,
+                               state=self.current_state,
+                               signals=self.current_signals,
+                               events=self.current_event_values)
+            return None
+
+        # No event occurred, so we simply accept the integrator end-point as the
+        # next sample point.
         self.current_time = integrator.t
         self.current_state = integrator.y
-        self.current_signals = evaluator.signal_vector
+        self.current_signals = evaluator.signals
         self.current_event_values = evaluator.event_values
 
         self.result.append(time=self.current_time,
@@ -183,6 +226,53 @@ class Simulator:
                            signals=self.current_signals,
                            events=self.current_event_values)
         return None
+
+    def find_first_event(self, state_trajectory, start_time, end_time, events_occurred):
+        """
+        Determine the event that occurred first.
+
+        :param state_trajectory: A callable that accepts a time in the interval
+            given by ``start_time`` and ``end_time`` and provides the state
+            vector for that point in time.
+        :param start_time: The lower limit of the time range to be considered.
+        :param end_time: The upper limit of the time range to be considered.
+        :param events_occurred: The list of events that occurred within the
+            given time interval.
+        :return: A tuple `(event, time)`, giving the event that occurred first
+            and the time at which it occurred.
+        """
+
+        # For each event that occurred we determine the exact time that it
+        # occurred. For that, we use the the state trajectory provided and
+        # determine the time at which the event function becomes zero.
+        # We do that for every event and then identify the event that has the
+        # minimum time associated with it.
+        event_times = np.empty(len(events_occurred))
+
+        for list_index, event in zip(itertools.count(), events_occurred):
+            def objective_function(time):
+                """
+                Determine the value of the event at different points in
+                time.
+                """
+
+                intermediate_state = state_trajectory(time)
+                intermediate_evaluator = Evaluator(system=self.system,
+                                                   time=time,
+                                                   state=intermediate_state)
+                event_value = intermediate_evaluator.get_event_value(event)
+                return event_value
+
+            event_times[list_index] = \
+                self.rootfinder_constructor(f=objective_function,
+                                            a=start_time,
+                                            b=end_time,
+                                            **self.rootfinder_options)
+        minimum_list_index = np.argmin(event_times)
+        first_event = events_occurred[minimum_list_index]
+        first_event_time = event_times[minimum_list_index]
+
+        return first_event, first_event_time
 
     def run_until(self, t_bound):
         while self.current_time < t_bound:
