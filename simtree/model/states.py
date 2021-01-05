@@ -36,6 +36,7 @@ class State:
 
     @property
     def slice(self):
+        """A slice that can be used to index state vectors"""
         return slice(self.state_index,
                      self.state_index + self.size)
 
@@ -49,4 +50,5 @@ class SignalState(State, Signal):
         Signal.__init__(self, owner, shape, function=self.output_function)
 
     def output_function(self, data):
+        """The output function that returns the state"""
         return data.states[self]

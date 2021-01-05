@@ -39,6 +39,7 @@ class Port:
 
     @property
     def slice(self):
+        """A slice object that can be used to index signal vectors"""
         return self.signal.indices
 
     def connect(self, other):
@@ -98,5 +99,6 @@ class Signal(Port):
 
     @property
     def slice(self):
+        """A slice object that can be used to index signal vectors"""
         return slice(self.signal_index,
                      self.signal_index+self.size)

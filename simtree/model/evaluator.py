@@ -73,9 +73,7 @@ class Evaluator:
         :param state: The state
         :return:  The value of the state
         """
-        start_index = state.state_index
-        end_index = start_index + state.size
-        return self._state[start_index:end_index].reshape(state.shape)
+        return self._state[state.slice].reshape(state.shape)
 
     def get_port_value(self, port: Port):
         """
@@ -91,13 +89,11 @@ class Evaluator:
             while evaluating the value of the signal
         """
         signal = port.signal
-        start_index = signal.signal_index
-        end_index = start_index + signal.size
 
         if signal in self.valid_signals:
             # That signal was already evaluated, so just return the value in
             # proper shape.
-            return self._signals[start_index:end_index]\
+            return self._signals[signal.slice]\
                 .reshape(signal.shape)
 
         # The signal has not yet been evaluated, so we try to do that now
@@ -119,7 +115,7 @@ class Evaluator:
         # Ensure that the signal has the correct shape
         signal_value = np.asarray(signal_value).reshape(signal.shape)
         # Assign the value to the signal_vector
-        self._signals[start_index:end_index] = signal_value.flatten()
+        self._signals[signal.slice] = signal_value.flatten()
         # Mark the signal as valid
         self.valid_signals.add(signal)
 
@@ -139,16 +135,14 @@ class Evaluator:
         :raises AlgebraicLoopException: if an algebraic loop is encountered
             while evaluating the derivative of the state instance
         """
-        start_index = state.state_index
-        end_index = start_index + state.size
         if state in self.valid_state_derivatives:
-            return self._state_derivative[start_index:end_index].reshape(state.shape)
+            return self._state_derivative[state.slice].reshape(state.shape)
         data = DataProvider(self.time,
                             StateProvider(self),
                             PortProvider(self))
         state_derivative = state.derivative_function(data)
         state_derivative = np.asarray(state_derivative).reshape(state.shape)
-        self._state_derivative[start_index:end_index] = state_derivative.flatten()
+        self._state_derivative[state.slice] = state_derivative.flatten()
         self.valid_state_derivatives.add(state)
         return state_derivative
 
