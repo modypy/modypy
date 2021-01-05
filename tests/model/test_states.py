@@ -1,29 +1,45 @@
-"""Tests for the simtree.model.states module"""
+"""Tests for the `simtree.model.states`` package"""
 import numpy as np
+import numpy.testing as npt
 
-from simtree.model import System, Block, Port
-from simtree.model.states import State
-
-
-class SimpleBlock(Block):
-    """A simple block with a few states"""
-    def __init__(self, parent):
-        Block.__init__(self, parent)
-        self.omega_dot = Port(self, shape=3)
-        self.omega = State(self, shape=3, derivative_function=self.omega_dot)
-        self.dcm = State(self, shape=(3, 3), derivative_function=self.dcm_dot, initial_condition=np.eye(3))
-
-    def omega_dot(self):
-        pass
-
-    def dcm_dot(self):
-        pass
+from simtree.model import System
+from simtree.model.evaluator import Evaluator
+from simtree.model.states import State, SignalState
 
 
-def test_state_basics():
-    """Test some basic functionality of states and state instances"""
+def test_state():
+    """Test the ``State`` class"""
+
     system = System()
-    block = SimpleBlock(system)
+    state_a = State(system,
+                    derivative_function=(lambda data: 0))
+    state_b = State(system, shape=3,
+                    derivative_function=(lambda data: np.zeros(3)))
+    state_c = State(system, shape=(3, 3),
+                    derivative_function=(lambda data: np.zeros(3, 3)))
+    state_d = State(system,
+                    derivative_function=(lambda data: 0),
+                    initial_condition=1)
 
-    assert block.omega.size == 3
-    assert block.dcm.size == 9
+    # Check the sizes
+    assert state_a.size == 1
+    assert state_b.size == 3
+    assert state_c.size == 9
+    assert state_d.size == 1
+
+    # Test the slice property
+    assert state_c.state_slice == slice(state_c.state_index,
+                                        state_c.state_index + state_c.size)
+
+
+def test_signal_state():
+    """Test the ``SignalState`` class"""
+
+    system = System()
+    state_a = SignalState(system,
+                          derivative_function=(lambda data: 0))
+
+    # Test the output
+    evaluator = Evaluator(time=0, system=system)
+    npt.assert_almost_equal(evaluator.get_port_value(state_a),
+                            np.zeros(1))

@@ -42,7 +42,7 @@ class Port:
     @property
     def signal_slice(self):
         """A slice object that can be used to index signal vectors"""
-        return self.signal.indices
+        return self.signal.signal_slice
 
     def connect(self, other):
         """
@@ -99,7 +99,7 @@ class Signal(Port):
     A signal provides the value for all ports connected to it.
     """
 
-    def __init__(self, owner, shape: ShapeType, value):
+    def __init__(self, owner, shape: ShapeType = 1, value=0):
         Port.__init__(self, owner, shape)
         self.signal_index = self.owner.system.allocate_signal_lines(self.size)
         self.owner.system.signals.append(self)
