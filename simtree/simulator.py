@@ -190,7 +190,7 @@ class Simulator:
             self.current_state = state_interpolator(self.current_time)
 
             if first_event.update_function is not None:
-                # Call the event handler function to update the state
+                # Call the event handler value to update the state
                 update_evaluator = Evaluator(system=self.system,
                                              time=self.current_time,
                                              state=self.current_state)
@@ -244,7 +244,7 @@ class Simulator:
 
         # For each event that occurred we determine the exact time that it
         # occurred. For that, we use the the state trajectory provided and
-        # determine the time at which the event function becomes zero.
+        # determine the time at which the event value becomes zero.
         # We do that for every event and then identify the event that has the
         # minimum time associated with it.
         event_times = np.empty(len(events_occurred))

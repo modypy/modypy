@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 from simtree.blocks.aerodyn import Propeller
 from simtree.blocks.elmech import DCMotor
-from simtree.blocks.sources import Constant
+from simtree.blocks.sources import constant
 from simtree.model import System
 from simtree.simulator import Simulator
 from simtree.utils.uiuc_db import load_static_propeller
@@ -34,12 +34,12 @@ propeller.torque.connect(dcmotor.external_torque)
 dcmotor.speed_rps.connect(propeller.speed_rps)
 
 # Create the sources
-voltage = Constant(system, value=3.5)
-density = Constant(system, value=1.29)
+voltage = constant(system, value=3.5)
+density = constant(system, value=1.29)
 
 # Connect the sources
-voltage.output.connect(dcmotor.voltage)
-density.output.connect(propeller.density)
+voltage.connect(dcmotor.voltage)
+density.connect(propeller.density)
 
 # Run the simulator
 simulator = Simulator(system=system, start_time=0)

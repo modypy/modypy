@@ -47,7 +47,7 @@ class SignalState(State, Signal):
     """
     def __init__(self, owner, derivative_function, shape=1, initial_condition=None):
         State.__init__(self, owner, derivative_function, shape, initial_condition)
-        Signal.__init__(self, owner, shape, function=self.output_function)
+        Signal.__init__(self, owner, shape, value=self.output_function)
 
     def output_function(self, data):
         """The output function that returns the state"""

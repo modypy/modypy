@@ -62,7 +62,7 @@ class Evaluator:
     def event_values(self):
         """The event vector for the complete system."""
         for event_instance in self.system.events:
-            # Trigger calculation of the event function
+            # Trigger calculation of the event value
             self.get_event_value(event_instance)
         return self._event_values
 
@@ -110,7 +110,10 @@ class Evaluator:
         data = DataProvider(self.time,
                             StateProvider(self),
                             PortProvider(self))
-        signal_value = signal.function(data)
+        if callable(signal.value):
+            signal_value = signal.value(data)
+        else:
+            signal_value = signal.value
 
         # Ensure that the signal has the correct shape
         signal_value = np.asarray(signal_value).reshape(signal.shape)

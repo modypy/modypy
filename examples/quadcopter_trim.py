@@ -6,7 +6,7 @@ import scipy.linalg as la
 from simtree.model import Block, Port, System
 from simtree.blocks.aerodyn import Propeller, Thruster
 from simtree.blocks.elmech import DCMotor
-from simtree.blocks.sources import Constant
+from simtree.blocks.sources import constant
 from simtree.blocks.linear import Sum
 from simtree.linearization import find_steady_state, system_jacobian
 from simtree.utils.uiuc_db import load_static_propeller
@@ -83,17 +83,17 @@ engines = [
            **parameters),
 ]
 
-gravity_source = Constant(system, value=np.c_[0, 0, 1.5*9.81])
-density = Constant(system, value=1.29)
+gravity_source = constant(system, value=np.r_[0, 0, 1.5*9.81])
+density = constant(system, value=1.29)
 thrust_sum = Sum(system, channel_weights=[1, 1, 1, 1, 1], output_size=3)
 torque_sum = Sum(system, channel_weights=[1, 1, 1, 1], output_size=3)
 
 for idx, engine in zip(itertools.count(), engines):
-    engine.density.connect(density.output)
+    engine.density.connect(density)
     engine.thrust_vector.connect(thrust_sum.inputs[idx])
     engine.torque_vector.connect(torque_sum.inputs[idx])
 
-gravity_source.output.connect(thrust_sum.inputs[-1])
+gravity_source.connect(thrust_sum.inputs[-1])
 
 # solution: omega=855, i=66.77, v=3.565
 

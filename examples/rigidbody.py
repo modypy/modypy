@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from simtree.model import System
-from simtree.blocks.sources import Constant
+from simtree.blocks.sources import constant
 from simtree.blocks.rigid import RigidBody6DOFFlatEarth, DirectCosineToEuler
 from simtree.simulator import Simulator
 
@@ -22,14 +22,12 @@ rb_6dof = RigidBody6DOFFlatEarth(system,
                                  initial_angular_rates_earth=[0, 0, OMEGA],
                                  moment_of_inertia=moment_of_inertia)
 dcm_to_euler = DirectCosineToEuler(system)
-thrust = Constant(system, value=np.r_[0, MASS * OMEGA * VELOCITY_X, 0])
-moment = Constant(system, value=np.r_[0, 0, 0])
+thrust = constant(system, value=np.r_[0, MASS * OMEGA * VELOCITY_X, 0])
+moment = constant(system, value=np.r_[0, 0, 0])
 
-thrust.output.connect(rb_6dof.forces_body)
-moment.output.connect(rb_6dof.moments_body)
+thrust.connect(rb_6dof.forces_body)
+moment.connect(rb_6dof.moments_body)
 rb_6dof.dcm.connect(dcm_to_euler.dcm)
-
-print(system.initial_condition[rb_6dof.dcm.slice])
 
 sim = Simulator(system, start_time=0)
 message = sim.run_until(t_bound=120.0)

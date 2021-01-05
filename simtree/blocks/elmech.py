@@ -55,8 +55,8 @@ class DCMotor(Block):
         self.omega = State(self, shape=1, derivative_function=self.omega_dot)
         self.current = State(self, shape=1, derivative_function=self.current_dot)
 
-        self.speed_rps = Signal(self, shape=1, function=self.speed_rps_output)
-        self.torque = Signal(self, shape=1, function=self.torque_output)
+        self.speed_rps = Signal(self, shape=1, value=self.speed_rps_output)
+        self.torque = Signal(self, shape=1, value=self.torque_output)
 
     def omega_dot(self, data):
         """Calculates the derivative of the speed in rad/s^2"""

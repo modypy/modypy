@@ -57,7 +57,7 @@ class LTISystem(Block):
                            derivative_function=self.state_derivative)
         self.output = Signal(self,
                              shape=self.output_matrix.shape[0],
-                             function=self.output_function)
+                             value=self.output_function)
 
     def state_derivative(self, data):
         """Calculates the state derivative for the system"""
@@ -86,7 +86,7 @@ class Gain(Block):
         self.input = Port(self, shape=k.shape[0])
         self.output = Signal(self,
                              shape=k.shape[1],
-                             function=self.output_function)
+                             value=self.output_function)
 
     def output_function(self, data):
         """Calculates the output for the system"""
@@ -118,7 +118,7 @@ class Sum(Block):
                        for port_idx in range(self.channel_weights.shape[0])]
         self.output = Signal(self,
                              shape=self.output_size,
-                             function=self.output_function)
+                             value=self.output_function)
 
     def output_function(self, data):
         """Calculates the output for the system"""

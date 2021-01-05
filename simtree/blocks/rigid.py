@@ -70,10 +70,10 @@ class RigidBody6DOFFlatEarth(Block):
 
         self.velocity_body = Signal(self,
                                     shape=3,
-                                    function=self.velocity_body_output)
+                                    value=self.velocity_body_output)
         self.omega_body = Signal(self,
                                  shape=3,
-                                 function=self.omega_body_output)
+                                 value=self.omega_body_output)
 
     def velocity_earth_dot(self, data):
         """Calculates the acceleration in the earth reference frame"""
@@ -129,9 +129,9 @@ class DirectCosineToEuler(Block):
         Block.__init__(self, parent)
 
         self.dcm = Port(self, shape=(3, 3))
-        self.yaw = Signal(self, shape=1, function=self.calculate_yaw)
-        self.pitch = Signal(self, shape=1, function=self.calculate_pitch)
-        self.roll = Signal(self, shape=1, function=self.calculate_roll)
+        self.yaw = Signal(self, shape=1, value=self.calculate_yaw)
+        self.pitch = Signal(self, shape=1, value=self.calculate_pitch)
+        self.roll = Signal(self, shape=1, value=self.calculate_roll)
 
     def calculate_yaw(self, data):
         """Calculate the yaw angle for the given direct cosine matrix"""

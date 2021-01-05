@@ -60,7 +60,7 @@ def test_lti_simulation(lti_system_with_reference):
                                                    rtol=simulator.integrator_options['rtol'],
                                                    atol=simulator.integrator_options['atol'])
 
-    # Determine the output values at the simulated times as per the reference function
+    # Determine the output values at the simulated times as per the reference value
     npt.assert_allclose(ref_time,
                         simulator.result.time)
     npt.assert_allclose(simulator.result.state,
@@ -176,4 +176,4 @@ def test_input_function(system, input_function):
     assert message is None
     assert simulator.status == "finished"
 
-    # TODO: Check for correspondence between inputs in result and values from input function
+    # TODO: Check for correspondence between inputs in result and values from input value

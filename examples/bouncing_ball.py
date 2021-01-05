@@ -9,7 +9,7 @@ class BouncingBall(Block):
         Block.__init__(self, parent)
         self.position = State(self, shape=2, derivative_function=self.position_derivative, initial_condition=initial_position)
         self.velocity = State(self, shape=2, derivative_function=self.velocity_derivative, initial_condition=initial_velocity)
-        self.posy = Signal(self, shape=1, function=self.posy_output)
+        self.posy = Signal(self, shape=1, value=self.posy_output)
         self.ground = Event(self, event_function=self.ground_event, update_function=self.on_ground_event)
         self.gravity = gravity
         self.gamma = gamma

@@ -16,8 +16,8 @@ class SimpleBlock(Block):
         self.port_c = Port(self, shape=1)
         self.port_d = Port(self, shape=3)
 
-        self.signal_a = Signal(self, shape=(3, 3), function=self.signal_a_func())
-        self.signal_b = Signal(self, shape=(3, 3), function=self.signal_b_func())
+        self.signal_a = Signal(self, shape=(3, 3), value=self.signal_a_func())
+        self.signal_b = Signal(self, shape=(3, 3), value=self.signal_b_func())
 
     def signal_a_func(self):
         pass

@@ -85,11 +85,11 @@ class Signal(Port):
     A signal provides the value for all ports connected to it.
     """
 
-    def __init__(self, owner, shape: ShapeType, function: callable):
+    def __init__(self, owner, shape: ShapeType, value: callable):
         Port.__init__(self, owner, shape)
         self.signal_index = self.owner.system.allocate_signal_lines(self.size)
         self.owner.system.signals.add(self)
-        self.function = function
+        self.value = value
 
     @property
     def signal(self):
