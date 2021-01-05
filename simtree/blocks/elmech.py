@@ -58,9 +58,9 @@ class DCMotor(Block):
                            derivative_function=self.omega_dot,
                            initial_condition=initial_omega)
         self.current = SignalState(self,
-                             shape=1,
-                             derivative_function=self.current_dot,
-                             initial_condition=initial_current)
+                                   shape=1,
+                                   derivative_function=self.current_dot,
+                                   initial_condition=initial_current)
 
         self.speed_rps = Signal(self, shape=1, value=self.speed_rps_output)
         self.torque = Signal(self, shape=1, value=self.torque_output)

@@ -1,10 +1,7 @@
-from itertools import accumulate
-
 import numpy as np
 from scipy.optimize import root
 from scipy.misc import central_diff_weights
 
-from simtree.model import Signal, InputSignal, OutputPort
 from simtree.model.evaluator import Evaluator
 
 
@@ -36,8 +33,6 @@ def find_steady_state(system,
 
     :param system: The system to analyze.
     :param time: The time at which to determine the steady state. Default: 0
-    :param constrained_ports: The list of ports that are constrained to 0.
-        Default: empty list
     :param method: The solver method to use. Refer to the documentation for
         `scipy.optimize.root` for more information on the available methods.
     :param solver_options: The options to pass to the solver.
@@ -57,18 +52,7 @@ def find_steady_state(system,
     initial_value = np.concatenate((system.initial_condition,
                                     system.initial_input))
 
-    def system_constraint_function(x):
-        state = x[:system.num_states]
-        inputs = x[system.num_states:]
-
-        evaluator = Evaluator(time=time, system=system, state=state, inputs=inputs)
-
-        state_derivative = evaluator.state_derivative
-        output_vector = evaluator.outputs
-
-        return np.concatenate((state_derivative, output_vector))
-
-    sol = root(fun=system_constraint_function,
+    sol = root(fun=(lambda x: _system_function(system, time, x)),
                x0=initial_value,
                method=method,
                options=solver_options,

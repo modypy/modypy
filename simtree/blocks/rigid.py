@@ -4,7 +4,7 @@ Blocks for stiff body dynamics
 import numpy as np
 import numpy.linalg as linalg
 
-from simtree.model import Block, Port, State, Signal, SignalState
+from simtree.model import Block, Port, Signal, SignalState
 
 
 class RigidBody6DOFFlatEarth(Block):
@@ -64,7 +64,7 @@ class RigidBody6DOFFlatEarth(Block):
                                        derivative_function=self.omega_earth_dot,
                                        initial_condition=initial_angular_rates_earth)
         self.dcm = SignalState(self,
-                               shape=(3,3),
+                               shape=(3, 3),
                                derivative_function=self.dcm_dot,
                                initial_condition=initial_transformation)
 

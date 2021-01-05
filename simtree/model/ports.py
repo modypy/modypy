@@ -93,6 +93,7 @@ class OutputPort(Port):
         return slice(self.output_index,
                      self.output_index+self.size)
 
+
 class Signal(Port):
     """
     A signal provides the value for all ports connected to it.

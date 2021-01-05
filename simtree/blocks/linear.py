@@ -53,7 +53,7 @@ class LTISystem(Block):
 
         self.input = Port(self, shape=self.input_matrix.shape[1])
         self.state = State(self,
-                           state=self.system_matrix.shape[0],
+                           shape=self.system_matrix.shape[0],
                            derivative_function=self.state_derivative)
         self.output = Signal(self,
                              shape=self.output_matrix.shape[0],
@@ -115,7 +115,7 @@ class Sum(Block):
         self.output_size = output_size
 
         self.inputs = [Port(self, shape=self.output_size)
-                       for port_idx in range(self.channel_weights.shape[0])]
+                       for _ in range(self.channel_weights.shape[0])]
         self.output = Signal(self,
                              shape=self.output_size,
                              value=self.output_function)
