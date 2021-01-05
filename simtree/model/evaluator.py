@@ -173,6 +173,19 @@ class Evaluator:
 
 
 class DataProvider:
+    """
+    A ``DataProvider`` provides access to the data about the current point in
+    time in the simulation. It has the following properties:
+
+    ``time``
+        The current time
+    ``states``
+        The contents of the current states, accessed by indexing using the
+        ``State`` objects.
+    ``inputs``
+        The contents of the current inputs, accessed by indexing using the
+        ``Port`` objects.
+    """
     def __init__(self, time, states, inputs):
         self.time = time
         self.states = states
@@ -180,6 +193,10 @@ class DataProvider:
 
 
 class StateProvider:
+    """
+    A ``StateProvider`` provides access to the state via indexing using the
+    ``State`` objects.
+    """
     def __init__(self, evaluator):
         self.evaluator = evaluator
 
@@ -187,21 +204,11 @@ class StateProvider:
         return self.evaluator.get_state_value(state)
 
 
-class StateUpdater:
-    def __init__(self, evaluator):
-        self.new_state = evaluator.state.copy()
-
-    def __setitem__(self, state, value):
-        start_index = state.state_index
-        end_index = start_index + state.size
-        self.new_state[start_index:end_index] = np.asarray(value).flatten()
-
-    def __getitem__(self, state):
-        start_index = state.state_index
-        end_index = start_index + state.size
-        return self.new_state[start_index:end_index].reshape(state.shape)
-
 class PortProvider:
+    """
+    A ``PortProvider`` provides access to the signals via indexing using the
+    ``Port`` objects.
+    """
     def __init__(self, evaluator):
         self.evaluator = evaluator
 

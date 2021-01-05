@@ -5,7 +5,7 @@ import scipy.integrate
 import scipy.optimize
 
 from simtree.model.system import System
-from simtree.model.evaluator import Evaluator, DataProvider, StateUpdater, PortProvider
+from simtree.model.evaluator import Evaluator, DataProvider, PortProvider
 
 INITIAL_RESULT_SIZE = 16
 RESULT_SIZE_EXTENSION = 16
@@ -285,3 +285,18 @@ class Simulator:
         evaluator = Evaluator(system=self.system, time=time, state=state)
         state_derivative = evaluator.state_derivative
         return state_derivative
+
+
+class StateUpdater:
+    def __init__(self, evaluator):
+        self.new_state = evaluator.state.copy()
+
+    def __setitem__(self, state, value):
+        start_index = state.state_index
+        end_index = start_index + state.size
+        self.new_state[start_index:end_index] = np.asarray(value).flatten()
+
+    def __getitem__(self, state):
+        start_index = state.state_index
+        end_index = start_index + state.size
+        return self.new_state[start_index:end_index].reshape(state.shape)
