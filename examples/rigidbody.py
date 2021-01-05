@@ -3,51 +3,48 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
-from simtree.compiler import compile
+from simtree.model import System
 from simtree.blocks.sources import Constant
 from simtree.blocks.rigid import RigidBody6DOFFlatEarth, DirectCosineToEuler
-from simtree.blocks import NonLeafBlock
 from simtree.simulator import Simulator
 
 MASS = 1.5
 OMEGA = 2 * math.pi / 120
 RADIUS = 10.0
 VELOCITY_X = RADIUS * OMEGA
-gravity = np.c_[0, 0, 9.81]
 moment_of_inertia = np.diag([13.2E-3, 12.8E-3, 24.6E-3])
 
-rb_6dof = RigidBody6DOFFlatEarth(mass=MASS,
-                                 gravity=gravity,
+system = System()
+
+rb_6dof = RigidBody6DOFFlatEarth(system,
+                                 mass=MASS,
                                  initial_velocity_earth=[VELOCITY_X, 0, 0],
                                  initial_angular_rates_earth=[0, 0, OMEGA],
                                  moment_of_inertia=moment_of_inertia)
-dcm_to_euler = DirectCosineToEuler()
-thrust = Constant(value=np.r_[0, MASS * OMEGA * VELOCITY_X, -1.5 * 9.81])
-moment = Constant(value=np.r_[0, 0, 0])
+dcm_to_euler = DirectCosineToEuler(system)
+thrust = Constant(system, value=np.r_[0, MASS * OMEGA * VELOCITY_X, 0])
+moment = Constant(system, value=np.r_[0, 0, 0])
 
-sys = NonLeafBlock(children=[thrust, moment, rb_6dof, dcm_to_euler],
-                   num_outputs=6)
-sys.connect(thrust, range(3), rb_6dof, range(0, 3))
-sys.connect(moment, range(3), rb_6dof, range(3, 6))
-sys.connect(rb_6dof, range(6, 15), dcm_to_euler, range(9))
-sys.connect_output(dcm_to_euler, range(3), range(3))
-sys.connect_output(rb_6dof, range(3, 6), range(3, 6))
+thrust.output.connect(rb_6dof.forces_body)
+moment.output.connect(rb_6dof.moments_body)
+rb_6dof.dcm.connect(dcm_to_euler.dcm)
 
-sys_compiled = compile(sys)
+print(system.initial_condition[rb_6dof.dcm.slice])
 
-sim = Simulator(sys_compiled, 0, 120.0)
-message = sim.run()
+sim = Simulator(system, start_time=0)
+message = sim.run_until(t_bound=120.0)
 
 assert message is None
 
-fig_euler, (ax_yaw, ax_pitch, ax_roll) = plt.subplots(nrows=3, sharex=True)
-ax_yaw.plot(sim.result.time, np.rad2deg(sim.result.output[:, 0]))
-ax_pitch.plot(sim.result.time, np.rad2deg(sim.result.output[:, 1]))
-ax_roll.plot(sim.result.time, np.rad2deg(sim.result.output[:, 2]))
+fig_euler, (ax_yaw, ax_pitch, ax_roll) = plt.subplots(nrows=3, sharex='row')
+ax_yaw.plot(sim.result.time, np.rad2deg(sim.result.signals[:, dcm_to_euler.yaw.slice]))
+ax_pitch.plot(sim.result.time, np.rad2deg(sim.result.signals[:, dcm_to_euler.pitch.slice]))
+ax_roll.plot(sim.result.time, np.rad2deg(sim.result.signals[:, dcm_to_euler.roll.slice]))
 ax_yaw.set_title("Yaw")
 ax_pitch.set_title("Pitch")
 ax_roll.set_title("Roll")
 
-fig_topview, ax = plt.subplots()
-ax.plot(sim.result.output[:, 3], sim.result.output[:, 4])
+fig_top_view, ax = plt.subplots()
+position = sim.result.signals[:, rb_6dof.position_earth.slice]
+ax.plot(position[:, 0], position[:, 1])
 plt.show()

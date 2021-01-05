@@ -1,26 +1,30 @@
+"""Provides some simple source blocks"""
 import numpy as np
-from simtree.blocks import LeafBlock
+
+from simtree.model import Block, Signal
 
 
-class Constant(LeafBlock):
+class Constant(Block):
     """
     A constant source block.
 
     Provides the given constant value as output.
     """
 
-    def __init__(self, value, **kwargs):
-        value = np.asarray(value).flatten()
+    def __init__(self, parent, value):
+        Block.__init__(self, parent)
+        self.value = np.asarray(value).flatten()
 
-        LeafBlock.__init__(self, num_outputs=value.size, **kwargs)
-        self.value = value
+        self.output = Signal(self,
+                             shape=self.value.shape,
+                             function=self.output_function)
 
-    def output_function(self, time):
-        del time  # unused
+    def output_function(self, data):
+        """Calculates the output of this block"""
         return self.value
 
 
-class SourceFromCallable(LeafBlock):
+class SourceFromCallable(Block):
     """A source block providing the output from a callable."""
 
     def __init__(self, fun, **kwargs):

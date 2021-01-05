@@ -2,12 +2,12 @@
 Blocks for stiff body dynamics
 """
 import numpy as np
-from numpy.linalg import solve
+import numpy.linalg as linalg
 
-from simtree.blocks import LeafBlock
+from simtree.model import Block, Port, State, Signal, SignalState
 
 
-class RigidBody6DOFFlatEarth(LeafBlock):
+class RigidBody6DOFFlatEarth(Block):
     """
     A block representing the motion of a rigid body in 6 degrees of freedom
     relative to a flat earth reference frame.
@@ -34,119 +34,87 @@ class RigidBody6DOFFlatEarth(LeafBlock):
         - the angular rates in the body reference frame.
     """
     def __init__(self,
+                 owner,
                  mass,
                  moment_of_inertia,
-                 gravity=None,
                  initial_velocity_earth=None,
                  initial_position_earth=None,
                  initial_transformation=None,
-                 initial_angular_rates_earth=None,
-                 **kwargs):
-        if gravity is None:
-            gravity = np.c_[0, 0, 9.81]
-        if initial_velocity_earth is None:
-            initial_velocity_earth = np.zeros(3)
-        if initial_position_earth is None:
-            initial_position_earth = np.zeros(3)
-        if initial_transformation is None:
-            initial_transformation = np.eye(3, 3)
-        if initial_angular_rates_earth is None:
-            initial_angular_rates_earth = np.zeros(3)
-        initial_condition = np.concatenate(
-            (initial_velocity_earth,
-             initial_position_earth,
-             initial_transformation,
-             initial_angular_rates_earth),
-            axis=None
-        )
-        LeafBlock.__init__(self,
-                           num_inputs=3+3,
-                           num_states=3+3+9+3,
-                           num_outputs=3+3+9+3+3,
-                           feedthrough_inputs=[],
-                           initial_condition=initial_condition,
-                           **kwargs)
+                 initial_angular_rates_earth=None):
+        Block.__init__(self, owner)
         self.mass = mass
         self.moment_of_inertia = moment_of_inertia
-        self.gravity = gravity
 
-    def state_update_function(self, time, state, inputs):
-        del time  # unused
+        self.forces_body = Port(self, shape=3)
+        self.moments_body = Port(self, shape=3)
 
-        # Get the relevant inputs
-        forces_body = inputs[0:3]
-        moments_body = inputs[3:6]
+        if initial_transformation is None:
+            initial_transformation = np.eye(3)
 
-        # Get the linear and angular accelerations in body frame
-        lin_accel_body = forces_body / self.mass
-        ang_accel_body = solve(self.moment_of_inertia, moments_body)
+        self.velocity_earth = SignalState(self,
+                                          shape=3,
+                                          derivative_function=self.velocity_earth_dot,
+                                          initial_condition=initial_velocity_earth)
+        self.position_earth = SignalState(self,
+                                          shape=3,
+                                          derivative_function=self.position_earth_dot,
+                                          initial_condition=initial_position_earth)
+        self.omega_earth = SignalState(self,
+                                       shape=3,
+                                       derivative_function=self.omega_earth_dot,
+                                       initial_condition=initial_angular_rates_earth)
+        self.dcm = SignalState(self,
+                               shape=(3,3),
+                               derivative_function=self.dcm_dot,
+                               initial_condition=initial_transformation)
 
-        # Get the relevant portions of the state
-        vel_earth = state[0:3]
-        trans_matrix = state[6:15].reshape(3, 3)
-        omega_earth = state[15:18]
+        self.velocity_body = Signal(self,
+                                    shape=3,
+                                    function=self.velocity_body_output)
+        self.omega_body = Signal(self,
+                                 shape=3,
+                                 function=self.omega_body_output)
 
-        # Transform the linear and angular acceleration into the earth frame
-        lin_accel_earth = trans_matrix @ lin_accel_body + self.gravity
-        ang_accel_earth = trans_matrix @ ang_accel_body
+    def velocity_earth_dot(self, data):
+        """Calculates the acceleration in the earth reference frame"""
+        forces_earth = data.states[self.dcm] @ data.inputs[self.forces_body]
+        accel_earth = forces_earth / self.mass
+        return accel_earth
 
-        # Determine the derivative of the transformation_matrix
-        omega_skew_matrix = np.asarray([
-            [0,               -omega_earth[2], +omega_earth[1]],
-            [+omega_earth[2], 0,               -omega_earth[0]],
-            [-omega_earth[1], +omega_earth[0], 0]
+    def position_earth_dot(self, data):
+        """Calculates the velocity in the earth reference frame"""
+        return data.states[self.velocity_earth]
+
+    def omega_earth_dot(self, data):
+        """Calculate the angular acceleration in the earth reference frame"""
+        moments_earth = data.states[self.dcm] @ data.inputs[self.moments_body]
+        ang_accel_earth = linalg.solve(self.moment_of_inertia, moments_earth)
+        return ang_accel_earth
+
+    def dcm_dot(self, data):
+        """Calculate the derivative of the direct cosine matrix"""
+        omega_earth = data.states[self.omega_earth]
+        skew_sym_matrix = np.array([
+            [0, -omega_earth[2], omega_earth[1]],
+            [omega_earth[2], 0, -omega_earth[0]],
+            [-omega_earth[1], omega_earth[0], 0]
         ])
-        trans_matrix_deriv = omega_skew_matrix @ trans_matrix
+        return skew_sym_matrix @ data.states[self.dcm]
 
-        # Return the state derivative
-        return np.concatenate(
-            (
-                # Change of velocity in earth reference frame
-                lin_accel_earth,
-                # Change of position in earth reference frame
-                vel_earth,
-                # Change of coordinate transformation matrix
-                trans_matrix_deriv,
-                # Change of angular velocity in earth reference frame
-                ang_accel_earth
-            ),
-            axis=None
-        )
+    def velocity_body_output(self, data):
+        """Calculate the velocity in the body reference frame"""
+        dcm = data.states[self.dcm]
+        velocity_earth = data.states[self.velocity_earth]
+        return dcm.T @ velocity_earth
 
-    @staticmethod
-    def output_function(time, state, inputs):
-        del time  # unused
-        del inputs  # unused
-
-        # Get the relevant portions of the state
-        vel_earth = state[0:3]
-        pos_earth = state[3:6]
-        trans_matrix = state[6:15].reshape(3, 3)
-        omega_earth = state[15:18]
-
-        # Calculate velocity and angular velocity in body reference frame
-        vel_body = solve(trans_matrix, vel_earth)
-        omega_body = solve(trans_matrix, omega_earth)
-
-        # Return all the outputs
-        return np.concatenate(
-            (
-                # velocity in earth reference frame
-                vel_earth,
-                # position in earth reference frame
-                pos_earth,
-                # coordinate transformation matrix
-                trans_matrix,
-                # velocity in body reference frame
-                vel_body,
-                # angular rates in the body reference frame
-                omega_body
-            ),
-            axis=None
-        )
+    def omega_body_output(self, data):
+        """Calculate the angular velocity in the body reference frame"""
+        dcm = data.states[self.dcm]
+        omega_earth = data.states[self.omega_earth]
+        return dcm.T @ omega_earth
 
 
-class DirectCosineToEuler(LeafBlock):
+class DirectCosineToEuler(Block):
     """
     A block translating a direct cosine matrix to Euler angles.
 
@@ -157,18 +125,25 @@ class DirectCosineToEuler(LeafBlock):
     # yaw: psi
     # pitch: theta
     # roll: phi
-    def __init__(self, **kwargs):
-        LeafBlock.__init__(self,
-                           num_inputs=9,
-                           num_outputs=3,
-                           **kwargs)
+    def __init__(self, parent):
+        Block.__init__(self, parent)
 
-    @staticmethod
-    def output_function(time, inputs):
-        del time  # unused
-        dcm = np.asarray(inputs).reshape(3,3)
-        psi = np.arctan2(dcm[1,0], dcm[0,0])
-        theta = np.arctan2(-dcm[2,0], np.sqrt(dcm[0,0]**2 + dcm[1,0]**2))
-        phi = np.arctan2(dcm[2,1], dcm[2,2])
+        self.dcm = Port(self, shape=(3, 3))
+        self.yaw = Signal(self, shape=1, function=self.calculate_yaw)
+        self.pitch = Signal(self, shape=1, function=self.calculate_pitch)
+        self.roll = Signal(self, shape=1, function=self.calculate_roll)
 
-        return np.r_[psi, theta, phi]
+    def calculate_yaw(self, data):
+        """Calculate the yaw angle for the given direct cosine matrix"""
+        dcm = data.inputs[self.dcm]
+        return np.arctan2(dcm[1, 0], dcm[0, 0])
+
+    def calculate_pitch(self, data):
+        """Calculate the pitch angle for the given direct cosine matrix"""
+        dcm = data.inputs[self.dcm]
+        return np.arctan2(-dcm[2, 0], np.sqrt(dcm[0, 0]**2 + dcm[1, 0]**2))
+
+    def calculate_roll(self, data):
+        """Calculate the roll angle for the given direct cosine matrix"""
+        dcm = data.inputs[self.dcm]
+        return np.arctan2(dcm[2, 1], dcm[2, 2])

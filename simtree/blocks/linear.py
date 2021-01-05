@@ -1,34 +1,32 @@
 """Blocks for linear, time-invariant systems"""
 import numpy as np
-from simtree.blocks import LeafBlock
+from simtree.model import Block, Port, State, Signal
 
 
-class LTISystem(LeafBlock):
+class LTISystem(Block):
     """
-    Implementation of a linear, time-invariant block of the format
+    Implementation of a linear, time-invariant block of the following format::
 
       dx/dt = system_matrix * x +        input_matrix * u
       y     = output_matrix * x + feed_through_matrix * u
 
-    The matrices system_matrix, input_matrix, output_matrix and
-    feed_through_matrix define the state and output behaviour of the block.
+    The matrices ``system_matrix``, ``input_matrix``, ``output_matrix`` and
+    ``feed_through_matrix`` define the state and output behaviour of the block.
     """
 
     def __init__(self,
+                 parent,
                  system_matrix,
                  input_matrix,
                  output_matrix,
-                 feed_through_matrix,
-                 **kwargs):
+                 feed_through_matrix):
+        Block.__init__(self, parent)
+
         system_matrix = np.atleast_2d(system_matrix)
         input_matrix = np.atleast_2d(input_matrix)
         output_matrix = np.atleast_2d(output_matrix)
         feed_through_matrix = np.atleast_2d(feed_through_matrix)
-        LeafBlock.__init__(self,
-                           num_states=system_matrix.shape[1],
-                           num_inputs=input_matrix.shape[1],
-                           num_outputs=output_matrix.shape[0],
-                           **kwargs)
+
         if system_matrix.shape[0] != system_matrix.shape[1]:
             raise ValueError("The system matrix must be square")
         if system_matrix.shape[0] != input_matrix.shape[0]:
@@ -47,80 +45,84 @@ class LTISystem(LeafBlock):
             raise ValueError(
                 "The width of the output matrix and the feed-through "
                 "matrix must be the same")
+
         self.system_matrix = system_matrix
         self.input_matrix = input_matrix
         self.output_matrix = output_matrix
         self.feed_through_matrix = feed_through_matrix
 
-    def state_update_function(self, time, *args):
-        del time  # unused
-        if self.num_states > 0:
-            dxdt = np.matmul(self.system_matrix, args[0])
-            if self.num_inputs > 0:
-                dxdt += np.matmul(self.input_matrix, args[1])
-            return dxdt
-        return np.empty(0)
+        self.input = Port(self, shape=self.input_matrix.shape[1])
+        self.state = State(self,
+                           state=self.system_matrix.shape[0],
+                           derivative_function=self.state_derivative)
+        self.output = Signal(self,
+                             shape=self.output_matrix.shape[0],
+                             function=self.output_function)
 
-    def output_function(self, time, *args):
-        del time  # unused
-        if self.num_states > 0 and self.num_inputs > 0:
-            return np.matmul(self.output_matrix, args[0]) + \
-                   np.matmul(self.feed_through_matrix, args[1])
-        if self.num_states > 0:
-            return np.matmul(self.output_matrix, args[0])
-        if self.num_inputs > 0:
-            return np.matmul(self.feed_through_matrix, args[0])
-        return np.zeros(self.num_outputs)
+    def state_derivative(self, data):
+        """Calculates the state derivative for the system"""
+        state = data.states[self.state]
+        inputs = data.states[self.input]
+        return (self.system_matrix @ state) + (self.input_matrix @ inputs)
+
+    def output_function(self, data):
+        """Calculates the output for the system"""
+        state = data.states[self.state]
+        inputs = data.states[self.input]
+        return (self.output_matrix @ state) + (self.feed_through_matrix @ inputs)
 
 
-class Gain(LeafBlock):
+class Gain(Block):
     """
     A simple linear gain block.
 
     Provides the input scaled by the constant gain as output.
     """
 
-    def __init__(self, k, **kwargs):
-        k = np.asarray(k)
-        LeafBlock.__init__(
-            self, num_inputs=k.shape[1], num_outputs=k.shape[0], **kwargs)
-        self.k = k
+    def __init__(self, parent, k):
+        Block.__init__(self, parent)
+        self.k = np.asarray(k)
 
-    def output_function(self, time, inputs):
-        del time  # unused
-        return np.matmul(self.k, inputs)
+        self.input = Port(self, shape=k.shape[0])
+        self.output = Signal(self,
+                             shape=k.shape[1],
+                             function=self.output_function)
+
+    def output_function(self, data):
+        """Calculates the output for the system"""
+        return self.k @ data.inputs[self.input]
 
 
-class Sum(LeafBlock):
+class Sum(Block):
     """
     A linear weighted sum block.
 
-    This block may have a number of inputs which are interpreted a vectors of
+    This block may have a number of inputs which are interpreted as vectors of
     common dimension. The output of the block is calculated as the weighted
     sum of the inputs.
 
-    The block has `channel_dim` outputs, which represent the elements of the
-    weighted vector sum of the inputs.
-    In that case, inputs `0:channel_dim` represent the first vector, inputs
-    `channel_dim:2*channel_dim` represent the second vector, etc.
-
-    The `channel_weights` give the factors by which the individual channels are
+    The ``channel_weights`` give the factors by which the individual channels are
     weighted in the sum.
     """
 
     def __init__(self,
+                 parent,
                  channel_weights,
-                 channel_dim=1,
-                 **kwargs):
-        channel_weights = np.asarray(channel_weights)
-        LeafBlock.__init__(self,
-                           num_inputs=channel_weights.size * channel_dim,
-                           num_outputs=channel_dim,
-                           **kwargs)
-        self.channel_weights = channel_weights
-        self.channel_dim = channel_dim
+                 output_size=1):
+        Block.__init__(self, parent)
 
-    def output_function(self, time, inputs):
-        del time  # unused
-        inputs = np.asarray(inputs).reshape(-1, self.channel_dim)
-        return np.matmul(self.channel_weights, inputs)
+        self.channel_weights = np.asarray(channel_weights)
+        self.output_size = output_size
+
+        self.inputs = [Port(self, shape=self.output_size)
+                       for port_idx in range(self.channel_weights.shape[0])]
+        self.output = Signal(self,
+                             shape=self.output_size,
+                             function=self.output_function)
+
+    def output_function(self, data):
+        """Calculates the output for the system"""
+        inputs = np.array(shape=(self.output_size, len(self.inputs)))
+        for port_idx in range(len(self.inputs)):
+            inputs[:, port_idx] = data.inputs[self.inputs[port_idx]]
+        return self.channel_weights @ inputs

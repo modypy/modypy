@@ -37,6 +37,10 @@ class Port:
             return None
         return self.reference.signal
 
+    @property
+    def slice(self):
+        return self.signal.indices
+
     def connect(self, other):
         """
         Connect this port to another port.
@@ -91,3 +95,8 @@ class Signal(Port):
         """The signal this port is connected. As this is a signal, it returns
         itself."""
         return self
+
+    @property
+    def slice(self):
+        return slice(self.signal_index,
+                     self.signal_index+self.size)

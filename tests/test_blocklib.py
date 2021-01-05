@@ -17,13 +17,13 @@ from simtree.simulator import Simulator
 @pytest.mark.parametrize(
     "block, inputs, expected_output",
     [
-        (Sum(channel_weights=[1, 1], channel_dim=1),
+        (Sum(channel_weights=[1, 1], output_size=1),
          [1, -1],
          [0]),
-        (Sum(channel_weights=[1, 2], channel_dim=2),
+        (Sum(channel_weights=[1, 2], output_size=2),
          [1, 2, 3, 4],
          [7, 10]),
-        (Sum(channel_weights=[1, 2, 3], channel_dim=3),
+        (Sum(channel_weights=[1, 2, 3], output_size=3),
          np.r_[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
          [30, 36, 42])
     ]
@@ -53,7 +53,7 @@ def test_aerodyn_blocks(propeller):
                         direction=1)
     density = Constant(value=1.29, name="density")
     gravity = Constant(value=[0, 0, 1.5/4*9.81], name="gravity")
-    thrust_sum = Sum(channel_weights=[1, 1], channel_dim=3)
+    thrust_sum = Sum(channel_weights=[1, 1], output_size=3)
     model = NonLeafBlock(children=[dcmotor,
                                    propeller,
                                    thruster,
