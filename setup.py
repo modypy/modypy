@@ -5,7 +5,7 @@ with open("README.rst", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="modypy",
-    version="1.0.0",
+    version="1.0",
     author="Ralf Gerlich",
     author_email="ralf@ralfgerlich.biz",
     description="A framework for hierarchical modelling and simulation of dynamic systems",
