@@ -1,3 +1,9 @@
+MoDyPy
+======
+
+.. image:: https://badge.fury.io/py/modpypy.svg
+    :alt: PyPi Version
+
 .. image:: https://travis-ci.com/ralfgerlich/modypy.svg?branch=master
     :alt: Build Status
     :target: https://travis-ci.com/ralfgerlich/modypy
@@ -20,10 +26,12 @@ It was originally inspired by `simupy <https://github.com/simupy/simupy>`_
 developed by Ben Margolis, but has a completely different philosophy and
 architecture than simupy.
 
-The basic components of a dynamic system in MoDyPy are states and signals.
+The basic components of a dynamic system in MoDyPy are
+:doc:`states <api/packages/model/states>` and :doc:`signals <api/packages/model/ports>`.
 States represent the internal state of the system, and signals represent the
 values calculated based on the state. Ports can be connected to signals, so that
-reusable blocks with input and output ports can be easily built.
+reusable blocks with input and output ports can be easily built. For more details,
+refer to the :doc:`API Documentation <api/api>`.
 
 For example, a simple combination of a DC-motor and a propeller can be built
 as follows:
@@ -85,7 +93,7 @@ as follows:
     plt.show()
 
 
-.. image:: docs/propeller.png
+.. image:: propeller.png
 
 Main Features
 =============
@@ -141,3 +149,10 @@ They can be run from the sources using, e.g.,
 
 Note that some of the examples require ``matplotlib`` to run and display the
 results.
+
+.. toctree::
+    :hidden:
+    :maxdepth: 2
+
+    math
+    api/api

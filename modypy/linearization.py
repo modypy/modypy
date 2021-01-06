@@ -90,13 +90,10 @@ def system_jacobian(system,
     :param order: The order of the interpolating polynomial
     :param single_matrix: Flag indicating whether a single matrix shall be
         returned. The default is `False`.
-    :return: jac - The jacobian, if `single_matrix` is `True`.
-             system_matrix,
-                input_matrix,
-                output_matrix,
-                feed_through_matrix - Otherwise, the matrices representing the
-                    LTI system at the given
-        state and input.
+    :return: The jacobian, if ``single_matrix`` is ``True``.
+    :return: ``system_matrix``, ``input_matrix``, ``output_matrix``,
+        ``feed_through_matrix``, representing the LTI system at the given state
+        and input.
     """
 
     if system.num_states + system.num_inputs == 0:

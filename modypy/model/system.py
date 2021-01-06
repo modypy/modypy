@@ -6,7 +6,7 @@ import numpy as np
 
 class System:
     """
-    A system is a group of interacting ``Block`` instances.
+    A system is a composition of states, signals and events.
     """
     def __init__(self):
         self.num_signals = 0
@@ -109,12 +109,7 @@ class System:
 
 class Block:
     """
-    A block describes the interface and behaviour of a part of a system.
-
-    The interface of a block is mainly defined by ports, by which signal
-    connections can be established to other parts of the system.
-
-    The behaviour of a block is defined by states.
+    A block is a re-usable building block for systems.
     """
     def __init__(self, parent):
         self.parent = parent
