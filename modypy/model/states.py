@@ -1,7 +1,8 @@
 """
 Provides classes for defining states.
 """
-import math
+import functools
+import operator
 
 import numpy as np
 
@@ -24,7 +25,7 @@ class State:
         else:
             self.initial_condition = np.asarray(initial_condition)
 
-        self.size = math.prod(self.shape)
+        self.size = functools.reduce(operator.mul, self.shape, 1)
 
         self.state_index = self.owner.system.allocate_state_lines(self.size)
         self.owner.system.states.append(self)

@@ -1,7 +1,8 @@
 """
 Provides classes for creating ports and signals.
 """
-import math
+import functools
+import operator
 from typing import Union, Sequence
 
 import numpy as np
@@ -24,7 +25,7 @@ class Port:
             self.shape = (shape,)
         else:
             self.shape = shape
-        self.size = math.prod(self.shape)
+        self.size = functools.reduce(operator.mul, self.shape, 1)
 
     @property
     def signal(self):

@@ -12,8 +12,9 @@
 .. image:: https://www.code-inspector.com/project/17342/status/svg
     :alt: Code Grade
 
-MoDyPy (rhymes with "modify") is a Python package for hierarchical modelling and
-simulation of linear and non-linear dynamical systems in
+MoDyPy (rhymes with "modify") is a Python framework for *Mo*\ delling *dy*\ namic
+systems in *Py*\ thon. The framework provides methods for describing continous-time
+linear and non-linear systems in
 `state-space representation <https://en.wikipedia.org/wiki/State-space_representation>`_.
 It was originally inspired by `simupy <https://github.com/simupy/simupy>`_
 developed by Ben Margolis, but has a completely different philosophy and
