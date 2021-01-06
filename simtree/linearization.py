@@ -2,7 +2,7 @@ import numpy as np
 from scipy.optimize import root
 from scipy.misc import central_diff_weights
 
-from simtree.model.evaluator import Evaluator
+from simtree.model.evaluation import Evaluator
 
 
 def find_steady_state(system,

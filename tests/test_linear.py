@@ -1,19 +1,28 @@
 import pytest
 import numpy as np
-from simtree.blocks.linear import LTISystem
+import numpy.testing as npt
+
+from simtree.blocks.linear import LTISystem, Gain
+from simtree.blocks.sources import constant
+from simtree.model import System
+from simtree.model.evaluation import Evaluator
 
 
 def test_lti_nonsquare_state_matrix():
+    system = System()
     with pytest.raises(ValueError):
-        LTISystem(system_matrix=[[-1, 0]],
+        LTISystem(parent=system,
+                  system_matrix=[[-1, 0]],
                   input_matrix=[[]],
                   output_matrix=[[1, 0]],
                   feed_through_matrix=[[]])
 
 
 def test_lti_state_input_mismatch():
+    system = System()
     with pytest.raises(ValueError):
-        LTISystem(system_matrix=[[-1, 0],
+        LTISystem(parent=system,
+                  system_matrix=[[-1, 0],
                                  [0, -1]],
                   input_matrix=[[1]],
                   output_matrix=[[1, 0]],
@@ -21,8 +30,10 @@ def test_lti_state_input_mismatch():
 
 
 def test_lti_state_output_mismatch():
+    system = System()
     with pytest.raises(ValueError):
-        LTISystem(system_matrix=[[-1, 0],
+        LTISystem(parent=system,
+                  system_matrix=[[-1, 0],
                                  [0, -1]],
                   input_matrix=[[1], [1]],
                   output_matrix=[[1]],
@@ -30,8 +41,10 @@ def test_lti_state_output_mismatch():
 
 
 def test_lti_output_feed_through_mismatch():
+    system = System()
     with pytest.raises(ValueError):
-        LTISystem(system_matrix=[[-1, 0],
+        LTISystem(parent=system,
+                  system_matrix=[[-1, 0],
                                  [0, -1]],
                   input_matrix=[[1], [1]],
                   output_matrix=[[1, 1]],
@@ -39,8 +52,10 @@ def test_lti_output_feed_through_mismatch():
 
 
 def test_lti_input_feed_through_mismatch():
+    system = System()
     with pytest.raises(ValueError):
-        LTISystem(system_matrix=[[-1, 0],
+        LTISystem(parent=system,
+                  system_matrix=[[-1, 0],
                                  [0, -1]],
                   input_matrix=[[1, 1],
                                 [1, 1]],
@@ -49,18 +64,41 @@ def test_lti_input_feed_through_mismatch():
 
 
 def test_lti_no_states():
-    sys = LTISystem(system_matrix=np.empty((0, 0)),
+    system = System()
+    lti = LTISystem(parent=system,
+                    system_matrix=np.empty((0, 0)),
                     input_matrix=np.empty((0, 1)),
                     output_matrix=np.empty((1, 0)),
                     feed_through_matrix=1)
-    state_update = sys.state_update_function(0, [1])
-    assert state_update.size == 0
+    source = constant(system, value=1)
+    source.connect(lti.input)
+
+    evaluator = Evaluator(time=0, system=system)
+    state_derivative = evaluator.get_state_derivative(lti.state)
+    assert state_derivative.size == 0
 
 
 def test_lti_empty():
-    sys = LTISystem(system_matrix=np.empty((0, 0)),
+    system = System()
+    lti = LTISystem(parent=system,
+                    system_matrix=np.empty((0, 0)),
                     input_matrix=np.empty((0, 0)),
                     output_matrix=np.empty((0, 0)),
                     feed_through_matrix=np.empty((0, 0)))
-    output = sys.output_function(0)
+
+    evaluator = Evaluator(time=0, system=system)
+    output = evaluator.get_port_value(lti.output)
     assert output.size == 0
+
+
+def test_gain():
+    system = System()
+    gain = Gain(system, k=[[1, 2], [3, 4]])
+    gain_in = constant(system, value=[3, 4])
+    print(gain.input.shape)
+    print(gain_in.shape)
+    gain.input.connect(gain_in)
+
+    evaluator = Evaluator(time=0, system=system)
+    npt.assert_almost_equal(evaluator.get_port_value(gain.output),
+                            [11, 25])

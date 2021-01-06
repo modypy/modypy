@@ -4,12 +4,12 @@ import numpy as np
 import scipy.linalg as la
 
 from simtree.model import Block, Port, System, InputSignal, OutputPort
-from simtree.model.evaluator import Evaluator
+from simtree.model.evaluation import Evaluator
 from simtree.blocks.aerodyn import Propeller, Thruster
 from simtree.blocks.elmech import DCMotor
 from simtree.blocks.sources import constant
 from simtree.blocks.linear import Sum
-from simtree.linearization import find_steady_state, system_jacobian, InputSignal
+from simtree.linearization import find_steady_state, system_jacobian
 from simtree.utils.uiuc_db import load_static_propeller
 
 

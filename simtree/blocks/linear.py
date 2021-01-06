@@ -19,7 +19,8 @@ class LTISystem(Block):
                  system_matrix,
                  input_matrix,
                  output_matrix,
-                 feed_through_matrix):
+                 feed_through_matrix,
+                 initial_condition=None):
         Block.__init__(self, parent)
 
         system_matrix = np.atleast_2d(system_matrix)
@@ -54,7 +55,8 @@ class LTISystem(Block):
         self.input = Port(self, shape=self.input_matrix.shape[1])
         self.state = State(self,
                            shape=self.system_matrix.shape[0],
-                           derivative_function=self.state_derivative)
+                           derivative_function=self.state_derivative,
+                           initial_condition=initial_condition)
         self.output = Signal(self,
                              shape=self.output_matrix.shape[0],
                              value=self.output_function)
@@ -62,13 +64,13 @@ class LTISystem(Block):
     def state_derivative(self, data):
         """Calculates the state derivative for the system"""
         state = data.states[self.state]
-        inputs = data.states[self.input]
+        inputs = data.inputs[self.input]
         return (self.system_matrix @ state) + (self.input_matrix @ inputs)
 
     def output_function(self, data):
         """Calculates the output for the system"""
         state = data.states[self.state]
-        inputs = data.states[self.input]
+        inputs = data.inputs[self.input]
         return (self.output_matrix @ state) + (self.feed_through_matrix @ inputs)
 
 
@@ -81,11 +83,11 @@ class Gain(Block):
 
     def __init__(self, parent, k):
         Block.__init__(self, parent)
-        self.k = np.asarray(k)
+        self.k = np.atleast_2d(k)
 
-        self.input = Port(self, shape=k.shape[0])
+        self.input = Port(self, shape=self.k.shape[0])
         self.output = Signal(self,
-                             shape=k.shape[1],
+                             shape=self.k.shape[1],
                              value=self.output_function)
 
     def output_function(self, data):

@@ -3,7 +3,7 @@ import numpy as np
 import numpy.testing as npt
 
 from simtree.model import System
-from simtree.model.evaluator import Evaluator
+from simtree.model.evaluation import Evaluator
 from simtree.model.states import State, SignalState
 
 

@@ -8,7 +8,7 @@ import pytest
 
 from simtree.blocks.sources import constant
 from simtree.model import System, State, Port, Signal, InputSignal, OutputPort, Event
-from simtree.model.evaluator import Evaluator, AlgebraicLoopException
+from simtree.model.evaluation import Evaluator, AlgebraicLoopError, PortNotConnectedError
 
 
 def test_evaluator():
@@ -133,7 +133,7 @@ def test_evaluator_with_initial_inputs():
                             initial_inputs)
 
 
-def test_algebraic_loop_exception():
+def test_algebraic_loop_error():
     """Test the detection of algebraic loops"""
 
     system = System()
@@ -148,5 +148,16 @@ def test_algebraic_loop_exception():
     port_b.connect(signal_b)
 
     evaluator = Evaluator(time=0, system=system)
-    with pytest.raises(AlgebraicLoopException):
+    with pytest.raises(AlgebraicLoopError):
         evaluator.signals
+
+
+def test_port_not_connected_error():
+    """Test the detection of unconnected ports"""
+
+    system = System()
+    port = Port(system)
+
+    evaluator = Evaluator(time=0, system=system)
+    with pytest.raises(PortNotConnectedError):
+        evaluator.get_port_value(port)

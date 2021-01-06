@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 
 class BouncingBall(Block):
-    def __init__(self, parent, gravity=-9.81, gamma=0.3, initial_velocity=None, initial_position=None):
+    def __init__(self, parent, gravity=-9.81, gamma=0.7, initial_velocity=None, initial_position=None):
         Block.__init__(self, parent)
         self.position = State(self, shape=2, derivative_function=self.position_derivative, initial_condition=initial_position)
         self.velocity = State(self, shape=2, derivative_function=self.velocity_derivative, initial_condition=initial_velocity)
@@ -19,7 +19,7 @@ class BouncingBall(Block):
 
     def velocity_derivative(self, data):
         velocity = data.states[self.velocity]
-        return np.r_[-self.gamma * velocity[0], self.gravity - self.gamma * velocity[1]]
+        return np.r_[0, self.gravity]
 
     def posy_output(self, data):
         return data.states[self.position][1]
@@ -29,13 +29,13 @@ class BouncingBall(Block):
 
     def on_ground_event(self, data):
         data.states[self.position][1] = abs(data.states[self.position][1])
-        data.states[self.velocity][1] = - data.states[self.velocity][1]
+        data.states[self.velocity][1] = - self.gamma * data.states[self.velocity][1]
 
 
 DEFAULT_INTEGRATOR_OPTIONS['max_step'] = 0.05
 
 system = System()
-block = BouncingBall(system, initial_velocity=[1,0], initial_position=[0, 10])
+block = BouncingBall(system, initial_velocity=[1, 0], initial_position=[0, 10])
 
 simulator = Simulator(system, start_time=0.0)
 simulator.run_until(10.0)

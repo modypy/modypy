@@ -4,101 +4,95 @@ import pytest
 import numpy as np
 import numpy.testing as npt
 
-from simtree.blocks import NonLeafBlock
 from simtree.blocks.aerodyn import Propeller, Thruster
 from simtree.blocks.elmech import DCMotor
 from simtree.blocks.linear import Sum
-from simtree.blocks.sources import Constant
+from simtree.blocks.sources import constant
 from simtree.blocks.rigid import RigidBody6DOFFlatEarth, DirectCosineToEuler
-from simtree.compiler import compile
 from simtree.linearization import find_steady_state
+from simtree.model import System, InputSignal, Evaluator, OutputPort
 from simtree.simulation import Simulator
 
+
 @pytest.mark.parametrize(
-    "block, inputs, expected_output",
+    "channel_weights, output_size, inputs, expected_output",
     [
-        (Sum(channel_weights=[1, 1], output_size=1),
-         [1, -1],
-         [0]),
-        (Sum(channel_weights=[1, 2], output_size=2),
-         [1, 2, 3, 4],
-         [7, 10]),
-        (Sum(channel_weights=[1, 2, 3], output_size=3),
-         np.r_[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-         [30, 36, 42])
+        ([1, 1], 1, [1, -1], [0]),
+        ([1, 2], 2, [[1, 2], [3, 4]], [7, 10]),
+        ([1, 2, 3], 3, [[1, 2, 3], [4, 5, 6], [7, 8, 9]], [30, 36, 42]),
     ]
 )
-def test_sum_block(block, inputs, expected_output):
-    actual_output = block.output_function(0, inputs)
+def test_sum_block(channel_weights, output_size, inputs, expected_output):
+    system = System()
+    sum_block = Sum(system,
+                    channel_weights=channel_weights,
+                    output_size=output_size)
+    for idx in range(len(inputs)):
+        input_signal = InputSignal(system, shape=output_size, value=inputs[idx])
+        sum_block.inputs[idx].connect(input_signal)
+
+    evaluator = Evaluator(time=0, system=system)
+    actual_output = evaluator.signals[sum_block.output.signal_slice]
     npt.assert_almost_equal(actual_output, expected_output)
 
+
 @pytest.mark.parametrize(
-    "propeller",
+    "thrust_coeff, power_coeff",
     [
-        Propeller(thrust_coeff=0.09,
-                  power_coeff=0.04,
-                  diameter=8 * 25.4E-3),
-        Propeller(thrust_coeff=(lambda n: 0.09),
-                  power_coeff=(lambda n: 0.04),
-                  diameter=8 * 25.4E-3),
+        [0.09, 0.04],
+        [(lambda n: 0.09), (lambda n: 0.04)],
     ]
 )
-def test_aerodyn_blocks(propeller):
-    dcmotor = DCMotor(Kv=789.E-6,
+def test_aerodyn_blocks(thrust_coeff, power_coeff):
+    system = System()
+    propeller = Propeller(system,
+                          thrust_coeff=thrust_coeff,
+                          power_coeff=power_coeff,
+                          diameter=8 * 25.4E-3)
+    dcmotor = DCMotor(system,
+                      Kv=789.E-6,
                       R=43.3E-3,
                       L=1.9E-3,
-                      J=5.284E-6)
-    thruster = Thruster(vector=np.c_[0, 0, -1],
+                      J=5.284E-6,
+                      initial_omega=1)
+    thruster = Thruster(system,
+                        vector=np.c_[0, 0, -1],
                         arm=np.c_[1, 1, 0],
                         direction=1)
-    density = Constant(value=1.29, name="density")
-    gravity = Constant(value=[0, 0, 1.5/4*9.81], name="gravity")
-    thrust_sum = Sum(channel_weights=[1, 1], output_size=3)
-    model = NonLeafBlock(children=[dcmotor,
-                                   propeller,
-                                   thruster,
-                                   density,
-                                   gravity,
-                                   thrust_sum],
-                         num_inputs=1,
-                         num_outputs=3)
-    # Connect the voltage
-    model.connect_input(0, dcmotor, 0)
-    # Connect the propeller braking torque
-    model.connect(propeller, 1, dcmotor, 1)
-    # Connect the shaft speed to the propeller
-    model.connect(dcmotor, 0, propeller, 0)
-    # Connect the density to the propeller
-    model.connect(density, 0, propeller, 1)
-    # Connect the propeller thrust to the thruster
-    model.connect(propeller, 0, thruster, 0)
-    # Connect the motor torque to the thruster
-    model.connect(dcmotor, 1, thruster, 1)
-    # Connect the thrust vector to the thrust sum
-    model.connect(thruster, range(3), thrust_sum, range(3))
-    # Connect the gravity to the thrust sum
-    model.connect(gravity, range(3), thrust_sum, range(3,6))
-    # Connect the thrust output to the block output
-    model.connect_output(thrust_sum, range(3), range(3))
+    density = constant(system, value=1.29)
+    gravity = constant(system, value=[0, 0, 1.5/4*9.81])
+    force_sum = Sum(system, channel_weights=[1, 1], output_size=3)
+    voltage = InputSignal(system)
 
-    # Compile the model
-    compiled_model = compile(model)
+    voltage.connect(dcmotor.voltage)
+    density.connect(propeller.density)
+    dcmotor.speed_rps.connect(propeller.speed_rps)
+    propeller.torque.connect(dcmotor.external_torque)
+    propeller.thrust.connect(thruster.scalar_thrust)
+    dcmotor.torque.connect(thruster.scalar_torque)
 
-    # Define the initial state and input
-    x_initial = np.r_[1, 0]
-    u_initial = np.r_[0]
+    thruster.thrust_vector.connect(force_sum.inputs[0])
+    gravity.connect(force_sum.inputs[1])
+
+    force_target = OutputPort(system, shape=3)
+    torque_target = OutputPort(system, shape=3)
+
+    force_sum.output.connect(force_target)
+    thruster.torque_vector.connect(torque_target)
 
     # Determine the steady state
-    sol, x0, u0 = find_steady_state(system=compiled_model,
-                                    time=0,
-                                    x_start=x_initial,
-                                    u_start=u_initial,
-                                    solver_options={
-                                        'maxiter': 2000
-                                    })
-    assert sol.success == True
-    npt.assert_almost_equal(x0, [856.57715753, 67.01693923])
-    npt.assert_almost_equal(u0, [3.57767285])
+    sol, states, inputs = find_steady_state(system=system,
+                                            time=0,
+                                            solver_options={
+                                                'maxiter': 2000
+                                            })
+    assert sol.success
+
+    npt.assert_almost_equal(states, [494.5280238,  22.3374414])
+    npt.assert_almost_equal(inputs, [1.3573938])
+
+    evaluator = Evaluator(system=system, time=0, state=states, inputs=inputs)
+    npt.assert_almost_equal(evaluator.get_port_value(propeller.power), 8.7156812)
 
 
 def test_rigidbody_movement():
@@ -106,60 +100,91 @@ def test_rigidbody_movement():
     omega = 2 * math.pi / 120
     r = 10.0
     vx = r * omega
-    gravity = np.c_[0, 0, 9.81]
     moment_of_inertia = np.diag([13.2E-3, 12.8E-3, 24.6E-3])
-    rb_6dof = RigidBody6DOFFlatEarth(mass=mass,
-                                     gravity=gravity,
+
+    system = System()
+    rb_6dof = RigidBody6DOFFlatEarth(owner=system,
+                                     mass=mass,
                                      initial_velocity_earth=[vx, 0, 0],
                                      initial_angular_rates_earth=[0, 0, omega],
                                      initial_position_earth=[0,0,0],
                                      initial_transformation=np.eye(3, 3),
                                      moment_of_inertia=moment_of_inertia)
-    dcm_to_euler = DirectCosineToEuler()
-    thrust = Constant(value=np.r_[0, mass * omega * vx, -1.5 * 9.81])
-    moment = Constant(value=np.r_[0, 0, 0])
+    dcm_to_euler = DirectCosineToEuler(system)
+    thrust = constant(system, value=np.r_[0, mass * omega * vx, 0])
+    moment = constant(system, value=np.r_[0, 0, 0])
 
-    sys = NonLeafBlock(children=[thrust, moment, rb_6dof, dcm_to_euler],
-                       num_outputs=6)
-    sys.connect(thrust, range(3), rb_6dof, range(0, 3))
-    sys.connect(moment, range(3), rb_6dof, range(3, 6))
-    sys.connect(rb_6dof, range(6, 15), dcm_to_euler, range(9))
-    sys.connect_output(dcm_to_euler, range(3), range(3))
-    sys.connect_output(rb_6dof, range(3, 6), range(3, 6))
+    thrust.connect(rb_6dof.forces_body)
+    moment.connect(rb_6dof.moments_body)
 
-    sys_compiled = compile(sys)
+    rb_6dof.dcm.connect(dcm_to_euler.dcm)
 
-    sim = Simulator(sys_compiled, 0, 30.0)
-    message = sim.run()
+    yaw_output = OutputPort(system)
+    pitch_output = OutputPort(system)
+    roll_output = OutputPort(system)
+
+    pos_output = OutputPort(system, shape=3)
+
+    dcm_to_euler.yaw.connect(yaw_output)
+    dcm_to_euler.pitch.connect(pitch_output)
+    dcm_to_euler.roll.connect(roll_output)
+    rb_6dof.position_earth.connect(pos_output)
+
+    sim = Simulator(system, start_time=0)
+    message = sim.run_until(t_bound=30.0)
 
     assert message is None
-    npt.assert_almost_equal(sim.result.output[-1],
-                            [math.pi/2, 0, 0, r, r, 0])
+
+    npt.assert_almost_equal(sim.result.outputs[-1][yaw_output.output_slice],
+                            math.pi/2)
+    npt.assert_almost_equal(sim.result.outputs[-1][pitch_output.output_slice],
+                            0)
+    npt.assert_almost_equal(sim.result.outputs[-1][roll_output.output_slice],
+                            0)
+    npt.assert_almost_equal(sim.result.outputs[-1][pos_output.output_slice],
+                            [r, r, 0])
 
 
 def test_rigidbody_defaults():
     mass = 1.5
+    omega = 2 * math.pi / 120
+    r = 10.0
     moment_of_inertia = np.diag([13.2E-3, 12.8E-3, 24.6E-3])
 
-    rb_6dof = RigidBody6DOFFlatEarth(mass=mass,
+    system = System()
+    rb_6dof = RigidBody6DOFFlatEarth(owner=system,
+                                     mass=mass,
                                      moment_of_inertia=moment_of_inertia)
-    dcm_to_euler = DirectCosineToEuler()
-    thrust = Constant(value=np.r_[0, 0, -mass*9.81])
-    moment = Constant(value=moment_of_inertia @ np.r_[0, 0, math.pi/30**2])
+    dcm_to_euler = DirectCosineToEuler(system)
+    thrust = constant(system, value=np.r_[0, 0, 0])
+    moment = constant(system, value=moment_of_inertia @ np.r_[0, 0, math.pi/30**2])
 
-    sys = NonLeafBlock(children=[thrust, moment, rb_6dof, dcm_to_euler],
-                       num_outputs=6)
-    sys.connect(thrust, range(3), rb_6dof, range(0, 3))
-    sys.connect(moment, range(3), rb_6dof, range(3, 6))
-    sys.connect(rb_6dof, range(6, 15), dcm_to_euler, range(9))
-    sys.connect_output(dcm_to_euler, range(3), range(3))
-    sys.connect_output(rb_6dof, range(3, 6), range(3, 6))
+    thrust.connect(rb_6dof.forces_body)
+    moment.connect(rb_6dof.moments_body)
 
-    sys_compiled = compile(sys)
+    rb_6dof.dcm.connect(dcm_to_euler.dcm)
 
-    sim = Simulator(sys_compiled, 0, 30.0)
-    message = sim.run()
+    yaw_output = OutputPort(system)
+    pitch_output = OutputPort(system)
+    roll_output = OutputPort(system)
+
+    pos_output = OutputPort(system, shape=3)
+
+    dcm_to_euler.yaw.connect(yaw_output)
+    dcm_to_euler.pitch.connect(pitch_output)
+    dcm_to_euler.roll.connect(roll_output)
+    rb_6dof.position_earth.connect(pos_output)
+
+    sim = Simulator(system, start_time=0)
+    message = sim.run_until(t_bound=30.0)
 
     assert message is None
-    npt.assert_almost_equal(sim.result.output[-1],
-                            [math.pi/2, 0, 0, 0, 0, 0])
+
+    npt.assert_almost_equal(sim.result.outputs[-1][yaw_output.output_slice],
+                            math.pi/2)
+    npt.assert_almost_equal(sim.result.outputs[-1][pitch_output.output_slice],
+                            0)
+    npt.assert_almost_equal(sim.result.outputs[-1][roll_output.output_slice],
+                            0)
+    npt.assert_almost_equal(sim.result.outputs[-1][pos_output.output_slice],
+                            [0, 0, 0])

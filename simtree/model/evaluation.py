@@ -9,8 +9,13 @@ from .ports import Port
 from .states import State
 
 
-class AlgebraicLoopException(RuntimeError):
-    """Exception raised when an algebraic loop is encountered."""
+class AlgebraicLoopError(RuntimeError):
+    """Exception raised when an algebraic loop is encountered"""
+
+
+class PortNotConnectedError(RuntimeError):
+    """Exception raised when requesting the value of a port that is not connected
+    to any signal"""
 
 
 class Evaluator:
@@ -104,14 +109,25 @@ class Evaluator:
 
         If the value has not yet been calculated, it will be calculated before
         this method returns. If an algebraic loop is encountered during
-        calculation, an ``AlgebraicLoopException`` will be raised.
+        calculation, an ``AlgebraicLoopError`` will be raised.
 
         :param port: The port for which the value shall be determined
         :return: The value of the port
-        :raises AlgebraicLoopException: if an algebraic loop is encountered
+        :raises AlgebraicLoopError: if an algebraic loop is encountered
             while evaluating the value of the signal
+        :raises PortNotConnectedError: if the port is not connected to a signal
         """
+
+        if port.size == 0:
+            # An empty port has no value
+            return np.empty(port.shape)
+
         signal = port.signal
+
+        if signal is None:
+            # This port is not connected to any signal, so we cannot determine
+            # its value.
+            raise PortNotConnectedError()
 
         if signal in self.valid_signals:
             # That signal was already evaluated, so just return the value in
@@ -123,7 +139,7 @@ class Evaluator:
         if signal in self.signal_evaluation_set:
             # The signal is currently being evaluated, but we got here again,
             # so there must be an algebraic loop.
-            raise AlgebraicLoopException()
+            raise AlgebraicLoopError()
 
         # Start evaluation of the signal
         self.signal_evaluation_set.add(signal)
@@ -158,7 +174,7 @@ class Evaluator:
 
         :param state: The state for which the derivative shall be determined
         :return: The state derivative
-        :raises AlgebraicLoopException: if an algebraic loop is encountered
+        :raises AlgebraicLoopError: if an algebraic loop is encountered
             while evaluating the derivative of the state instance
         """
         if state in self.valid_state_derivatives:
@@ -178,7 +194,7 @@ class Evaluator:
 
         :param event: The event for which to calculate the value
         :return: The value of the event function
-        :raises AlgebraicLoopException: if an algebraic loop is encountered
+        :raises AlgebraicLoopError: if an algebraic loop is encountered
             while evaluating the value of the event function
         """
         if event in self.valid_event_values:

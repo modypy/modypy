@@ -5,7 +5,7 @@ import scipy.integrate
 import scipy.optimize
 
 from simtree.model.system import System
-from simtree.model.evaluator import Evaluator, DataProvider, PortProvider
+from simtree.model.evaluation import Evaluator, DataProvider, PortProvider
 
 INITIAL_RESULT_SIZE = 16
 RESULT_SIZE_EXTENSION = 16
@@ -13,7 +13,7 @@ RESULT_SIZE_EXTENSION = 16
 DEFAULT_INTEGRATOR = scipy.integrate.DOP853
 DEFAULT_INTEGRATOR_OPTIONS = {
     'rtol': 1.E-12,
-    'atol': 1.E-15,
+    'atol': 1.E-12,
 }
 
 DEFAULT_ROOTFINDER = scipy.optimize.brentq
@@ -35,46 +35,88 @@ class SimulationResult:
     def __init__(self, system: System):
         self.system = system
         self._t = np.empty(INITIAL_RESULT_SIZE)
+        self._inputs = np.empty((INITIAL_RESULT_SIZE, self.system.num_inputs))
         self._state = np.empty((INITIAL_RESULT_SIZE, self.system.num_states))
         self._signals = np.empty((INITIAL_RESULT_SIZE, self.system.num_signals))
         self._events = np.empty((INITIAL_RESULT_SIZE, self.system.num_events))
+        self._outputs = np.empty((INITIAL_RESULT_SIZE, self.system.num_outputs))
 
         self.current_idx = 0
 
     @property
     def time(self):
+        """The time vector of the simulation result"""
         return self._t[0:self.current_idx]
 
     @property
+    def inputs(self):
+        """The input vector of the simulation result"""
+        return self._inputs[0:self.current_idx]
+
+    @property
     def state(self):
+        """The state vector of the simulation result"""
         return self._state[0:self.current_idx]
 
     @property
     def signals(self):
+        """The signal vector of the simulation result"""
         return self._signals[0:self.current_idx]
 
     @property
     def events(self):
+        """The event vector of the simulation result"""
         return self._events[0:self.current_idx]
 
-    def append(self, time, state, signals, events):
+    @property
+    def outputs(self):
+        """The output vector of the simulation result"""
+        return self._outputs[0:self.current_idx]
+
+    def append(self, time, inputs, state, signals, events, outputs):
+        """
+        Append an entry to the result vectors.
+
+        :param time: The time tag for the entry
+        :param inputs: The input vector
+        :param state: The state vector
+        :param signals: The signals vector
+        :param events: The events vector
+        :param outputs: The outputs vector
+        """
+
         if self.current_idx >= self._t.size:
             self.extend_space()
         self._t[self.current_idx] = time
+        self._inputs[self.current_idx] = inputs
         self._state[self.current_idx] = state
         self._signals[self.current_idx] = signals
         self._events[self.current_idx] = events
+        self._outputs[self.current_idx] = outputs
 
         self.current_idx += 1
 
     def extend_space(self):
-        self._t = np.r_[self._t,      np.empty(RESULT_SIZE_EXTENSION)]
-        self._state = np.r_[self._state,  np.empty(
-            (RESULT_SIZE_EXTENSION, self.system.num_states))]
-        self._signals = np.r_[self._signals, np.empty(
-            (RESULT_SIZE_EXTENSION, self.system.num_signals))]
-        self._events = np.r_[self._events, np.empty(
-            (RESULT_SIZE_EXTENSION, self.system.num_events))]
+        """
+        Extend the storage space for the vectors
+        """
+        self._t = np.r_[self._t,
+                        np.empty(RESULT_SIZE_EXTENSION)]
+        self._inputs = np.r_[self._inputs,
+                             np.empty((RESULT_SIZE_EXTENSION,
+                                       self.system.num_inputs))]
+        self._state = np.r_[self._state,
+                            np.empty((RESULT_SIZE_EXTENSION,
+                                      self.system.num_states))]
+        self._signals = np.r_[self._signals,
+                              np.empty((RESULT_SIZE_EXTENSION,
+                                        self.system.num_signals))]
+        self._events = np.r_[self._events,
+                             np.empty((RESULT_SIZE_EXTENSION,
+                                       self.system.num_events))]
+        self._outputs = np.r_[self._outputs,
+                              np.empty((RESULT_SIZE_EXTENSION,
+                                        self.system.num_outputs))]
 
 
 class Simulator:
@@ -126,10 +168,16 @@ class Simulator:
             self.initial_condition = self.system.initial_condition
 
         self.integrator_constructor = integrator_constructor
-        self.integrator_options = integrator_options or DEFAULT_INTEGRATOR_OPTIONS
+        if integrator_options is None:
+            self.integrator_options = DEFAULT_INTEGRATOR_OPTIONS
+        else:
+            self.integrator_options = integrator_options
 
         self.rootfinder_constructor = rootfinder_constructor
-        self.rootfinder_options = rootfinder_options or DEFAULT_ROOTFINDER_OPTIONS
+        if rootfinder_options is None:
+            self.rootfinder_options = DEFAULT_ROOTFINDER_OPTIONS
+        else:
+            self.rootfinder_options = rootfinder_options
 
         self.current_time = self.start_time
         self.current_state = self.initial_condition
@@ -139,20 +187,25 @@ class Simulator:
         evaluator = Evaluator(system=self.system,
                               time=self.current_time,
                               state=self.current_state)
+        self.current_inputs = evaluator.inputs
         self.current_signals = evaluator.signals
         self.current_event_values = evaluator.event_values
+        self.current_outputs = evaluator.outputs
 
         # Store the initial state
         self.result.append(time=self.current_time,
+                           inputs=self.current_inputs,
                            state=self.current_state,
                            signals=self.current_signals,
-                           events=self.current_event_values)
+                           events=self.current_event_values,
+                           outputs=self.current_outputs)
 
     def step(self, t_bound=None):
         """
         Execute a single execution step.
 
-        :param t_bound: The maximum time until which the simulation may proceed.
+        :param t_bound: The maximum time until which the simulation may proceed
+        :return: ``None`` if successful, a message string otherwise
         """
 
         last_time = self.current_time
@@ -205,26 +258,34 @@ class Simulator:
             evaluator = Evaluator(system=self.system,
                                   time=self.current_time,
                                   state=self.current_state)
+            self.current_inputs = evaluator.inputs
             self.current_signals = evaluator.signals
             self.current_event_values = evaluator.event_values
+            self.current_outputs = evaluator.outputs
 
             self.result.append(time=self.current_time,
+                               inputs=self.current_inputs,
                                state=self.current_state,
                                signals=self.current_signals,
-                               events=self.current_event_values)
+                               events=self.current_event_values,
+                               outputs=self.current_outputs)
             return None
 
         # No event occurred, so we simply accept the integrator end-point as the
         # next sample point.
         self.current_time = integrator.t
+        self.current_inputs = evaluator.inputs
         self.current_state = integrator.y
         self.current_signals = evaluator.signals
         self.current_event_values = evaluator.event_values
+        self.current_outputs = evaluator.outputs
 
         self.result.append(time=self.current_time,
+                           inputs=self.current_inputs,
                            state=self.current_state,
                            signals=self.current_signals,
-                           events=self.current_event_values)
+                           events=self.current_event_values,
+                           outputs=self.current_outputs)
         return None
 
     def find_first_event(self, state_trajectory, start_time, end_time, events_occurred):
@@ -275,6 +336,12 @@ class Simulator:
         return first_event, first_event_time
 
     def run_until(self, t_bound):
+        """
+        Run the simulation until the given end time
+
+        :param t_bound: The end time
+        :return: ``None`` if successful, a message string otherwise
+        """
         while self.current_time < t_bound:
             message = self.step(t_bound)
             if message is not None:
