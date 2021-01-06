@@ -4,8 +4,8 @@ import numpy as np
 import scipy.integrate
 import scipy.optimize
 
-from simtree.model.system import System
-from simtree.model.evaluation import Evaluator, DataProvider, PortProvider
+from modypy.model.system import System
+from modypy.model.evaluation import Evaluator, DataProvider, PortProvider
 
 INITIAL_RESULT_SIZE = 16
 RESULT_SIZE_EXTENSION = 16

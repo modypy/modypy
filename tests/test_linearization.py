@@ -3,8 +3,8 @@ import pytest
 import numpy as np
 import numpy.testing as npt
 
-from simtree.linearization import find_steady_state, system_jacobian
-from simtree.model import Evaluator, System, OutputPort, State, InputSignal
+from modypy.linearization import find_steady_state, system_jacobian
+from modypy.model import Evaluator, System, OutputPort, State, InputSignal
 from fixtures.models import first_order_lag, first_order_lag_no_input, damped_oscillator, lti_gain
 
 

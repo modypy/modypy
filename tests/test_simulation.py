@@ -12,9 +12,9 @@ from fixtures.models import \
     oscillator_with_sine_input, sine_input_with_gain, \
     sine_source, BouncingBall
 
-from simtree.blocks.linear import LTISystem
-from simtree.model import Evaluator, System
-from simtree.simulation import Simulator
+from modypy.blocks.linear import LTISystem
+from modypy.model import Evaluator, System
+from modypy.simulation import Simulator
 
 
 @pytest.fixture(params=[

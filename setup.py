@@ -4,7 +4,7 @@ with open("README.rst", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="simtree-ralfgerlich",
+    name="modypy-ralfgerlich",
     version="0.1.1",
     author="Ralf Gerlich",
     author_email="ralf@ralfgerlich.biz",

@@ -3,10 +3,10 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
-from simtree.model import System
-from simtree.blocks.sources import constant
-from simtree.blocks.rigid import RigidBody6DOFFlatEarth, DirectCosineToEuler
-from simtree.simulation import Simulator
+from modypy.model import System
+from modypy.blocks.sources import constant
+from modypy.blocks.rigid import RigidBody6DOFFlatEarth, DirectCosineToEuler
+from modypy.simulation import Simulator
 
 MASS = 1.5
 OMEGA = 2 * math.pi / 120

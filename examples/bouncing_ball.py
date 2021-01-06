@@ -1,5 +1,5 @@
-from simtree.model import System, Block, State, Signal, Event
-from simtree.simulation import Simulator, DEFAULT_INTEGRATOR_OPTIONS
+from modypy.model import System, Block, State, Signal, Event
+from modypy.simulation import Simulator, DEFAULT_INTEGRATOR_OPTIONS
 import numpy as np
 import matplotlib.pyplot as plt
 

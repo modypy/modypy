@@ -4,14 +4,14 @@ import pytest
 import numpy as np
 import numpy.testing as npt
 
-from simtree.blocks.aerodyn import Propeller, Thruster
-from simtree.blocks.elmech import DCMotor
-from simtree.blocks.linear import Sum
-from simtree.blocks.sources import constant
-from simtree.blocks.rigid import RigidBody6DOFFlatEarth, DirectCosineToEuler
-from simtree.linearization import find_steady_state
-from simtree.model import System, InputSignal, Evaluator, OutputPort
-from simtree.simulation import Simulator
+from modypy.blocks.aerodyn import Propeller, Thruster
+from modypy.blocks.elmech import DCMotor
+from modypy.blocks.linear import Sum
+from modypy.blocks.sources import constant
+from modypy.blocks.rigid import RigidBody6DOFFlatEarth, DirectCosineToEuler
+from modypy.linearization import find_steady_state
+from modypy.model import System, InputSignal, Evaluator, OutputPort
+from modypy.simulation import Simulator
 
 
 @pytest.mark.parametrize(

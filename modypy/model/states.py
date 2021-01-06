@@ -1,12 +1,11 @@
 """
 Provides classes for defining states.
 """
-from functools import cached_property
 import math
 
 import numpy as np
 
-from simtree.model import Signal
+from modypy.model import Signal
 
 
 class State:
@@ -25,14 +24,10 @@ class State:
         else:
             self.initial_condition = np.asarray(initial_condition)
 
+        self.size = math.prod(self.shape)
+
         self.state_index = self.owner.system.allocate_state_lines(self.size)
         self.owner.system.states.append(self)
-
-    @cached_property
-    def size(self):
-        """The size of the state. Equivalent to the product of the dimensions
-        of the state."""
-        return math.prod(self.shape)
 
     @property
     def state_slice(self):

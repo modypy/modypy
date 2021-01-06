@@ -5,7 +5,7 @@ import math
 
 import numpy as np
 
-from simtree.model import Block, Port, Signal
+from modypy.model import Block, Port, Signal
 
 
 class Propeller(Block):

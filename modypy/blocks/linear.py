@@ -1,6 +1,6 @@
 """Blocks for linear, time-invariant systems"""
 import numpy as np
-from simtree.model import Block, Port, State, Signal
+from modypy.model import Block, Port, State, Signal
 
 
 class LTISystem(Block):

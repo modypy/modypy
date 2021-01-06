@@ -1,8 +1,8 @@
-"""Tests for ``simtree.model.ports``"""
+"""Tests for ``modypy.model.ports``"""
 import pytest
 
-from simtree.model import System
-from simtree.model.ports import \
+from modypy.model import System
+from modypy.model.ports import \
     Port, \
     OutputPort, \
     Signal, \

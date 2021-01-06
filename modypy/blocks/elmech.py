@@ -4,7 +4,7 @@ A collection fo electro-mechanical blocks.
 
 import math
 
-from simtree.model import Block, Port, State, SignalState, Signal
+from modypy.model import Block, Port, State, SignalState, Signal
 
 
 class DCMotor(Block):

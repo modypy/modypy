@@ -1,10 +1,10 @@
-"""Tests for the `simtree.model.states`` package"""
+"""Tests for the `modypy.model.states`` package"""
 import numpy as np
 import numpy.testing as npt
 
-from simtree.model import System
-from simtree.model.evaluation import Evaluator
-from simtree.model.states import State, SignalState
+from modypy.model import System
+from modypy.model.evaluation import Evaluator
+from modypy.model.states import State, SignalState
 
 
 def test_state():

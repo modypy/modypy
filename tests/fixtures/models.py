@@ -2,8 +2,8 @@ import math
 
 import numpy as np
 
-from simtree.blocks.linear import LTISystem, Gain
-from simtree.model import \
+from modypy.blocks.linear import LTISystem, Gain
+from modypy.model import \
     Block,\
     System, \
     Event, \

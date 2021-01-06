@@ -1,14 +1,14 @@
 """
-Tests for ``simtree.model.evaluator``
+Tests for ``modypy.model.evaluator``
 """
 import numpy as np
 import numpy.testing as npt
 
 import pytest
 
-from simtree.blocks.sources import constant
-from simtree.model import System, State, Port, Signal, InputSignal, OutputPort, Event
-from simtree.model.evaluation import Evaluator, AlgebraicLoopError, PortNotConnectedError
+from modypy.blocks.sources import constant
+from modypy.model import System, State, Port, Signal, InputSignal, OutputPort, Event
+from modypy.model.evaluation import Evaluator, AlgebraicLoopError, PortNotConnectedError
 
 
 def test_evaluator():

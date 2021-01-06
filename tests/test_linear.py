@@ -2,10 +2,10 @@ import pytest
 import numpy as np
 import numpy.testing as npt
 
-from simtree.blocks.linear import LTISystem, Gain
-from simtree.blocks.sources import constant
-from simtree.model import System
-from simtree.model.evaluation import Evaluator
+from modypy.blocks.linear import LTISystem, Gain
+from modypy.blocks.sources import constant
+from modypy.model import System
+from modypy.model.evaluation import Evaluator
 
 
 def test_lti_nonsquare_state_matrix():

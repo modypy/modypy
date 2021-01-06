@@ -1,7 +1,7 @@
 """Provides some simple source blocks"""
 import numpy as np
 
-from simtree.model import Signal
+from modypy.model import Signal
 
 
 def constant(parent, value):

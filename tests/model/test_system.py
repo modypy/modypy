@@ -1,11 +1,11 @@
 """
-Tests for ``simtree.model.system``
+Tests for ``modypy.model.system``
 """
 import numpy as np
 import numpy.testing as npt
 
-from simtree.model import State, InputSignal, OutputPort, Event
-from simtree.model.system import System, Block
+from modypy.model import State, InputSignal, OutputPort, Event
+from modypy.model.system import System, Block
 
 
 def test_system():

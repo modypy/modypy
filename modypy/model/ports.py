@@ -1,7 +1,6 @@
 """
 Provides classes for creating ports and signals.
 """
-from functools import cached_property
 import math
 from typing import Union, Sequence
 
@@ -25,12 +24,7 @@ class Port:
             self.shape = (shape,)
         else:
             self.shape = shape
-
-    @cached_property
-    def size(self):
-        """The size of the port. Equivalent to the product of the dimensions of
-        the port."""
-        return math.prod(self.shape)
+        self.size = math.prod(self.shape)
 
     @property
     def signal(self):

@@ -3,14 +3,14 @@ import itertools
 import numpy as np
 import scipy.linalg as la
 
-from simtree.model import Block, Port, System, InputSignal, OutputPort
-from simtree.model.evaluation import Evaluator
-from simtree.blocks.aerodyn import Propeller, Thruster
-from simtree.blocks.elmech import DCMotor
-from simtree.blocks.sources import constant
-from simtree.blocks.linear import Sum
-from simtree.linearization import find_steady_state, system_jacobian
-from simtree.utils.uiuc_db import load_static_propeller
+from modypy.model import Block, Port, System, InputSignal, OutputPort
+from modypy.model.evaluation import Evaluator
+from modypy.blocks.aerodyn import Propeller, Thruster
+from modypy.blocks.elmech import DCMotor
+from modypy.blocks.sources import constant
+from modypy.blocks.linear import Sum
+from modypy.linearization import find_steady_state, system_jacobian
+from modypy.utils.uiuc_db import load_static_propeller
 
 
 class Engine(Block):

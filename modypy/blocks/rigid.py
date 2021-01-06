@@ -4,7 +4,7 @@ Blocks for stiff body dynamics
 import numpy as np
 import numpy.linalg as linalg
 
-from simtree.model import Block, Port, Signal, SignalState
+from modypy.model import Block, Port, Signal, SignalState
 
 
 class RigidBody6DOFFlatEarth(Block):

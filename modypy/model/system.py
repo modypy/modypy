@@ -1,8 +1,6 @@
 """
 Provides classes for constructing systems and block hierarchies.
 """
-from functools import cached_property
-
 import numpy as np
 
 
@@ -120,8 +118,4 @@ class Block:
     """
     def __init__(self, parent):
         self.parent = parent
-
-    @cached_property
-    def system(self):
-        """The system this block is part of"""
-        return self.parent.system
+        self.system = self.parent.system
