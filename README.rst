@@ -1,4 +1,4 @@
-.. image:: https://badge.fury.io/py/modpypy.svg
+.. image:: https://badge.fury.io/py/modypy.svg
     :alt: PyPi Version
 
 .. image:: https://travis-ci.com/ralfgerlich/modypy.svg?branch=master
