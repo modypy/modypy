@@ -1,7 +1,11 @@
+"""
+A larger example showcasing the steady-state-determination and linearisation
+of complex systems, in this case for a quadrocopter frame with four
+DC-motors with propellers.
+"""
 import itertools
 
 import numpy as np
-import scipy.linalg as la
 
 from modypy.model import Block, Port, System, InputSignal, OutputPort
 from modypy.model.evaluation import Evaluator
@@ -14,6 +18,9 @@ from modypy.utils.uiuc_db import load_static_propeller
 
 
 class Engine(Block):
+    """
+    An engine block consisting of a propeller and a DC-motor.
+    """
     def __init__(self,
                  parent,
                  ct, cp, diameter,
@@ -21,39 +28,56 @@ class Engine(Block):
                  direction, vector, arm):
         Block.__init__(self, parent)
 
+        # Create ports for the motor voltage and the air density
         self.voltage = Port(self, shape=1)
         self.density = Port(self, shape=1)
 
+        # Create the motor
         self.dcmotor = DCMotor(self, Kv, R, L, J, initial_omega=1)
+
+        # Create the propeller
         self.propeller = Propeller(self,
                                    thrust_coeff=ct,
                                    power_coeff=cp,
                                    diameter=diameter)
+
+        # Create a thruster that converts the scalar thrust and torque into
+        # thrust and torque vectors, considering the arm of the engine
+        # relative to the center of gravity
         self.thruster = Thruster(self,
                                  direction=direction,
                                  vector=vector,
                                  arm=arm)
 
+        # Provide output ports for the thrust and torque vectors
         self.thrust_vector = Port(self, shape=3)
         self.torque_vector = Port(self, shape=3)
 
+        # Connect the voltage to the motor
         self.dcmotor.voltage.connect(self.voltage)
+        # Connect the density to the propeller
         self.propeller.density.connect(self.density)
 
+        # Connect the motor and propeller to each other
         self.dcmotor.external_torque.connect(self.propeller.torque)
         self.propeller.speed_rps.connect(self.dcmotor.speed_rps)
+
+        # Provide the scalar thrust and torque to the thruster
         self.thruster.scalar_thrust.connect(self.propeller.thrust)
         self.thruster.scalar_torque.connect(self.dcmotor.torque)
 
+        # Connect the thrust and torque vectors to the outputs
         self.thrust_vector.connect(self.thruster.thrust_vector)
         self.torque_vector.connect(self.thruster.torque_vector)
 
 
+# Import thrust and torque coefficients from the UIUC propeller database
 thrust_coeff, torque_coeff = \
     load_static_propeller('volume-1/data/apcsf_8x3.8_static_2777rd.txt',
                           interp_options={"bounds_error": False,
                                           "fill_value": "extrapolate"})
 
+# Set up a general parameters vector for all four engines
 parameters = {
     'Kv': 789.E-6,
     'R': 43.3E-3,
@@ -64,26 +88,35 @@ parameters = {
     'diameter': 8*25.4E-3
 }
 
-RADIUS_X = 0.25
-RADIUS_Y = 0.25
+# Set up the positions of the engines
+POSITION_X = 0.25
+POSITION_Y = 0.25
 
+# Create a system
 system = System()
 
+# Add the engines to the system.
+# Note how the positions and the directions alternate between the engines.
 engines = [
     Engine(system,
-           vector=np.c_[0, 0, -1], arm=np.c_[+RADIUS_X, +RADIUS_Y, 0], direction=1,
+           vector=np.c_[0, 0, -1], arm=np.c_[+POSITION_X, +POSITION_Y, 0], direction=1,
            **parameters),
     Engine(system,
-           vector=np.c_[0, 0, -1], arm=np.c_[-RADIUS_X, +RADIUS_Y, 0], direction=-1,
+           vector=np.c_[0, 0, -1], arm=np.c_[-POSITION_X, +POSITION_Y, 0], direction=-1,
            **parameters),
     Engine(system,
-           vector=np.c_[0, 0, -1], arm=np.c_[-RADIUS_X, -RADIUS_Y, 0], direction=1,
+           vector=np.c_[0, 0, -1], arm=np.c_[-POSITION_X, -POSITION_Y, 0], direction=1,
            **parameters),
     Engine(system,
-           vector=np.c_[0, 0, -1], arm=np.c_[+RADIUS_X, -RADIUS_Y, 0], direction=-1,
+           vector=np.c_[0, 0, -1], arm=np.c_[+POSITION_X, -POSITION_Y, 0], direction=-1,
            **parameters),
 ]
 
+# Create input and output signals.
+# The steady-state determination will try to vary the input signals and states
+# such that the state derivatives and the output signals are zero.
+
+# Create individual input signals for the voltages of the four engines
 voltages = [
     InputSignal(system, value=0),
     InputSignal(system, value=0),
@@ -91,26 +124,37 @@ voltages = [
     InputSignal(system, value=0),
 ]
 
-gravity_source = constant(system, value=np.r_[0, 0, 1.5*9.81])
-counter_torque = constant(system, value=np.r_[0, 0, 0])
-density = constant(system, value=1.29)
-force_sum = Sum(system, channel_weights=np.ones(5), output_size=3)
-torque_sum = Sum(system, channel_weights=np.ones(5), output_size=3)
-current_sum = Sum(system, channel_weights=np.ones(4))
-
-for idx, engine in zip(itertools.count(), engines):
-    voltages[idx].connect(engine.voltage)
-    engine.density.connect(density)
-    engine.thrust_vector.connect(force_sum.inputs[idx])
-    engine.torque_vector.connect(torque_sum.inputs[idx])
-    engine.dcmotor.current.connect(current_sum.inputs[idx])
-
-gravity_source.connect(force_sum.inputs[-1])
-counter_torque.connect(torque_sum.inputs[-1])
-
+# Provide outputs for the forces and torques
 force_output = OutputPort(system, shape=3)
 torque_output = OutputPort(system, shape=3)
 
+# Provide the air density as input
+density = constant(system, value=1.29)
+
+# Set up the sums of forces and torques
+force_sum = Sum(system, channel_weights=np.ones(5), output_size=3)
+torque_sum = Sum(system, channel_weights=np.ones(5), output_size=3)
+
+# Connect the engines
+for idx, engine in zip(itertools.count(), engines):
+    # Provide voltage and density to the engine
+    voltages[idx].connect(engine.voltage)
+    density.connect(engine.density)
+
+    # Connect the thruster outputs to the respective sum nodes
+    engine.thrust_vector.connect(force_sum.inputs[idx])
+    engine.torque_vector.connect(torque_sum.inputs[idx])
+
+# We consider gravity and a possible counter torque that need to be compensated
+# by thrust and torque
+gravity_source = constant(system, value=np.r_[0, 0, 1.5*9.81])
+counter_torque = constant(system, value=np.r_[0, 0, 0])
+
+# Connect these to the force and torque sums
+gravity_source.connect(force_sum.inputs[-1])
+counter_torque.connect(torque_sum.inputs[-1])
+
+# Connect the force and torque sums to the respective outputs
 force_output.connect(force_sum.output)
 torque_output.connect(torque_sum.output)
 
@@ -123,12 +167,12 @@ sol, x0, u0 = find_steady_state(system,
                                 })
 
 if sol.success:
-    evaluator = Evaluator(system=system, time=0, state=x0, inputs=u0)
-    print("\tx0     =%s" % x0)
-    print("\tu0     =%s" % x0)
-    print("\tdxdt   =%s" % evaluator.state_derivative)
-    print("\tforce  =%s" % evaluator.get_port_value(force_sum.output))
-    print("\ttorque =%s" % evaluator.get_port_value(torque_sum.output))
+    # The function was successful in finding the steady state
+    print("Steady state determination was successful")
+    print("\tstates =%s" % x0)
+    print("\tinputs =%s" % u0)
+
+    # Determine the jacobian of the whole system at the steady state
     A, B, C, D = system_jacobian(system, 0, x0, u0)
     print("A:")
     print(A)
@@ -138,9 +182,5 @@ if sol.success:
     print(C)
     print("D:")
     print(D)
-
-    w, vr = la.eig(A)
-    print("Eigenvalues:%s" % w)
-    print("Eigenvectors:%s" % vr)
 else:
-    print("message=%s" % sol.message)
+    print("Steady state determination failed with message=%s" % sol.message)

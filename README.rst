@@ -97,3 +97,41 @@ Main Features
 - Steady state determination and linearization
 - Library of standard blocks, including 6-degree-of-freedom rigid body motion
 - Tested for 100% statement and branch coverage
+
+Installation
+============
+
+To install the development version,
+
+.. code-block:: bash
+
+  $ git clone https://github.com/ralfgerlich/modypy.git
+  $ pip install -e modypy
+
+Examples
+========
+
+Check out the examples in the ``examples`` directory:
+
+``dcmotor.py``
+    A simple example using a DC-motor driving a propeller.
+``rigidbody.py``
+    Some rigid-body simulation using moments and forces showing an object
+    moving in a circle with constant velocity and turn-rate.
+``bouncing_ball.py``
+    An example modelling a bouncing ball, demonstrating the use of events and
+    event-handler functions.
+``quadcopter_trim.py``
+    A larger example showcasing the steady-state-determination and linearisation
+    of complex systems, in this case for a quadrocopter frame with four
+    DC-motors with propellers.
+
+They can be run using, e.g.,
+
+.. code-block:: bash
+
+  $ pip install matplotlib
+  $ python examples/bouncing_ball.py
+
+Note that some of the examples require ``matplotlib`` to run and display the
+results.
