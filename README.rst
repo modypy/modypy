@@ -1,3 +1,6 @@
+.. image:: https://badge.fury.io/py/modpypy.svg
+    :alt: PyPi Version
+
 .. image:: https://travis-ci.com/ralfgerlich/modypy.svg?branch=master
     :alt: Build Status
     :target: https://travis-ci.com/ralfgerlich/modypy
