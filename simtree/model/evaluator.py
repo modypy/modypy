@@ -23,7 +23,7 @@ class Evaluator:
         self.system = system
 
         if state is None:
-            state = np.zeros(system.num_states)
+            state = system.initial_condition.copy()
         self._state = state
 
         self._state_derivative = np.empty(system.num_states)
@@ -58,7 +58,7 @@ class Evaluator:
     @property
     def inputs(self):
         """The input vector for the complete system"""
-        input_vector = np.empty(self.system.num_outputs)
+        input_vector = np.empty(self.system.num_inputs)
         for signal in self.system.inputs:
             signal_value = self.get_port_value(signal)
             input_vector[signal.input_slice] = signal_value.flatten()
