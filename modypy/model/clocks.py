@@ -24,7 +24,8 @@ class ClockPort:
         """
         The clock-port that is referenced by connection by this clock port.
         """
-        self._reference = self._reference.reference
+        if self._reference is not self:
+            self._reference = self._reference.reference
         return self._reference
 
     @reference.setter

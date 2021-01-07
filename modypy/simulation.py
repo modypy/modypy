@@ -334,6 +334,7 @@ class Simulator:
                                          inputs=port_provider)
             for listener in clock.listeners:
                 listener(data_provider)
+            self.current_state = state_updater.new_state
             # Get the next tick
             try:
                 next_tick_time = next(tick_entry.tick_generator)

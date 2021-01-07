@@ -35,6 +35,8 @@ def find_steady_state(system,
     If the search is successful, the values of all input signals in the system
     will be set to the respective input value identified for the steady state.
 
+    NOTE: This function currently does not honor clocks.
+
     :param system: The system to analyze.
     :param time: The time at which to determine the steady state. Default: 0
     :param method: The solver method to use. Refer to the documentation for
@@ -85,6 +87,8 @@ def system_jacobian(system,
 
     This can be used in conjunction with `find_steady_state` to determine
     an LTI approximating the behaviour around the steady state.
+
+    NOTE: This function currently does not honor clocks.
 
     :param system: The system to be analysed
     :param time: The time at which the system shall be considered

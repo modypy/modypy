@@ -1,13 +1,15 @@
 """
-A simple example using a DC-motor driving a propeller.
+A simple example using a DC-motor driving a propeller and sampling the
+thrust using a zero-order hold.
 """
 
 import matplotlib.pyplot as plt
 
 from modypy.blocks.aerodyn import Propeller
+from modypy.blocks.discrete import zero_order_hold
 from modypy.blocks.elmech import DCMotor
 from modypy.blocks.sources import constant
-from modypy.model import System
+from modypy.model import System, Clock
 from modypy.simulation import Simulator
 from modypy.utils.uiuc_db import load_static_propeller
 
@@ -47,13 +49,28 @@ voltage.connect(dcmotor.voltage)
 # Connect the density to the propeller
 density.connect(propeller.density)
 
+# We want to monitor the sampled thrust
+sample_clock = Clock(system, period=1/50.0)
+thrust_sampler = zero_order_hold(system,
+                                 input_port=propeller.thrust,
+                                 clock=sample_clock)
+
 # Run a simulation for 1/2s
 simulator = Simulator(system=system, start_time=0)
 simulator.run_until(t_bound=0.5)
 
 # Plot the thrust output over time
-plt.plot(simulator.result.time, simulator.result.signals[:, propeller.thrust.signal_slice])
-plt.title("Propeller Simulation")
-plt.xlabel("Time (s)")
-plt.ylabel("Thrust (N)")
+fig, ax = plt.subplots()
+ax.plot(simulator.result.time,
+        simulator.result.signals[:, propeller.thrust.signal_slice],
+        label="continuous-time")
+ax.step(simulator.result.time,
+        simulator.result.signals[:, thrust_sampler.signal_slice],
+        label="sampled")
+
+ax.set_title("Propeller Simulation")
+ax.legend()
+ax.set_xlabel("Time (s)")
+ax.set_ylabel("Thrust (N)")
+fig.savefig("propeller.png")
 plt.show()

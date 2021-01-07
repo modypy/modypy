@@ -31,7 +31,7 @@ class Evaluator:
             state = system.initial_condition.copy()
         self._state = state
 
-        self._state_derivative = np.empty(system.num_states)
+        self._state_derivative = np.zeros(system.num_states)
         self.valid_state_derivatives = set()
 
         self._signals = np.zeros(system.num_signals)
@@ -179,12 +179,15 @@ class Evaluator:
         """
         if state in self.valid_state_derivatives:
             return self._state_derivative[state.state_slice].reshape(state.shape)
-        data = DataProvider(self.time,
-                            StateProvider(self),
-                            PortProvider(self))
-        state_derivative = state.derivative_function(data)
-        state_derivative = np.asarray(state_derivative).reshape(state.shape)
-        self._state_derivative[state.state_slice] = state_derivative.flatten()
+        if state.derivative_function is not None:
+            data = DataProvider(self.time,
+                                StateProvider(self),
+                                PortProvider(self))
+            state_derivative = state.derivative_function(data)
+            state_derivative = np.asarray(state_derivative).reshape(state.shape)
+            self._state_derivative[state.state_slice] = state_derivative.flatten()
+        else:
+            state_derivative = self._state_derivative[state.state_slice]
         self.valid_state_derivatives.add(state)
         return state_derivative
 

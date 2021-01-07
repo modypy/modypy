@@ -36,18 +36,20 @@ refer to the :doc:`API Documentation <api/api>`.
 For example, a simple combination of a DC-motor and a propeller can be built
 as follows:
 
+
 .. code-block:: python
 
     import matplotlib.pyplot as plt
 
     from modypy.blocks.aerodyn import Propeller
+    from modypy.blocks.discrete import zero_order_hold
     from modypy.blocks.elmech import DCMotor
     from modypy.blocks.sources import constant
-    from modypy.model import System
+    from modypy.model import System, Clock
     from modypy.simulation import Simulator
     from modypy.utils.uiuc_db import load_static_propeller
 
-    # Import propeller data from UIUC database
+    # Import thrust and torque coefficients from the UIUC propeller database
     thrust_coeff, torque_coeff = \
         load_static_propeller(
             'volume-1/data/apcsf_8x3.8_static_2777rd.txt',
@@ -57,8 +59,9 @@ as follows:
             }
         )
 
-    # Create the Engine
     system = System()
+
+    # Create the engine, consisting of the motor and a propeller
     dcmotor = DCMotor(system,
                       Kv=789.E-6,
                       R=43.3E-3,
@@ -69,27 +72,43 @@ as follows:
                           power_coeff=torque_coeff,
                           diameter=8*25.4E-3)
 
-    # Connect the signals
+    # Connect the motor and propeller to each other
     propeller.torque.connect(dcmotor.external_torque)
     dcmotor.speed_rps.connect(propeller.speed_rps)
 
-    # Create the sources
+    # Create the sources for voltage and air density
     voltage = constant(system, value=3.5)
     density = constant(system, value=1.29)
 
-    # Connect the sources
+    # Connect the voltage to the motor
     voltage.connect(dcmotor.voltage)
+    # Connect the density to the propeller
     density.connect(propeller.density)
 
-    # Run the simulator
+    # We want to monitor the sampled thrust
+    sample_clock = Clock(system, period=1/50.0)
+    thrust_sampler = zero_order_hold(system,
+                                     input_port=propeller.thrust,
+                                     clock=sample_clock)
+
+    # Run a simulation for 1/2s
     simulator = Simulator(system=system, start_time=0)
     simulator.run_until(t_bound=0.5)
 
-    # Plot the results
-    plt.plot(simulator.result.time, simulator.result.signals[:, propeller.thrust.signal_slice])
-    plt.title("Propeller Simulation")
-    plt.xlabel("Time (s)")
-    plt.ylabel("Thrust (N)")
+    # Plot the thrust output over time
+    fig, ax = plt.subplots()
+    ax.plot(simulator.result.time,
+            simulator.result.signals[:, propeller.thrust.signal_slice],
+            label="continuous-time")
+    ax.step(simulator.result.time,
+            simulator.result.signals[:, thrust_sampler.signal_slice],
+            label="sampled")
+
+    ax.set_title("Propeller Simulation")
+    ax.legend()
+    ax.set_xlabel("Time (s)")
+    ax.set_ylabel("Thrust (N)")
+    fig.savefig("propeller.png")
     plt.show()
 
 
@@ -101,7 +120,8 @@ Main Features
 - Simple architecture based on states, signals and connectible ports
 - Enables hierarchical modelling
 - Allows the establishment of reusable building blocks
-- Simulator for continuous-time, linear and non-linear systems
+- Simulator for linear and non-linear continuous-time systems
+- Clock system to model periodic events and discrete-time components
 - Steady state determination and linearization
 - Library of standard blocks, including 6-degree-of-freedom rigid body motion
 - Tested for 100% statement and branch coverage
@@ -128,7 +148,8 @@ Examples
 Check out the examples in the ``examples`` directory:
 
 ``dcmotor.py``
-    A simple example using a DC-motor driving a propeller.
+    A simple example using a DC-motor driving a propeller and sampling the
+    thrust using a zero-order hold.
 ``rigidbody.py``
     Some rigid-body simulation using moments and forces showing an object
     moving in a circle with constant velocity and turn-rate.
