@@ -26,7 +26,8 @@ architecture than simupy.
 The basic components of a dynamic system in MoDyPy are states and signals.
 States represent the internal state of the system, and signals represent the
 values calculated based on the state. Ports can be connected to signals, so that
-reusable blocks with input and output ports can be easily built.
+reusable blocks with input and output ports can be easily built. For more
+details refer to the `API documentation <https://modypy.readthedocs.io/>`_.
 
 For example, a simple combination of a DC-motor and a propeller can be built
 as follows:
