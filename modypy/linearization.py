@@ -1,3 +1,7 @@
+"""
+Provides functions to determine the steady state of a system and the jacobi
+matrix for linearizing the system around a steady state.
+"""
 import numpy as np
 from scipy.optimize import root
 from scipy.misc import central_diff_weights

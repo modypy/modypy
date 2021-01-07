@@ -1,3 +1,6 @@
+"""
+Utilities for loading measurement data from the UIUC aeronautical databases.
+"""
 import urllib.request as request
 import urllib.parse as parse
 

@@ -1,4 +1,8 @@
+"""
+Provide classes for simulation.
+"""
 import itertools
+import heapq
 
 import numpy as np
 import scipy.integrate
@@ -200,6 +204,20 @@ class Simulator:
                            events=self.current_event_values,
                            outputs=self.current_outputs)
 
+        # Start all the clocks
+        self.clock_queue = []
+        for clock in self.system.clocks:
+            # Start the tick generator at the current time
+            tick_generator = clock.tick_generator(self.current_time)
+            try:
+                first_tick = next(tick_generator)
+                entry = TickEntry(first_tick, clock, tick_generator)
+                heapq.heappush(self.clock_queue, entry)
+            except StopIteration:
+                # The block did not produce any ticks at all,
+                # so we just ignore it
+                pass
+
     def step(self, t_bound=None):
         """
         Execute a single execution step.
@@ -207,6 +225,14 @@ class Simulator:
         :param t_bound: The maximum time until which the simulation may proceed
         :return: ``None`` if successful, a message string otherwise
         """
+
+        # Execute any pending clock ticks
+        self.run_clock_ticks()
+
+        # Check if there is a clock event before the given boundary time.
+        # If so, we may not advance beyond that event
+        if len(self.clock_queue) > 0 and self.clock_queue[0].tick_time < t_bound:
+            t_bound = self.clock_queue[0].tick_time
 
         last_time = self.current_time
         last_event_values = self.current_event_values
@@ -288,6 +314,38 @@ class Simulator:
                            outputs=self.current_outputs)
         return None
 
+    def run_clock_ticks(self):
+        """
+        Run all the pending clock ticks.
+        """
+
+        while (len(self.clock_queue) > 0 and
+               self.clock_queue[0].tick_time <= self.current_time):
+            tick_entry = heapq.heappop(self.clock_queue)
+            clock = tick_entry.clock
+            # Execute all the listeners on the clock
+            update_evaluator = Evaluator(system=self.system,
+                                         time=self.current_time,
+                                         state=self.current_state)
+            state_updater = StateUpdater(update_evaluator)
+            port_provider = PortProvider(update_evaluator)
+            data_provider = DataProvider(time=self.current_time,
+                                         states=state_updater,
+                                         inputs=port_provider)
+            for listener in clock.listeners:
+                listener(data_provider)
+            # Get the next tick
+            try:
+                next_tick_time = next(tick_entry.tick_generator)
+                next_tick_entry = TickEntry(next_tick_time,
+                                            clock,
+                                            tick_entry.tick_generator)
+                heapq.heappush(self.clock_queue, next_tick_entry)
+            except StopIteration:
+                # The clock does not deliver any more ticks, so we simply
+                # ignore it from now on
+                pass
+
     def find_first_event(self, state_trajectory, start_time, end_time, events_occurred):
         """
         Determine the event that occurred first.
@@ -349,12 +407,24 @@ class Simulator:
         return None
 
     def state_derivative(self, time, state):
+        """
+        The state derivative function used for integrating the state over time.
+
+        :param time: The current time
+        :param state: The current state vector
+        :return: The time-derivative of the state vector
+        """
+
         evaluator = Evaluator(system=self.system, time=time, state=state)
         state_derivative = evaluator.state_derivative
         return state_derivative
 
 
 class StateUpdater:
+    """
+    A ``StateUpdater`` provides access to the states via indexing using the
+    ``State`` objects. It also allows the state vector to be updated.
+    """
     def __init__(self, evaluator):
         self.new_state = evaluator.state.copy()
 
@@ -367,3 +437,18 @@ class StateUpdater:
         start_index = state.state_index
         end_index = start_index + state.size
         return self.new_state[start_index:end_index].reshape(state.shape)
+
+
+class TickEntry:
+    """
+    A ``TickEntry`` holds information about the next tick of a given clock.
+    An order over ``TickEntry`` instances is defined by their time.
+    """
+
+    def __init__(self, tick_time, clock, tick_generator):
+        self.tick_time = tick_time
+        self.clock = clock
+        self.tick_generator = tick_generator
+
+    def __lt__(self, other):
+        return self.tick_time < other.tick_time

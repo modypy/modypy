@@ -23,6 +23,8 @@ class System:
         self.num_outputs = 0
         self.outputs = list()
 
+        self.clocks = set()
+
     @property
     def system(self):
         """The system itself"""
@@ -95,11 +97,21 @@ class System:
         """
         Register an event.
 
+        :param event: The event to register
         :return: The index of the event line allocated for the event
         """
         event_index = len(self.events)
         self.events.append(event)
         return event_index
+
+    def register_clock(self, clock):
+        """
+        Register a clock.
+
+        :param clock: The clock to register.
+        :return:
+        """
+        self.clocks.add(clock)
 
     @property
     def num_events(self):

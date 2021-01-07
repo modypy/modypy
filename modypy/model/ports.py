@@ -78,6 +78,11 @@ class ShapeMismatchError(RuntimeError):
 
 
 class OutputPort(Port):
+    """
+    An ``OutputPort`` is a special port that is considered to be an output of
+    the system. In simulation or steady-state determination, output ports play
+    a special role.
+    """
     def __init__(self, owner, shape=1):
         Port.__init__(self, owner, shape)
         self.output_index = self.owner.system.allocate_output_lines(self.size)
@@ -85,6 +90,10 @@ class OutputPort(Port):
 
     @property
     def output_slice(self):
+        """
+        A slice object that represents the indices of this port in the outputs
+        vector.
+        """
         return slice(self.output_index,
                      self.output_index+self.size)
 
@@ -117,6 +126,11 @@ class Signal(Port):
 
 
 class InputSignal(Signal):
+    """
+    An ``InputSignal`` is a special kind of signal that is considered an input
+    into the system. In simulation and linearization, input signals play a
+    special role.
+    """
     def __init__(self, owner, shape: ShapeType = 1, value=0):
         Signal.__init__(self, owner, shape, value)
         self.input_index = self.owner.system.allocate_input_lines(self.size)
