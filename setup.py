@@ -10,7 +10,7 @@ setuptools.setup(
     author_email="ralf@ralfgerlich.biz",
     description="A framework for hierarchical modelling and simulation of dynamic systems",
     long_description=long_description,
-    long_description_content_type="text/markdown",
+    long_description_content_type="text/x-rst",
     url="https://github.com/ralfgerlich/simtree",
     license="BSD 2-clause \"Simplified\" License",
     packages=setuptools.find_packages(),
