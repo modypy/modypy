@@ -66,7 +66,8 @@ ax.plot(simulator.result.time,
         label="continuous-time")
 ax.step(simulator.result.time,
         simulator.result.signals[:, thrust_sampler.signal_slice],
-        label="sampled")
+        label="sampled",
+        where="post")
 
 ax.set_title("Propeller Simulation")
 ax.legend()

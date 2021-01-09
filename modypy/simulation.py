@@ -183,11 +183,20 @@ class Simulator:
         else:
             self.rootfinder_options = rootfinder_options
 
+        self.result = SimulationResult(system)
+
+        # Set up the state of the system
         self.current_time = self.start_time
         self.current_state = self.initial_condition
 
-        self.result = SimulationResult(system)
+        # Start all the clocks
+        self.clock_queue = []
+        self.start_clocks()
 
+        # Run the first tick of each clock
+        self.run_clock_ticks()
+
+        # Determine the initial sample
         evaluator = Evaluator(system=self.system,
                               time=self.current_time,
                               state=self.current_state)
@@ -196,7 +205,7 @@ class Simulator:
         self.current_event_values = evaluator.event_values
         self.current_outputs = evaluator.outputs
 
-        # Store the initial state
+        # Store the initial sample
         self.result.append(time=self.current_time,
                            inputs=self.current_inputs,
                            state=self.current_state,
@@ -204,8 +213,9 @@ class Simulator:
                            events=self.current_event_values,
                            outputs=self.current_outputs)
 
-        # Start all the clocks
-        self.clock_queue = []
+    def start_clocks(self):
+        """Set up all the clock ticks"""
+
         for clock in self.system.clocks:
             # Start the tick generator at the current time
             tick_generator = clock.tick_generator(self.current_time)
@@ -218,7 +228,7 @@ class Simulator:
                 # so we just ignore it
                 pass
 
-    def step(self, t_bound=None):
+    def step(self, t_bound):
         """
         Execute a single execution step.
 
@@ -226,17 +236,15 @@ class Simulator:
         :return: ``None`` if successful, a message string otherwise
         """
 
-        # Execute any pending clock ticks
-        self.run_clock_ticks()
-
         # Check if there is a clock event before the given boundary time.
-        # If so, we may not advance beyond that event
+        # If so, we must not advance beyond that event.
         if len(self.clock_queue) > 0 and self.clock_queue[0].tick_time < t_bound:
             t_bound = self.clock_queue[0].tick_time
 
         last_time = self.current_time
         last_event_values = self.current_event_values
 
+        # Integrate for a single step
         integrator = self.integrator_constructor(fun=self.state_derivative,
                                                  t0=self.current_time,
                                                  y0=self.current_state,
@@ -259,13 +267,16 @@ class Simulator:
             start_time = last_time
             end_time = integrator.t
 
+            # Identify the first event that occurred
             first_event, first_event_time = \
                 self.find_first_event(state_interpolator,
                                       start_time,
                                       end_time,
                                       events_occurred)
 
+            # We will continue immediately after that event
             self.current_time = first_event_time + 1.E-3
+            # Get the state at the event time
             self.current_state = state_interpolator(self.current_time)
 
             if first_event.update_function is not None:
@@ -280,28 +291,20 @@ class Simulator:
                                     inputs=port_provider)
                 first_event.update_function(data)
                 self.current_state = state_updater.new_state
+        else:
+            # No event occurred, so we simply accept the integrator end-point as the
+            # next sample point.
+            self.current_time = integrator.t
+            self.current_state = integrator.y
 
-            evaluator = Evaluator(system=self.system,
-                                  time=self.current_time,
-                                  state=self.current_state)
-            self.current_inputs = evaluator.inputs
-            self.current_signals = evaluator.signals
-            self.current_event_values = evaluator.event_values
-            self.current_outputs = evaluator.outputs
+        # Execute any pending clock ticks
+        self.run_clock_ticks()
 
-            self.result.append(time=self.current_time,
-                               inputs=self.current_inputs,
-                               state=self.current_state,
-                               signals=self.current_signals,
-                               events=self.current_event_values,
-                               outputs=self.current_outputs)
-            return None
-
-        # No event occurred, so we simply accept the integrator end-point as the
-        # next sample point.
-        self.current_time = integrator.t
+        # Determine all characteristics of the current sample and store it
+        evaluator = Evaluator(system=self.system,
+                              time=self.current_time,
+                              state=self.current_state)
         self.current_inputs = evaluator.inputs
-        self.current_state = integrator.y
         self.current_signals = evaluator.signals
         self.current_event_values = evaluator.event_values
         self.current_outputs = evaluator.outputs
@@ -323,6 +326,7 @@ class Simulator:
                self.clock_queue[0].tick_time <= self.current_time):
             tick_entry = heapq.heappop(self.clock_queue)
             clock = tick_entry.clock
+
             # Execute all the listeners on the clock
             update_evaluator = Evaluator(system=self.system,
                                          time=self.current_time,
@@ -334,17 +338,21 @@ class Simulator:
                                          inputs=port_provider)
             for listener in clock.listeners:
                 listener(data_provider)
+
+            # Update the state
             self.current_state = state_updater.new_state
-            # Get the next tick
+
             try:
+                # Get the next tick for the clock
                 next_tick_time = next(tick_entry.tick_generator)
                 next_tick_entry = TickEntry(next_tick_time,
                                             clock,
                                             tick_entry.tick_generator)
+                # Add the clock tick to the queue
                 heapq.heappush(self.clock_queue, next_tick_entry)
             except StopIteration:
-                # The clock does not deliver any more ticks, so we simply
-                # ignore it from now on
+                # This clock does not deliver any more ticks, so we simply
+                # ignore it from now on.
                 pass
 
     def find_first_event(self, state_trajectory, start_time, end_time, events_occurred):

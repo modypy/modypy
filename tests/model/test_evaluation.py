@@ -28,6 +28,9 @@ def test_evaluator():
     state_b1 = State(system,
                      shape=3,
                      derivative_function=(lambda data: data.states[state_b]))
+    state_b2 = State(system,
+                     shape=3,
+                     derivative_function=None)
     input_a = InputSignal(system, shape=(3, 3), value=np.eye(3))
     input_c = InputSignal(system, value=1)
     input_d = InputSignal(system, shape=2, value=[2, 3])
@@ -50,6 +53,8 @@ def test_evaluator():
                             state_b.initial_condition.flatten())
     npt.assert_almost_equal(evaluator.state[state_b1.state_slice],
                             state_b1.initial_condition.flatten())
+    npt.assert_almost_equal(evaluator.state[state_b2.state_slice],
+                            np.zeros(state_b2.size))
 
     # Check the derivative property
     npt.assert_almost_equal(evaluator.state_derivative[state_a.state_slice],

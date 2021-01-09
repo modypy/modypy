@@ -98,7 +98,8 @@ def test_tick_generator(start_time,
                         end_time,
                         run_before_start,
                         expected):
-    """Test an endless tick generator"""
+    """Test the tick generator"""
+
     system = System()
 
     clock = Clock(system,
@@ -113,3 +114,20 @@ def test_tick_generator(start_time,
     ticks = [tick for _idx, tick in zip(range(4), tick_generator)]
 
     npt.assert_almost_equal(ticks, expected)
+
+
+def test_tick_generator_stop_iteration():
+    """Test whether the tick generator throws a ``StopIteration`` exception
+    when the current time is after the end time."""
+
+    system = System()
+
+    clock = Clock(system,
+                  period=1.0,
+                  start_time=0.0,
+                  end_time=2.0)
+
+    tick_generator = clock.tick_generator(not_before=3.0)
+
+    with pytest.raises(StopIteration):
+        next(tick_generator)

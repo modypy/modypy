@@ -8,13 +8,13 @@ import scipy.signal as signal
 from fixtures.models import \
     first_order_lag, first_order_lag_no_input, \
     damped_oscillator, damped_oscillator_with_events, \
-    bouncing_ball_model, \
-    oscillator_with_sine_input, sine_input_with_gain, \
-    sine_source, BouncingBall
+    BouncingBall
 
+from modypy.blocks.discrete import zero_order_hold
 from modypy.blocks.linear import LTISystem
-from modypy.model import Evaluator, System
-from modypy.simulation import Simulator
+from modypy.blocks.sources import constant
+from modypy.model import Evaluator, System, Signal, Clock
+from modypy.simulation import Simulator, DEFAULT_INTEGRATOR_OPTIONS
 
 
 @pytest.fixture(params=[
@@ -156,3 +156,56 @@ def test_events():
     vy = simulator.result.state[:, bouncing_ball.velocity.state_slice][:, 1]
 
     assert np.sign(vy[idx-1]) != np.sign(vy[idx+1])
+
+
+def test_clock_handling():
+    """Test the handling of clocks in the simulator"""
+
+    time_constant = 1.0
+    initial_value = 2.0
+    system = System()
+
+    input_signal = constant(system, value=0.0)
+    lag = LTISystem(parent=system,
+                    system_matrix=-1 / time_constant,
+                    input_matrix=1,
+                    output_matrix=1,
+                    feed_through_matrix=0,
+                    initial_condition=[initial_value])
+    lag.input.connect(input_signal)
+
+    clock1 = Clock(system, period=0.2)
+    hold1 = zero_order_hold(system,
+                            input_port=lag.output,
+                            clock=clock1,
+                            initial_condition=initial_value)
+
+    clock2 = Clock(system, period=0.25, end_time=2.0)
+    hold2 = zero_order_hold(system,
+                            input_port=lag.output,
+                            clock=clock2,
+                            initial_condition=initial_value)
+
+    # Clock 3 will not fire within the simulation time frame
+    clock3 = Clock(system, period=0.25, start_time=-6.0, end_time=-1.0)
+    hold3 = zero_order_hold(system,
+                            input_port=lag.output,
+                            clock=clock3,
+                            initial_condition=initial_value)
+
+    simulator = Simulator(system,
+                          start_time=0.0)
+    simulator.run_until(t_bound=5.0)
+
+    time_floor1 = np.floor(simulator.result.time/clock1.period)*clock1.period
+    time_floor2 = np.minimum(clock2.end_time,
+                             np.floor(simulator.result.time/clock2.period)*clock2.period)
+    reference1 = initial_value*np.exp(-time_floor1 / time_constant)
+    reference2 = initial_value*np.exp(-time_floor2 / time_constant)
+
+    npt.assert_almost_equal(simulator.result.signals[:, hold1.signal_slice].flatten(),
+                            reference1)
+    npt.assert_almost_equal(simulator.result.signals[:, hold2.signal_slice].flatten(),
+                            reference2)
+    npt.assert_almost_equal(simulator.result.signals[:, hold3.signal_slice].flatten(),
+                            initial_value)
