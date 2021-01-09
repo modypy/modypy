@@ -93,42 +93,6 @@ def damped_oscillator_with_events(mass=100.,
     return system, lti, 3 * time_constant
 
 
-def oscillator_with_sine_input(omega,
-                               mass=100.,
-                               damping_coefficient=50.,
-                               spring_coefficient=1.,
-                               initial_value=10.):
-    system = System()
-    lti = LTISystem(parent=system,
-                    system_matrix=[[0, 1],
-                                   [-spring_coefficient / mass,
-                                    -damping_coefficient / mass]],
-                    input_matrix=[[-1 / mass], [0]],
-                    output_matrix=[[1, 0]],
-                    feed_through_matrix=np.zeros((1, 1)),
-                    initial_condition=[initial_value, 0])
-    Event(owner=system,
-          event_function=(lambda data: data.states[lti.state][1]))
-    sine_input = Signal(owner=system,
-                        value=(lambda data: np.sin(omega * data.time)))
-    sine_input.connect(lti.input)
-
-    time_constant = 2 * mass / damping_coefficient
-    return system, lti, 3 * time_constant
-
-
-def sine_input_with_gain(omega):
-    system = System()
-    gain = Gain(parent=system, k=1)
-    gain_event = Event(owner=system,
-                       event_function=(lambda data: data.inputs[gain.input]))
-    sine_input = Signal(owner=system,
-                        value=(lambda data: np.sin(omega*data.time)))
-    sine_input.connect(gain.input)
-
-    return system, 10.0
-
-
 def lti_gain(gain):
     system = System()
     lti = LTISystem(parent=system,
@@ -144,18 +108,6 @@ def lti_gain(gain):
     dest.connect(lti.output)
 
     return system, lti, 10.0
-
-
-def sine_source(omega):
-    system = System()
-    sine_input = Signal(owner=system,
-                        value=(lambda data: np.sin(omega*data.time)))
-    event = Event(owner=system,
-                  event_function=(lambda data: data.inputs[sine_input]))
-
-    return system, 3*2*math.pi/omega
-
-
 
 
 class BouncingBall(Block):
@@ -183,18 +135,3 @@ class BouncingBall(Block):
     def on_ground_event(self, data):
         data.states[self.position] = [data.states[self.position][0], abs(data.states[self.position][1])]
         data.states[self.velocity][1] = - self.gamma * data.states[self.velocity][1]
-
-
-def bouncing_ball_model(g=-9.81,
-                        gamma=0.3,
-                        initial_velocity=None,
-                        initial_position=None):
-    system = System()
-
-    BouncingBall(system,
-                 gravity=g,
-                 gamma=gamma,
-                 initial_position=initial_position,
-                 initial_velocity=initial_velocity)
-
-    return system

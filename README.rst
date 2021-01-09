@@ -16,7 +16,7 @@
     :alt: Code Grade
 
 MoDyPy (rhymes with "modify") is a Python framework for *Mo*\ delling *dy*\ namic
-systems in *Py*\ thon. The framework provides methods for describing continous-time
+systems in *Py*\ thon. The framework provides methods for describing continuous-time
 linear and non-linear systems in
 `state-space representation <https://en.wikipedia.org/wiki/State-space_representation>`_.
 It was originally inspired by `simupy <https://github.com/simupy/simupy>`_

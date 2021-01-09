@@ -51,6 +51,7 @@ class BouncingBall(Block):
         data.states[self.position][1] = abs(data.states[self.position][1])
         data.states[self.velocity][1] = - self.gamma * data.states[self.velocity][1]
 
+
 # Create a system containing the bouncing ball model
 system = System()
 block = BouncingBall(system, initial_velocity=[1, 0], initial_position=[0, 10])
