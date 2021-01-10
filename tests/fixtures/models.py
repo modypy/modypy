@@ -6,7 +6,7 @@ from modypy.blocks.linear import LTISystem, Gain
 from modypy.model import \
     Block,\
     System, \
-    Event, \
+    ZeroCrossEventSource, \
     InputSignal, \
     Signal, \
     State, \
@@ -81,8 +81,8 @@ def damped_oscillator_with_events(mass=100.,
                     output_matrix=[[1, 0]],
                     feed_through_matrix=np.zeros((1, 1)),
                     initial_condition=[initial_value, 0])
-    Event(owner=system,
-          event_function=(lambda data: data.states[lti.state][1]))
+    ZeroCrossEventSource(owner=system,
+                         event_function=(lambda data: data.states[lti.state][1]))
     time_constant = 2 * mass / damping_coefficient
 
     src = InputSignal(system)
@@ -116,7 +116,8 @@ class BouncingBall(Block):
         self.position = State(self, shape=2, derivative_function=self.position_derivative, initial_condition=initial_position)
         self.velocity = State(self, shape=2, derivative_function=self.velocity_derivative, initial_condition=initial_velocity)
         self.posy = Signal(self, shape=1, value=self.posy_output)
-        self.ground = Event(self, event_function=self.ground_event, update_function=self.on_ground_event)
+        self.ground = ZeroCrossEventSource(self, event_function=self.ground_event)
+        self.ground.register_listener(self.on_ground_event)
         self.gravity = gravity
         self.gamma = gamma
 

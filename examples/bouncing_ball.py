@@ -1,11 +1,12 @@
 """
-An example modelling a bouncing ball, demonstrating the use of events and
-event-handler functions.
+An example modelling a bouncing ball, demonstrating the use of zero-crossing
+events and event-handler functions.
 """
-from modypy.model import System, Block, State, Signal, Event
-from modypy.simulation import Simulator, DEFAULT_INTEGRATOR_OPTIONS
 import numpy as np
 import matplotlib.pyplot as plt
+
+from modypy.model import System, Block, State, Signal, ZeroCrossEventSource
+from modypy.simulation import Simulator, DEFAULT_INTEGRATOR_OPTIONS
 
 
 class BouncingBall(Block):
@@ -26,7 +27,8 @@ class BouncingBall(Block):
         self.position = State(self, shape=2, derivative_function=self.position_derivative, initial_condition=initial_position)
         self.velocity = State(self, shape=2, derivative_function=self.velocity_derivative, initial_condition=initial_velocity)
         self.posy = Signal(self, shape=1, value=self.posy_output)
-        self.ground = Event(self, event_function=self.ground_event, update_function=self.on_ground_event)
+        self.ground = ZeroCrossEventSource(self, event_function=self.ground_event)
+        self.ground.register_listener(self.on_ground_event)
         self.gravity = gravity
         self.gamma = gamma
 

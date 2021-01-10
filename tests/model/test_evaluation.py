@@ -7,7 +7,7 @@ import numpy.testing as npt
 import pytest
 
 from modypy.blocks.sources import constant
-from modypy.model import System, State, Port, Signal, InputSignal, OutputPort, Event
+from modypy.model import System, State, Port, Signal, InputSignal, OutputPort, ZeroCrossEventSource
 from modypy.model.evaluation import Evaluator, AlgebraicLoopError, PortNotConnectedError
 
 
@@ -38,8 +38,8 @@ def test_evaluator():
     signal_d = Signal(system, shape=2, value=(lambda data: [17, 19]))
     output_a = OutputPort(system, shape=(3, 3))
     output_c = OutputPort(system)
-    event_a = Event(system, event_function=(lambda data: 23))
-    event_b = Event(system, event_function=(lambda data: 25))
+    event_a = ZeroCrossEventSource(system, event_function=(lambda data: 23))
+    event_b = ZeroCrossEventSource(system, event_function=(lambda data: 25))
 
     evaluator = Evaluator(time=0, system=system)
 

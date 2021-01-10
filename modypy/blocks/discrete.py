@@ -1,11 +1,14 @@
 """Blocks for discrete-time simulation"""
-from modypy.model import Block, SignalState, Port, ClockPort
+from modypy.model import Block, SignalState, Port, EventPort
 
 
 class ZeroOrderHold(Block):
     """
-    A zero-order-hold block which samples an input signal at the pulses
-    of the connected clock.
+    A zero-order-hold block which samples an input signal when the connected
+    event occurs.
+
+    The block provides an event port ``event_input`` that should be connected
+    to the event source that shall trigger the sampling.
     """
 
     def __init__(self, owner, shape=1, initial_condition=None):
@@ -19,8 +22,8 @@ class ZeroOrderHold(Block):
         """
         Block.__init__(self, owner)
 
-        self.clock_input = ClockPort(self)
-        self.clock_input.register_listener(self.update_state)
+        self.event_input = EventPort(self)
+        self.event_input.register_listener(self.update_state)
         self.input = Port(self, shape=shape)
         self.output = SignalState(self,
                                   shape=shape,
@@ -32,7 +35,7 @@ class ZeroOrderHold(Block):
         data.states[self.output] = data.inputs[self.input]
 
 
-def zero_order_hold(system, input_port, clock, initial_condition=None):
+def zero_order_hold(system, input_port, event_port, initial_condition=None):
     """
     Create a ``ZeroOrderHold`` instance that samples the given input port.
     This is a convenience function that returns the single output port of the
@@ -40,7 +43,7 @@ def zero_order_hold(system, input_port, clock, initial_condition=None):
 
     :param system: The system the ``ZeroOrderHold`` block shall be added to.
     :param input_port: The input port to sample.
-    :param clock: The clock or clock port to use as a sampling signal
+    :param event_port: The event port to use as a sampling signal
     :param initial_condition: The initial condition of the ``ZeroOrderHold`` block.
     :return:
     """
@@ -49,5 +52,5 @@ def zero_order_hold(system, input_port, clock, initial_condition=None):
                          shape=input_port.shape,
                          initial_condition=initial_condition)
     hold.input.connect(input_port)
-    hold.clock_input.connect(clock)
+    hold.event_input.connect(event_port)
     return hold.output

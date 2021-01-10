@@ -1,22 +1,23 @@
 """
-Tests for the ``modypy.model.clocks`` module
+Tests for the ``modypy.model.events`` module
 """
 import pytest
 
 import numpy.testing as npt
 
 from modypy.model import System
-from modypy.model.clocks import ClockPort, Clock, MultipleClocksError
+from modypy.model.events import MultipleEventSourcesError, EventPort, Clock
 
-def test_clock_port():
-    """Test the ``ClockPort`` class"""
+
+def test_event_port():
+    """Test the ``EventPort`` class"""
 
     system = System()
 
-    port_a = ClockPort(system)
-    port_b = ClockPort(system)
-    port_c = ClockPort(system)
-    port_d = ClockPort(system)
+    port_a = EventPort(system)
+    port_b = EventPort(system)
+    port_c = EventPort(system)
+    port_d = EventPort(system)
 
     port_a.register_listener("1")
     port_c.register_listener("2")
@@ -34,19 +35,19 @@ def test_clock_port():
     assert port_a.listeners == {"1", "2", "3"}
 
 
-def test_clock():
+def test_event_connection():
     """
-    Test the ``Clock`` class
+    Test connecting event ports to events.
     """
 
     system = System()
 
     clock_a = Clock(system, period=1.0)
 
-    port_a = ClockPort(system)
-    port_b = ClockPort(system)
-    port_c = ClockPort(system)
-    port_d = ClockPort(system)
+    port_a = EventPort(system)
+    port_b = EventPort(system)
+    port_c = EventPort(system)
+    port_d = EventPort(system)
 
     port_b.connect(clock_a)
     port_d.connect(clock_a)
@@ -55,22 +56,25 @@ def test_clock():
     port_c.connect(port_d)
     port_c.connect(port_b)
 
-    assert port_a.clock == clock_a
-    assert port_b.clock == clock_a
-    assert port_c.clock == clock_a
-    assert port_d.clock == clock_a
+    assert port_a.source == clock_a
+    assert port_b.source == clock_a
+    assert port_c.source == clock_a
+    assert port_d.source == clock_a
 
 
-def test_multiple_clocks_error():
+def test_multiple_event_sources_error():
+    """
+    Test the detection of multiple conflicting event sources on connection.
+    """
     system = System()
 
     clock_a = Clock(system, period=1.0)
     clock_b = Clock(system, period=1.0)
 
-    port_a = ClockPort(system)
-    port_b = ClockPort(system)
-    port_c = ClockPort(system)
-    port_d = ClockPort(system)
+    port_a = EventPort(system)
+    port_b = EventPort(system)
+    port_c = EventPort(system)
+    port_d = EventPort(system)
 
     port_a.connect(clock_a)
     port_d.connect(clock_b)
@@ -78,10 +82,10 @@ def test_multiple_clocks_error():
     port_b.connect(port_a)
     port_c.connect(port_d)
 
-    assert port_b.clock is clock_a
-    assert port_c.clock is clock_b
+    assert port_b.source is clock_a
+    assert port_c.source is clock_b
 
-    with pytest.raises(MultipleClocksError):
+    with pytest.raises(MultipleEventSourcesError):
         port_c.connect(port_b)
 
 
@@ -98,7 +102,7 @@ def test_tick_generator(start_time,
                         end_time,
                         run_before_start,
                         expected):
-    """Test the tick generator"""
+    """Test the tick generator of a clock event"""
 
     system = System()
 
@@ -117,8 +121,8 @@ def test_tick_generator(start_time,
 
 
 def test_tick_generator_stop_iteration():
-    """Test whether the tick generator throws a ``StopIteration`` exception
-    when the current time is after the end time."""
+    """Test whether the clock tick generator throws a ``StopIteration``
+    exception when the current time is after the end time."""
 
     system = System()
 

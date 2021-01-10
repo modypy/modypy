@@ -89,7 +89,7 @@ as follows:
     sample_clock = Clock(system, period=1/50.0)
     thrust_sampler = zero_order_hold(system,
                                      input_port=propeller.thrust,
-                                     clock=sample_clock)
+                                     event_port=sample_clock)
 
     # Run a simulation for 1/2s
     simulator = Simulator(system=system, start_time=0)
@@ -102,7 +102,8 @@ as follows:
             label="continuous-time")
     ax.step(simulator.result.time,
             simulator.result.signals[:, thrust_sampler.signal_slice],
-            label="sampled")
+            label="sampled",
+            where="post")
 
     ax.set_title("Propeller Simulation")
     ax.legend()

@@ -117,7 +117,10 @@ def test_lti_simulation_failure(lti_system_with_reference):
     # Integration must fail
     assert message is not None
 
-def test_events():
+
+def test_zero_crossing_event_detection():
+    """Test the detection of zero-crossing events."""
+
     x0 = 0
     y0 = 10
     vx0 = 1
@@ -159,7 +162,7 @@ def test_events():
 
 
 def test_clock_handling():
-    """Test the handling of clocks in the simulator"""
+    """Test the handling of clocks in the simulator."""
 
     time_constant = 1.0
     initial_value = 2.0
@@ -177,20 +180,20 @@ def test_clock_handling():
     clock1 = Clock(system, period=0.2)
     hold1 = zero_order_hold(system,
                             input_port=lag.output,
-                            clock=clock1,
+                            event_port=clock1,
                             initial_condition=initial_value)
 
     clock2 = Clock(system, period=0.25, end_time=2.0)
     hold2 = zero_order_hold(system,
                             input_port=lag.output,
-                            clock=clock2,
+                            event_port=clock2,
                             initial_condition=initial_value)
 
     # Clock 3 will not fire within the simulation time frame
     clock3 = Clock(system, period=0.25, start_time=-6.0, end_time=-1.0)
     hold3 = zero_order_hold(system,
                             input_port=lag.output,
-                            clock=clock3,
+                            event_port=clock3,
                             initial_condition=initial_value)
 
     simulator = Simulator(system,

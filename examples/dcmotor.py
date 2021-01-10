@@ -53,7 +53,7 @@ density.connect(propeller.density)
 sample_clock = Clock(system, period=1/50.0)
 thrust_sampler = zero_order_hold(system,
                                  input_port=propeller.thrust,
-                                 clock=sample_clock)
+                                 event_port=sample_clock)
 
 # Run a simulation for 1/2s
 simulator = Simulator(system=system, start_time=0)

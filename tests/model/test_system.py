@@ -4,7 +4,7 @@ Tests for ``modypy.model.system``
 import numpy as np
 import numpy.testing as npt
 
-from modypy.model import State, InputSignal, OutputPort, Event
+from modypy.model import State, InputSignal, OutputPort, ZeroCrossEventSource
 from modypy.model.system import System, Block
 
 
@@ -26,8 +26,8 @@ def test_system():
     input_d = InputSignal(system, shape=2, value=[2, 3])
     output_a = OutputPort(system, shape=(3, 3))
     output_c = OutputPort(system)
-    event_a = Event(system, event_function=None)
-    event_b = Event(system, event_function=None)
+    event_a = ZeroCrossEventSource(system, event_function=None)
+    event_b = ZeroCrossEventSource(system, event_function=None)
 
     # Check the counts
     assert system.num_inputs == input_c.size+input_d.size

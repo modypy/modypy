@@ -27,11 +27,14 @@ States (:mod:`modypy.model.states`)
     the state contents for other elements.
 
 Events (:mod:`modypy.model.events`)
-    provide the means to detect the occurrence of special events during simulation
-    and to react to them by modifying the state of the system. An event
-    (:class:`modypy.model.events.Event`) is defined by the sign-change of a
-    special event function which may depend on the time, the state and the
-    values of the signals in the system.
+    provide the means to handle the occurrence occurrence of special events
+    during simulation and to react to them by modifying the state of the system.
+    An event may either be defined by a clock tick
+    (:class:`modypy.model.events.Clock`) or by the sign-change of a special
+    event function which may depend on the time, the state and the values of the
+    signals in the system (:class:`modypy.model.events.ZeroCrossEventSource`).
+    Events and specifically clocks are the basis of the simulation of
+    discrete-time elements in a system.
 
 Evaluation (:mod:`modpy.model.evaluation`)
     is done by :class`:`modpy.model.evaluation.Evaluator` objects, which lazily

@@ -279,18 +279,8 @@ class Simulator:
             # Get the state at the event time
             self.current_state = state_interpolator(self.current_time)
 
-            if first_event.update_function is not None:
-                # Call the event handler value to update the state
-                update_evaluator = Evaluator(system=self.system,
-                                             time=self.current_time,
-                                             state=self.current_state)
-                state_updater = StateUpdater(update_evaluator)
-                port_provider = PortProvider(update_evaluator)
-                data = DataProvider(time=self.current_time,
-                                    states=state_updater,
-                                    inputs=port_provider)
-                first_event.update_function(data)
-                self.current_state = state_updater.new_state
+            # Run the event handlers on the event to update the state
+            self.run_event_listeners(first_event)
         else:
             # No event occurred, so we simply accept the integrator end-point as the
             # next sample point.
@@ -328,19 +318,7 @@ class Simulator:
             clock = tick_entry.clock
 
             # Execute all the listeners on the clock
-            update_evaluator = Evaluator(system=self.system,
-                                         time=self.current_time,
-                                         state=self.current_state)
-            state_updater = StateUpdater(update_evaluator)
-            port_provider = PortProvider(update_evaluator)
-            data_provider = DataProvider(time=self.current_time,
-                                         states=state_updater,
-                                         inputs=port_provider)
-            for listener in clock.listeners:
-                listener(data_provider)
-
-            # Update the state
-            self.current_state = state_updater.new_state
+            self.run_event_listeners(clock)
 
             try:
                 # Get the next tick for the clock
@@ -354,6 +332,28 @@ class Simulator:
                 # This clock does not deliver any more ticks, so we simply
                 # ignore it from now on.
                 pass
+
+    def run_event_listeners(self, event_source):
+        """
+        Run the event listeners on the given event.
+
+        :param event_source:
+        :return:
+        """
+
+        update_evaluator = Evaluator(system=self.system,
+                                     time=self.current_time,
+                                     state=self.current_state)
+        state_updater = StateUpdater(update_evaluator)
+        port_provider = PortProvider(update_evaluator)
+        data_provider = DataProvider(time=self.current_time,
+                                     states=state_updater,
+                                     inputs=port_provider)
+        for listener in event_source.listeners:
+            listener(data_provider)
+
+        # Update the state
+        self.current_state = state_updater.new_state
 
     def find_first_event(self, state_trajectory, start_time, end_time, events_occurred):
         """
