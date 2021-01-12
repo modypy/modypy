@@ -20,7 +20,7 @@ def test_evaluator():
                     initial_condition=[[1, 2, 3],
                                        [4, 5, 6],
                                        [7, 8, 9]],
-                    derivative_function=(lambda data: data.inputs[input_a]))
+                    derivative_function=(lambda data: data.signals[input_a]))
     state_b = State(system,
                     shape=3,
                     initial_condition=[10, 11, 12],
@@ -145,9 +145,9 @@ def test_algebraic_loop_error():
     port_a = Port(system)
     port_b = Port(system)
     signal_a = Signal(system,
-                      value=(lambda data: data.inputs[port_b]))
+                      value=(lambda data: data.signals[port_b]))
     signal_b = Signal(system,
-                      value=(lambda data: data.inputs[port_a]))
+                      value=(lambda data: data.signals[port_a]))
 
     port_a.connect(signal_a)
     port_b.connect(signal_b)

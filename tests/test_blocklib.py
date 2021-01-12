@@ -131,7 +131,7 @@ def test_rigidbody_movement():
     rb_6dof.position_earth.connect(pos_output)
 
     sim = Simulator(system, start_time=0)
-    message = sim.run_until(t_bound=30.0)
+    message = sim.run_until(time_boundary=30.0)
 
     assert message is None
 
@@ -176,7 +176,7 @@ def test_rigidbody_defaults():
     rb_6dof.position_earth.connect(pos_output)
 
     sim = Simulator(system, start_time=0)
-    message = sim.run_until(t_bound=30.0)
+    message = sim.run_until(time_boundary=30.0)
 
     assert message is None
 

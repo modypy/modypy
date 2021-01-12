@@ -348,7 +348,7 @@ class Simulator:
         port_provider = PortProvider(update_evaluator)
         data_provider = DataProvider(time=self.current_time,
                                      states=state_updater,
-                                     inputs=port_provider)
+                                     signals=port_provider)
         for listener in event_source.listeners:
             listener(data_provider)
 
@@ -402,15 +402,15 @@ class Simulator:
 
         return first_event, first_event_time
 
-    def run_until(self, t_bound):
+    def run_until(self, time_boundary):
         """
         Run the simulation until the given end time
 
-        :param t_bound: The end time
+        :param time_boundary: The end time
         :return: ``None`` if successful, a message string otherwise
         """
-        while self.current_time < t_bound:
-            message = self.step(t_bound)
+        while self.current_time < time_boundary:
+            message = self.step(time_boundary)
             if message is not None:
                 return message
         return None

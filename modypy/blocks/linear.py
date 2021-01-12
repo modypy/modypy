@@ -64,13 +64,13 @@ class LTISystem(Block):
     def state_derivative(self, data):
         """Calculates the state derivative for the system"""
         state = data.states[self.state]
-        inputs = data.inputs[self.input]
+        inputs = data.signals[self.input]
         return (self.system_matrix @ state) + (self.input_matrix @ inputs)
 
     def output_function(self, data):
         """Calculates the output for the system"""
         state = data.states[self.state]
-        inputs = data.inputs[self.input]
+        inputs = data.signals[self.input]
         return (self.output_matrix @ state) + (self.feed_through_matrix @ inputs)
 
 
@@ -92,7 +92,7 @@ class Gain(Block):
 
     def output_function(self, data):
         """Calculates the output for the system"""
-        return self.k @ data.inputs[self.input]
+        return self.k @ data.signals[self.input]
 
 
 class Sum(Block):
@@ -126,5 +126,5 @@ class Sum(Block):
         """Calculates the output for the system"""
         inputs = np.empty((len(self.inputs), self.output_size))
         for port_idx in range(len(self.inputs)):
-            inputs[port_idx] = data.inputs[self.inputs[port_idx]]
+            inputs[port_idx] = data.signals[self.inputs[port_idx]]
         return self.channel_weights @ inputs

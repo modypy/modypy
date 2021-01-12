@@ -32,7 +32,7 @@ class ZeroOrderHold(Block):
 
     def update_state(self, data):
         """Update the state on a clock event"""
-        data.states[self.output] = data.inputs[self.input]
+        data.states[self.output] = data.signals[self.input]
 
 
 def zero_order_hold(system, input_port, event_port, initial_condition=None):

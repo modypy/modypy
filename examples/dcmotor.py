@@ -57,7 +57,7 @@ thrust_sampler = zero_order_hold(system,
 
 # Run a simulation for 1/2s
 simulator = Simulator(system=system, start_time=0)
-simulator.run_until(t_bound=0.5)
+simulator.run_until(time_boundary=0.5)
 
 # Plot the thrust output over time
 fig, ax = plt.subplots()

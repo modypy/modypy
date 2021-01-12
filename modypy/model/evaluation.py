@@ -221,14 +221,23 @@ class DataProvider:
     ``states``
         The contents of the current states, accessed by indexing using the
         ``State`` objects.
-    ``inputs``
-        The contents of the current inputs, accessed by indexing using the
+    ``signals``
+        The contents of the current signals, accessed by indexing using the
         ``Port`` objects.
     """
-    def __init__(self, time, states, inputs):
+    def __init__(self, time, states, signals):
         self.time = time
         self.states = states
-        self.inputs = inputs
+        self.signals = signals
+
+    @property
+    def inputs(self):
+        """Old way of accessing the signals dictionary. Deprecated."""
+        raise DeprecationWarning("The ``inputs`` property of the "
+                                 "``DataProvider`` class is deprecated and will "
+                                 "be removed in the future. Use the ``signals`` "
+                                 "property instead.")
+        return self.signals
 
 
 class StateProvider:

@@ -77,7 +77,7 @@ class RigidBody6DOFFlatEarth(Block):
 
     def velocity_earth_dot(self, data):
         """Calculates the acceleration in the earth reference frame"""
-        forces_earth = data.states[self.dcm] @ data.inputs[self.forces_body]
+        forces_earth = data.states[self.dcm] @ data.signals[self.forces_body]
         accel_earth = forces_earth / self.mass
         return accel_earth
 
@@ -87,7 +87,7 @@ class RigidBody6DOFFlatEarth(Block):
 
     def omega_earth_dot(self, data):
         """Calculate the angular acceleration in the earth reference frame"""
-        moments_earth = data.states[self.dcm] @ data.inputs[self.moments_body]
+        moments_earth = data.states[self.dcm] @ data.signals[self.moments_body]
         ang_accel_earth = linalg.solve(self.moment_of_inertia, moments_earth)
         return ang_accel_earth
 
@@ -135,15 +135,15 @@ class DirectCosineToEuler(Block):
 
     def calculate_yaw(self, data):
         """Calculate the yaw angle for the given direct cosine matrix"""
-        dcm = data.inputs[self.dcm]
+        dcm = data.signals[self.dcm]
         return np.arctan2(dcm[1, 0], dcm[0, 0])
 
     def calculate_pitch(self, data):
         """Calculate the pitch angle for the given direct cosine matrix"""
-        dcm = data.inputs[self.dcm]
+        dcm = data.signals[self.dcm]
         return np.arctan2(-dcm[2, 0], np.sqrt(dcm[0, 0]**2 + dcm[1, 0]**2))
 
     def calculate_roll(self, data):
         """Calculate the roll angle for the given direct cosine matrix"""
-        dcm = data.inputs[self.dcm]
+        dcm = data.signals[self.dcm]
         return np.arctan2(dcm[2, 1], dcm[2, 2])

@@ -68,14 +68,14 @@ class DCMotor(Block):
     def omega_dot(self, data):
         """Calculates the derivative of the speed in rad/s^2"""
         current = data.states[self.current]
-        tau_ext = data.inputs[self.external_torque]
+        tau_ext = data.signals[self.external_torque]
         return (self.Kv * current - tau_ext) / self.J
 
     def current_dot(self, data):
         """Calculates the derivative of the current in A/s"""
         omega = data.states[self.omega]
         current = data.states[self.current]
-        voltage = data.inputs[self.voltage]
+        voltage = data.signals[self.voltage]
 
         return (voltage - self.Kv*omega - self.R*current) / self.L
 

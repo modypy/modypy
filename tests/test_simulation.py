@@ -51,7 +51,7 @@ def test_lti_simulation(lti_system_with_reference):
     # Check correspondence of the result with intermediate values
     for idx in range(simulator.result.time.shape[0]):
         time = simulator.result.time[idx]
-        inputs = simulator.result.inputs[idx]
+        inputs = simulator.result.signals[idx]
         state = simulator.result.state[idx]
         signals = simulator.result.signals[idx]
         events = simulator.result.events[idx]
@@ -144,7 +144,7 @@ def test_zero_crossing_event_detection():
                           start_time=0,
                           initial_condition=initial_condition,
                           rootfinder_options=rootfinder_options)
-    message = simulator.run_until(t_bound=10.0)
+    message = simulator.run_until(time_boundary=10.0)
 
     # Check for successful run
     assert message is None
@@ -198,7 +198,7 @@ def test_clock_handling():
 
     simulator = Simulator(system,
                           start_time=0.0)
-    simulator.run_until(t_bound=5.0)
+    simulator.run_until(time_boundary=5.0)
 
     time_floor1 = np.floor(simulator.result.time/clock1.period)*clock1.period
     time_floor2 = np.minimum(clock2.end_time,
