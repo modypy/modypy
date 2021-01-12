@@ -95,8 +95,6 @@ def test_gain():
     system = System()
     gain = Gain(system, k=[[1, 2], [3, 4]])
     gain_in = constant(system, value=[3, 4])
-    print(gain.input.shape)
-    print(gain_in.shape)
     gain.input.connect(gain_in)
 
     evaluator = Evaluator(time=0, system=system)
