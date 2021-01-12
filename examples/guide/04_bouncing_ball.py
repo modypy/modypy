@@ -57,7 +57,6 @@ simulator = Simulator(system,
                       start_time=0.0)
 msg = simulator.run_until(time_boundary=10.0)
 
-
 if msg is not None:
     print("Simulation failed with message '%s'" % msg)
 else:

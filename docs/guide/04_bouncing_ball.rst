@@ -7,6 +7,7 @@ To do that, we need to detect when the ball hits the ground and modify its
 velocity according to the law of reflection.
 
 After this exercise you will know
+
 - how to describe zero-crossing events, and
 - how to update the state as a reaction to such an event.
 

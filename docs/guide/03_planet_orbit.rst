@@ -4,6 +4,7 @@ A Planet Orbit
 In this exercise we will model the system of a sun and a planet orbiting around
 it. We will model the two-dimensional position and velocity of the planet.
 After completing this exercise, you will know
+
 - how to model systems with multi-dimensional states and
 - how to specify integrator options.
 
@@ -24,11 +25,12 @@ planet has the magnitude
     F = G \frac{m M}{r^2}
 
 where
+
 - :math:`M` is the mass of the sun,
 - :math:`m` is the mass of the planet,
 - :math:`r` is the distance of the planet from the sun, and
 - :math:`G` is the gravitational constant, with a value of approximately
-:math:`6.67\dot 10^{-11} \frac{\text{m}^3}{\text{kg}\text{s}^2}`.
+  :math:`6.67\dot 10^{-11} \frac{\text{m}^3}{\text{kg}\text{s}^2}`.
 
 Thus, the acceleration of the planet is given by:
 

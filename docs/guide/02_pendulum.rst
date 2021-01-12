@@ -18,6 +18,7 @@ the one we are going to model. We will not consider drag.
     Pendulum with mass, length, angle and gravitational force marked
 
 Our pendulum has two states:
+
 - the current angle :math:`\alpha\left(t\right)` and
 - the current angular velocity :math:`\omega\left(t\right)`.
 
