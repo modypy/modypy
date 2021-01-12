@@ -10,6 +10,6 @@ With the maths basics out of the way, let us dive into creating system models.
 
 .. toctree::
     :glob:
-    :maxdepth: 2
+    :maxdepth: 1
 
     guide/*
