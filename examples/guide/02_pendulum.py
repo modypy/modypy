@@ -54,6 +54,7 @@ else:
                  simulator.result.state[:, omega.state_slice],
                  'g')
     plt.legend((alpha_line, omega_line), ('Alpha', 'Omega'))
+    plt.title("Pendulum")
     plt.xlabel("Time")
     plt.savefig("02_pendulum_simulation.png")
     plt.show()

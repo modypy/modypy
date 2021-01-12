@@ -52,6 +52,7 @@ else:
                  simulator.result.state[:, integrator_state.state_slice],
                  'g')
     plt.legend((input_line, integrator_line), ('Input', 'Integrator State'))
+    plt.title("Integrator")
     plt.xlabel("Time")
     plt.savefig("01_integrator_simulation.png")
     plt.show()

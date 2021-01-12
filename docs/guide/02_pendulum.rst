@@ -126,3 +126,11 @@ The result of that simulation can be seen in :numref:`pendulum_simulation`.
 If you want, you can now play around with the parameters gravity and length or
 the initial states. For example, you can give the pendulum some initial impulse
 by setting ``OMEGA_0`` to some value other than 0.
+
+As an additional exercise, try to integrate drag into the system, specified by
+the drag coefficient :math:`\gamma` with :math:`\gamma>0`:
+
+.. math::
+    \frac{d}{dt} \omega\left(t\right) =
+    - \frac{g \sin\left(\alpha\left(t\right)\right)}{l}
+    - \gamma \omega\left(t\right)
