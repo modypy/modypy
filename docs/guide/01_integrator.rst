@@ -16,8 +16,8 @@ that state is just the input into the system. In addition to the derivative, we
 need to specify the initial value of the state :math:`x\left(t_0\right)`:
 
 .. math::
-    x\left(t_0\right) = x_0 \\
-    \frac{d}{dt} x\left(t\right) = u\left(t\right)
+    x\left(t_0\right) &= x_0 \\
+    \frac{d}{dt} x\left(t\right) &= u\left(t\right)
 
 To view our results, we will use ``matplotlib``, so we install that first:
 
@@ -130,18 +130,26 @@ the input and the integrator state:
         print("Simulation failed with message '%s'" % msg)
     else:
         # Plot the result
-        input_line, output_line = \
+        input_line, integrator_line = \
             plt.plot(simulator.result.time,
                      simulator.result.signals[:, input_signal.signal_slice],
                      'r',
                      simulator.result.time,
                      simulator.result.state[:, integrator_state.state_slice],
                      'g')
+        plt.legend((input_line, integrator_line), ('Input', 'Integrator State'))
+        plt.xlabel("Time")
+        plt.savefig("01_integrator_simulation.png")
         plt.show()
 
-When you run this script, you should see this plot:
+The result of that simulation can be seen in :numref:`integrator_simulation`.
 
-.. image:: 01_integrator.png
+.. _integrator_simulation:
+.. figure:: 01_integrator_simulation.png
+    :align: center
+    :alt: Results of integrator simulation
+
+    Results of integrator simulation: Input and integrator state
 
 In red, we see the input signal, while the value of our integrator state is
 plotted in green. Looks quite correct.

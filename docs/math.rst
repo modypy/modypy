@@ -11,20 +11,30 @@ Specifically, dynamical systems in MoDyPy are modelled as continuous-time
 systems, using the following principal formulation:
 
 .. math::
-    \frac{d}{dt} \vec{x}\left(t\right) =
+    \vec{x}\left(t_0\right) &= \vec{x}_0 \\
+    \frac{d}{dt} \vec{x}\left(t\right) &=
         \vec{g}\left(t, \vec{x}\left(t\right), \vec{u}\left(t\right)\right) \\
-    \vec{y}\left(t\right) =
+    \vec{y}\left(t\right) &=
         \vec{h}\left(t, \vec{x}\left(t\right), \vec{u}\left(t\right)\right)
 
-Here, :math:`\vec{x}\left(t\right)` is a vector that represents the *state* of
-the system at time :math:`t` and :math:`\vec{u}\left(t\right)` is a vector that
-represents the *inputs* to the system at that time.
+Here,
+- :math:`\vec{x}\left(t\right)` is a vector that represents the *state* of
+the system at time :math:`t`,
+- :math:`\vec{u}\left(t\right)` is a vector that represents the *inputs* to the
+system at that time, and
+- :math:`\vec{x}_0` is the *initial state* or *initial condition* of the system
+at time :math:`t_0`.
 
 The *output* of the system is described by the function :math:`\vec{h}`, which
 may depend on the time, the state and the input vector.
 Similarly, the function :math:`\vec{g}` describes the derivative of the state
 with respect to time. That is, it describes how the state evolves with time.
 Again, it may also depend on the time, the state and the input vector.
+
+Finding the value of :math:`\vec{x}\left(t\right)` for some value of :math:`t`
+based on the equations given above is called an *initial value problem*, and
+closed solutions are only known for specific forms of :math:`\vec{g}`, such as
+linear forms. However, for most, approximate numerical solutions are required.
 
 Systems may be classified according to a set of attributes, such as
 *time-dependency*, *linearity* or *autonomy*. In the following, a few important
@@ -50,8 +60,8 @@ A very interesting special class of systems are *linear and time-independent*
 systems, or *LTI* for short. These can be expressed in the following form:
 
 .. math::
-    \frac{d}{dt} \vec{x} = A \vec{x} + B \vec{u}
-    \vec{y} = C \vec{x} + D \vec{u}
+    \frac{d}{dt} \vec{x} &= A \vec{x} + B \vec{u} \\
+    \vec{y} &= C \vec{x} + D \vec{u}
 
 with matrices :math:`A`, :math:`B`, :math:`C`, :math:`D`. These systems are
 particularly interesting, because there are generic methods for solving the

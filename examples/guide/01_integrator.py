@@ -44,12 +44,14 @@ if msg is not None:
     print("Simulation failed with message '%s'" % msg)
 else:
     # Plot the result
-    input_line, output_line = \
+    input_line, integrator_line = \
         plt.plot(simulator.result.time,
                  simulator.result.signals[:, input_signal.signal_slice],
                  'r',
                  simulator.result.time,
                  simulator.result.state[:, integrator_state.state_slice],
                  'g')
-    plt.savefig("01_integrator.png")
+    plt.legend((input_line, integrator_line), ('Input', 'Integrator State'))
+    plt.xlabel("Time")
+    plt.savefig("01_integrator_simulation.png")
     plt.show()
