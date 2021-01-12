@@ -51,7 +51,7 @@ def test_lti_simulation(lti_system_with_reference):
     # Check correspondence of the result with intermediate values
     for idx in range(simulator.result.time.shape[0]):
         time = simulator.result.time[idx]
-        inputs = simulator.result.signals[idx]
+        inputs = simulator.result.inputs[idx]
         state = simulator.result.state[idx]
         signals = simulator.result.signals[idx]
         events = simulator.result.events[idx]
