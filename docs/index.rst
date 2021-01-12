@@ -177,4 +177,5 @@ results.
     :maxdepth: 2
 
     math
+    guide
     api/api
