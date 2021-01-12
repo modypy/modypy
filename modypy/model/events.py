@@ -112,10 +112,9 @@ class ZeroCrossEventSource(AbstractEventSource):
     and the values of event functions are recorded by the simulator.
     """
 
-    def __init__(self, owner, event_function, update_function=None):
+    def __init__(self, owner, event_function):
         AbstractEventSource.__init__(self, owner)
         self.event_function = event_function
-        self.update_function = update_function
         self.event_index = self.owner.system.register_event(self)
 
 
