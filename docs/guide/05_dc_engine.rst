@@ -31,7 +31,7 @@ Again, we start by importing everything we need:
     import numpy as np
     import matplotlib.pyplot as plt
 
-    from modypy.model import System, State, Signal, SignalState, Block, Port
+    from modypy.model import System, State, SignalState, Block, Port
     from modypy.blocks.sources import constant
     from modypy.simulation import Simulator
 

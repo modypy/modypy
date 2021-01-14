@@ -13,6 +13,9 @@ Linear blocks (:mod:`modypy.blocks.linear`)
     :class:`modypy.blocks.linear.LTISystem` class for linear time-invariant
     systems in the typical state-space formulation.
 
+Discrete-Time blocks (:mod:`modypy.blocks.discrete`)
+    are special blocks for use in discrete-time or mixed systems.
+
 Electro-mechanical blocks (:mod:`modypy.blocks.elmech`)
     are useful for modelling electro-mechanical systems. The main constituent of
     this module currently is the :class:`modypy.blocks.elmech.DCMotor` class for

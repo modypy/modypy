@@ -1,10 +1,11 @@
 """
-An engine consisting of a DC motor and a static propeller.
+An engine consisting of a DC motor and a static propeller, sampling the
+generated thrust at regular intervals.
 """
 import numpy as np
 import matplotlib.pyplot as plt
 
-from modypy.model import System, Signal, SignalState, Block, Port
+from modypy.model import System, Signal, SignalState, Block, Port, Clock
 from modypy.blocks.sources import constant
 from modypy.simulation import Simulator
 
@@ -158,6 +159,21 @@ density = constant(system, value=1.29)
 engine.voltage.connect(voltage)
 engine.density.connect(density)
 
+# Set up the state for keeping the sampled value.
+sample_state = SignalState(system)
+
+# Create a clock for sampling at 100Hz
+sample_clock = Clock(system, period=0.01)
+
+
+# Define the function for updating the state
+def update_sample(data):
+    data.states[sample_state] = data.signals[engine.thrust]
+
+
+# Register it as event handler on the clock
+sample_clock.register_listener(update_sample)
+
 # Create the simulator and run it
 simulator = Simulator(system, start_time=0.0)
 msg = simulator.run_until(time_boundary=0.5)
@@ -167,9 +183,17 @@ if msg is not None:
 else:
     # Plot the result
     plt.plot(simulator.result.time,
-             simulator.result.signals[:, engine.thrust.signal_slice])
+             simulator.result.signals[:, engine.thrust.signal_slice],
+             'r',
+             label="Continuous-Time")
+    plt.step(simulator.result.time,
+             simulator.result.signals[:, sample_state.signal_slice],
+             'g',
+             where="post",
+             label="Sampled")
     plt.title("Engine with DC-Motor and Static Propeller")
+    plt.legend()
     plt.xlabel("Time")
     plt.ylabel("Thrust")
-    plt.savefig("05_dc_engine_simulation.png")
+    plt.savefig("06_dc_engine_sampling.png")
     plt.show()
