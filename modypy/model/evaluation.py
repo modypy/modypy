@@ -2,6 +2,7 @@
 Provides the ``Evaluator`` class, which can be used to evaluate the individual
 aspects (signals, state derivatives, ...) at any given point in time.
 """
+import warnings
 import numpy as np
 
 from .system import System
@@ -233,10 +234,10 @@ class DataProvider:
     @property
     def inputs(self):
         """Old way of accessing the signals dictionary. Deprecated."""
-        raise DeprecationWarning("The ``inputs`` property of the "
-                                 "``DataProvider`` class is deprecated and will "
-                                 "be removed in the future. Use the ``signals`` "
-                                 "property instead.")
+        warnings.warn(DeprecationWarning("The ``inputs`` property of the "
+                                         "``DataProvider`` class is deprecated "
+                                         "and will be removed in the future. "
+                                         "Use the ``signals`` property instead."))
         return self.signals
 
 

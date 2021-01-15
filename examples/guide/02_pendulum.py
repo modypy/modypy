@@ -18,6 +18,7 @@ OMEGA_0 = 0
 # Create the system
 system = System()
 
+
 # Define the derivatives of the states
 def alpha_dt(data):
     return data.states[omega]

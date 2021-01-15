@@ -34,7 +34,7 @@ class DCMotor(Block):
                                  initial_condition=initial_speed)
         self.current = SignalState(self,
                                    derivative_function=self.current_dt,
-                                   initial_condition=initial_speed)
+                                   initial_condition=initial_current)
 
         # Create the output for the speed in revolutions per second
         self.speed_rps = Signal(self,

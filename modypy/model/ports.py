@@ -138,5 +138,6 @@ class InputSignal(Signal):
 
     @property
     def input_slice(self):
+        """A slice object that can be used to index input vectors"""
         return slice(self.input_index,
                      self.input_index+self.size)

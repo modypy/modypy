@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from modypy.model import System, Block, State, Signal, ZeroCrossEventSource
-from modypy.simulation import Simulator, DEFAULT_INTEGRATOR_OPTIONS
+from modypy.simulation import Simulator
 
 
 class BouncingBall(Block):
@@ -24,8 +24,14 @@ class BouncingBall(Block):
     """
     def __init__(self, parent, gravity=-9.81, gamma=0.7, initial_velocity=None, initial_position=None):
         Block.__init__(self, parent)
-        self.position = State(self, shape=2, derivative_function=self.position_derivative, initial_condition=initial_position)
-        self.velocity = State(self, shape=2, derivative_function=self.velocity_derivative, initial_condition=initial_velocity)
+        self.position = State(self,
+                              shape=2,
+                              derivative_function=self.position_derivative,
+                              initial_condition=initial_position)
+        self.velocity = State(self,
+                              shape=2,
+                              derivative_function=self.velocity_derivative,
+                              initial_condition=initial_velocity)
         self.posy = Signal(self, shape=1, value=self.posy_output)
         self.ground = ZeroCrossEventSource(self, event_function=self.ground_event)
         self.ground.register_listener(self.on_ground_event)

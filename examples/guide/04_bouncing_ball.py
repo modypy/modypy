@@ -18,6 +18,7 @@ INITIAL_VELOCITY = 0.0
 # The system
 system = System()
 
+
 # The system states
 def height_dt(data):
     return data.states[velocity]

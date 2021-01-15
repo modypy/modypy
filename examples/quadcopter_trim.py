@@ -8,7 +8,6 @@ import itertools
 import numpy as np
 
 from modypy.model import Block, Port, System, InputSignal, OutputPort
-from modypy.model.evaluation import Evaluator
 from modypy.blocks.aerodyn import Propeller, Thruster
 from modypy.blocks.elmech import DCMotor
 from modypy.blocks.sources import constant

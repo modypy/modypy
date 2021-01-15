@@ -107,7 +107,7 @@ def test_rigidbody_movement():
                                      mass=mass,
                                      initial_velocity_earth=[vx, 0, 0],
                                      initial_angular_rates_earth=[0, 0, omega],
-                                     initial_position_earth=[0,0,0],
+                                     initial_position_earth=[0, 0, 0],
                                      initial_transformation=np.eye(3, 3),
                                      moment_of_inertia=moment_of_inertia)
     dcm_to_euler = DirectCosineToEuler(system)
@@ -147,8 +147,6 @@ def test_rigidbody_movement():
 
 def test_rigidbody_defaults():
     mass = 1.5
-    omega = 2 * math.pi / 120
-    r = 10.0
     moment_of_inertia = np.diag([13.2E-3, 12.8E-3, 24.6E-3])
 
     system = System()

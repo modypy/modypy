@@ -1,8 +1,6 @@
-import math
-
 import numpy as np
 
-from modypy.blocks.linear import LTISystem, Gain
+from modypy.blocks.linear import LTISystem
 from modypy.model import \
     Block,\
     System, \
@@ -113,8 +111,14 @@ def lti_gain(gain):
 class BouncingBall(Block):
     def __init__(self, parent, gravity=-9.81, gamma=0.7, initial_velocity=None, initial_position=None):
         Block.__init__(self, parent)
-        self.position = State(self, shape=2, derivative_function=self.position_derivative, initial_condition=initial_position)
-        self.velocity = State(self, shape=2, derivative_function=self.velocity_derivative, initial_condition=initial_velocity)
+        self.position = State(self,
+                              shape=2,
+                              derivative_function=self.position_derivative,
+                              initial_condition=initial_position)
+        self.velocity = State(self,
+                              shape=2,
+                              derivative_function=self.velocity_derivative,
+                              initial_condition=initial_velocity)
         self.posy = Signal(self, shape=1, value=self.posy_output)
         self.ground = ZeroCrossEventSource(self, event_function=self.ground_event)
         self.ground.register_listener(self.on_ground_event)

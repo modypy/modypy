@@ -12,6 +12,7 @@ from fixtures.models import first_order_lag, first_order_lag_no_input, damped_os
 def interpolation_order(request):
     return request.param
 
+
 @pytest.mark.parametrize(
     "param",
     [
@@ -62,10 +63,10 @@ def test_steady_state_linearisation(param, interpolation_order):
                           u0,
                           single_matrix=True,
                           order=interpolation_order)
-    A=jac[:system.num_states, :system.num_states]
-    B=jac[:system.num_states, system.num_states:]
-    C=jac[system.num_states:, :system.num_states]
-    D=jac[system.num_states:, system.num_states:]
+    A = jac[:system.num_states, :system.num_states]
+    B = jac[:system.num_states, system.num_states:]
+    C = jac[system.num_states:, :system.num_states]
+    D = jac[system.num_states:, system.num_states:]
     npt.assert_almost_equal(A, lti.system_matrix)
     npt.assert_almost_equal(B, lti.input_matrix)
     npt.assert_almost_equal(C, lti.output_matrix)

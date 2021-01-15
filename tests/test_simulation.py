@@ -13,8 +13,8 @@ from fixtures.models import \
 from modypy.blocks.discrete import zero_order_hold
 from modypy.blocks.linear import LTISystem
 from modypy.blocks.sources import constant
-from modypy.model import Evaluator, System, Signal, Clock
-from modypy.simulation import Simulator, DEFAULT_INTEGRATOR_OPTIONS
+from modypy.model import Evaluator, System, Clock
+from modypy.simulation import Simulator
 
 
 @pytest.fixture(params=[
