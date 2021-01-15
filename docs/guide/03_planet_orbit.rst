@@ -92,9 +92,9 @@ Now let us define the system, its states and state derivatives:
 
 
     def velocity_dt(data):
-        x = data.states[position]
-        r = linalg.norm(x)
-        return -G * SUN_MASS/(r**3) * x
+        pos = data.states[position]
+        distance = linalg.norm(pos)
+        return -G * SUN_MASS/(distance**3) * pos
 
 
     # Create the states

@@ -37,23 +37,23 @@ def test_sum_block(channel_weights, output_size, inputs, expected_output):
 
 
 @pytest.mark.parametrize(
-    "thrust_coeff, power_coeff",
+    "thrust_coefficient, power_coefficient",
     [
         [0.09, 0.04],
         [(lambda n: 0.09), (lambda n: 0.04)],
     ]
 )
-def test_aerodyn_blocks(thrust_coeff, power_coeff):
+def test_aerodyn_blocks(thrust_coefficient, power_coefficient):
     system = System()
     propeller = Propeller(system,
-                          thrust_coeff=thrust_coeff,
-                          power_coeff=power_coeff,
+                          thrust_coefficient=thrust_coefficient,
+                          power_coefficient=power_coefficient,
                           diameter=8 * 25.4E-3)
     dcmotor = DCMotor(system,
-                      Kv=789.E-6,
-                      R=43.3E-3,
-                      L=1.9E-3,
-                      J=5.284E-6,
+                      motor_constant=789.E-6,
+                      resistance=43.3E-3,
+                      inductance=1.9E-3,
+                      moment_of_inertia=5.284E-6,
                       initial_omega=1)
     thruster = Thruster(system,
                         vector=np.c_[0, 0, -1],

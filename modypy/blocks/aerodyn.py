@@ -43,19 +43,19 @@ class Propeller(Block):
 
     def __init__(self,
                  parent,
-                 thrust_coeff,
-                 power_coeff,
+                 thrust_coefficient,
+                 power_coefficient,
                  diameter):
         Block.__init__(self, parent)
-        if not callable(thrust_coeff):
-            thrust_coeff_value = thrust_coeff
-            thrust_coeff = (lambda n: thrust_coeff_value)
-        if not callable(power_coeff):
-            power_coeff_value = power_coeff
-            power_coeff = (lambda n: power_coeff_value)
+        if not callable(thrust_coefficient):
+            thrust_coeff_value = thrust_coefficient
+            thrust_coefficient = (lambda n: thrust_coeff_value)
+        if not callable(power_coefficient):
+            power_coeff_value = power_coefficient
+            power_coefficient = (lambda n: power_coeff_value)
 
-        self.thrust_coeff = thrust_coeff
-        self.power_coeff = power_coeff
+        self.thrust_coefficient = thrust_coefficient
+        self.power_coefficient = power_coefficient
         self.diameter = diameter
 
         self.speed_rps = Port(self, shape=1)
@@ -69,19 +69,21 @@ class Propeller(Block):
         """Function used to calculate the ``thrust`` output"""
         speed_rps = data.signals[self.speed_rps]
         density = data.signals[self.density]
-        return self.thrust_coeff(speed_rps) * density * self.diameter**4 * speed_rps**2
+        return self.thrust_coefficient(speed_rps) * density * self.diameter ** 4 * speed_rps ** 2
 
     def torque_output(self, data):
         """Function used to calculate the ``torque`` output"""
         speed_rps = data.signals[self.speed_rps]
         density = data.signals[self.density]
-        return self.power_coeff(speed_rps)/(2*math.pi) * density * self.diameter**5 * speed_rps**2
+        return self.power_coefficient(speed_rps) / (2 * math.pi) * \
+            density * self.diameter ** 5 * speed_rps ** 2
 
     def power_output(self, data):
         """Function used to calculate the ``power`` output"""
         speed_rps = data.signals[self.speed_rps]
         density = data.signals[self.density]
-        return self.power_coeff(speed_rps) * density * self.diameter**5 * speed_rps**3
+        return self.power_coefficient(speed_rps) * \
+            density * self.diameter ** 5 * speed_rps ** 3
 
 
 class Thruster(Block):

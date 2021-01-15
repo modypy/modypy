@@ -153,7 +153,7 @@ signal will be connected to them later.
 
             # Create (input) ports for voltage and external torque load
             self.voltage = Port(self)
-            self.external_load = Port(self)
+            self.external_torque = Port(self)
 
 What is missing are the definitions of the derivative functions and the signal
 values:
@@ -162,7 +162,7 @@ values:
 
         def omega_dt(self, data):
             return ((self.motor_constant * data.states[self.current]
-                     - data.signals[self.external_load]) /
+                     - data.signals[self.external_torque]) /
                     self.moment_of_inertia)
 
         def current_dt(self, data):
@@ -210,7 +210,7 @@ So, we define our static propeller block:
 
 .. code-block:: python
 
-    class StaticPropeller(Block):
+    class Propeller(Block):
         def __init__(self,
                      parent,
                      thrust_coefficient,
@@ -277,7 +277,7 @@ For our engine block, we first create the elements -- the motor and the propelle
                                     resistance=resistance,
                                     inductance=inductance,
                                     moment_of_inertia=moment_of_inertia)
-            self.propeller = StaticPropeller(self,
+            self.propeller = Propeller(self,
                                              thrust_coefficient=thrust_coefficient,
                                              power_coefficient=power_coefficient,
                                              diameter=diameter)
@@ -301,7 +301,7 @@ propeller. For that, we use the ``connect`` method of the
             self.dc_motor.speed_rps.connect(self.propeller.speed_rps)
 
             # The DC-motor needs to know the torque required by the propeller
-            self.propeller.torque.connect(self.dc_motor.external_load)
+            self.propeller.torque.connect(self.dc_motor.external_torque)
 
 Now, the ports and signals are properly connected. Finally, it's time to put it
 all together.

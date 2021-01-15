@@ -36,8 +36,8 @@ class Engine(Block):
 
         # Create the propeller
         self.propeller = Propeller(self,
-                                   thrust_coeff=ct,
-                                   power_coeff=cp,
+                                   thrust_coefficient=ct,
+                                   power_coefficient=cp,
                                    diameter=diameter)
 
         # Create a thruster that converts the scalar thrust and torque into
@@ -78,10 +78,10 @@ thrust_coeff, torque_coeff = \
 
 # Set up a general parameters vector for all four engines
 parameters = {
-    'Kv': 789.E-6,
-    'R': 43.3E-3,
-    'L': 1.9E-3,
-    'J': 5.284E-6,
+    'motor_constant': 789.E-6,
+    'resistance': 43.3E-3,
+    'inductance': 1.9E-3,
+    'moment_of_inertia': 5.284E-6,
     'ct': thrust_coeff,
     'cp': torque_coeff,
     'diameter': 8*25.4E-3

@@ -25,9 +25,15 @@ def interpolation_order(request):
         first_order_lag_no_input(time_constant=1, initial_value=10),
 
         # 1 input, 2 states, 1 output
-        damped_oscillator(mass=100, spring_coefficient=1., damping_coefficient=20),   # critically damped
-        damped_oscillator(mass=100, spring_coefficient=0.5, damping_coefficient=20),  # overdamped
-        damped_oscillator(mass=100, spring_coefficient=2., damping_coefficient=20),   # underdamped
+        damped_oscillator(mass=100,
+                          spring_coefficient=1.,
+                          damping_coefficient=20),   # critically damped
+        damped_oscillator(mass=100,
+                          spring_coefficient=0.5,
+                          damping_coefficient=20),  # overdamped
+        damped_oscillator(mass=100,
+                          spring_coefficient=2.,
+                          damping_coefficient=20),   # underdamped
     ])
 def test_steady_state_linearisation(param, interpolation_order):
     system, lti, sim_time = param

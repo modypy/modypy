@@ -13,6 +13,7 @@ system = System()
 
 # Define the function for generating the sine signal
 def sine_input(data):
+    """Calculate the value of the input signal"""
     return np.sin(data.time)
 
 
@@ -24,6 +25,7 @@ input_signal = Signal(system,
 
 # Define the derivative for the integrator
 def integrator_dt(data):
+    """Calculate the derivative function for the integrator"""
     return data.signals[input_signal]
 
 

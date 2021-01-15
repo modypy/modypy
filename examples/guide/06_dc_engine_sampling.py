@@ -2,106 +2,19 @@
 An engine consisting of a DC motor and a static propeller, sampling the
 generated thrust at regular intervals.
 """
-import numpy as np
 import matplotlib.pyplot as plt
 
 from modypy.model import System, Signal, SignalState, Block, Port, Clock
+from modypy.blocks.aerodyn import Propeller
+from modypy.blocks.elmech import DCMotor
 from modypy.blocks.sources import constant
 from modypy.simulation import Simulator
 
 
-# Define the DC-motor block
-class DCMotor(Block):
-    def __init__(self,
-                 parent,
-                 motor_constant,
-                 resistance,
-                 inductance,
-                 moment_of_inertia,
-                 initial_speed=None,
-                 initial_current=None):
-        Block.__init__(self, parent)
-        self.motor_constant = motor_constant
-        self.resistance = resistance
-        self.inductance = inductance
-        self.moment_of_inertia = moment_of_inertia
-
-        # Create the velocity and current state
-        # These can also be used as signals which export the exact value of
-        # the respective state.
-        self.omega = SignalState(self,
-                                 derivative_function=self.omega_dt,
-                                 initial_condition=initial_speed)
-        self.current = SignalState(self,
-                                   derivative_function=self.current_dt,
-                                   initial_condition=initial_current)
-
-        # Create the output for the speed in revolutions per second
-        self.speed_rps = Signal(self,
-                                value=self.speed_rps_value)
-
-        # Create the output for the generated torque
-        self.torque = Signal(self,
-                             value=self.torque_value)
-
-        # Create (input) ports for voltage and external torque load
-        self.voltage = Port(self)
-        self.external_load = Port(self)
-
-    def omega_dt(self, data):
-        return ((self.motor_constant * data.states[self.current]
-                 - data.signals[self.external_load]) /
-                self.moment_of_inertia)
-
-    def current_dt(self, data):
-        return ((data.signals[self.voltage]
-                 - self.resistance * data.states[self.current]
-                 - self.motor_constant * data.states[self.omega]) /
-                self.inductance)
-
-    def speed_rps_value(self, data):
-        return data.signals[self.omega] / (2 * np.pi)
-
-    def torque_value(self, data):
-        return self.motor_constant * data.states[self.current]
-
-
-# Define the static propeller block
-class StaticPropeller(Block):
-    def __init__(self,
-                 parent,
-                 thrust_coefficient,
-                 power_coefficient,
-                 diameter):
-        Block.__init__(self, parent)
-        self.thrust_coefficient = thrust_coefficient
-        self.power_coefficient = power_coefficient
-        self.diameter = diameter
-
-        # Define the thrust and torque output signals
-        self.thrust = Signal(self,
-                             value=self.thrust_output)
-        self.torque = Signal(self,
-                             value=self.torque_output)
-
-        # Define the input ports for propeller speed and air density
-        self.speed_rps = Port(self)
-        self.density = Port(self)
-
-    def thrust_output(self, data):
-        rho = data.signals[self.density]
-        n = data.signals[self.speed_rps]
-        return self.thrust_coefficient * rho * self.diameter ** 4 * n ** 2
-
-    def torque_output(self, data):
-        rho = data.signals[self.density]
-        n = data.signals[self.speed_rps]
-        return self.power_coefficient / (2 * np.pi) * \
-            rho * self.diameter ** 5 * n ** 2
-
-
 # Define the engine
 class Engine(Block):
+    """A block defining an engine consisting of a DC motor and a propeller"""
+
     def __init__(self,
                  parent,
                  thrust_coefficient,
@@ -119,10 +32,10 @@ class Engine(Block):
                                 resistance=resistance,
                                 inductance=inductance,
                                 moment_of_inertia=moment_of_inertia)
-        self.propeller = StaticPropeller(self,
-                                         thrust_coefficient=thrust_coefficient,
-                                         power_coefficient=power_coefficient,
-                                         diameter=diameter)
+        self.propeller = Propeller(self,
+                                   thrust_coefficient=thrust_coefficient,
+                                   power_coefficient=power_coefficient,
+                                   diameter=diameter)
 
         # We will simply pass through the voltage and density ports of the
         # motor and the propeller
@@ -137,7 +50,7 @@ class Engine(Block):
         self.dc_motor.speed_rps.connect(self.propeller.speed_rps)
 
         # The DC-motor needs to know the torque required by the propeller
-        self.propeller.torque.connect(self.dc_motor.external_load)
+        self.propeller.torque.connect(self.dc_motor.external_torque)
 
 
 # Create the system and the engine
@@ -168,6 +81,8 @@ sample_clock = Clock(system, period=0.01)
 
 # Define the function for updating the state
 def update_sample(data):
+    """Update the state of the sampler"""
+
     data.states[sample_state] = data.signals[engine.thrust]
 
 

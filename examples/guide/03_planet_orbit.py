@@ -25,13 +25,15 @@ system = System()
 
 # Define the derivatives
 def position_dt(data):
+    """Calculate the derivative of the position"""
     return data.states[velocity]
 
 
 def velocity_dt(data):
-    x = data.states[position]
-    r = linalg.norm(x)
-    return -G * SUN_MASS/(r**3) * x
+    """Calculate the derivative of the velocity"""
+    pos = data.states[position]
+    distance = linalg.norm(pos)
+    return -G * SUN_MASS/(distance**3) * pos
 
 
 # Create the states

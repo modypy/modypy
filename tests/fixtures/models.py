@@ -109,7 +109,12 @@ def lti_gain(gain):
 
 
 class BouncingBall(Block):
-    def __init__(self, parent, gravity=-9.81, gamma=0.7, initial_velocity=None, initial_position=None):
+    def __init__(self,
+                 parent,
+                 gravity=-9.81,
+                 gamma=0.7,
+                 initial_velocity=None,
+                 initial_position=None):
         Block.__init__(self, parent)
         self.position = State(self,
                               shape=2,
@@ -138,5 +143,6 @@ class BouncingBall(Block):
         return data.states[self.position][1]
 
     def on_ground_event(self, data):
-        data.states[self.position] = [data.states[self.position][0], abs(data.states[self.position][1])]
+        data.states[self.position] = [data.states[self.position][0],
+                                      abs(data.states[self.position][1])]
         data.states[self.velocity][1] = - self.gamma * data.states[self.velocity][1]

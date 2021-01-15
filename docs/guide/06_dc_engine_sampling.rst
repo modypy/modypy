@@ -17,35 +17,28 @@ time intervals. At the end of this exercise you will know
 - how to update states when a clock tick occurs.
 
 For this, we will slightly modify the DC-engine example from the previous
-exercise. We again start by importing our required elements:
+exercise. The DC-motor block and the propeller block are also provided as
+standard blocks, which we will use in this example.
+
+We again start by importing our required elements:
 
 .. code-block:: python
 
-    import numpy as np
     import matplotlib.pyplot as plt
 
     from modypy.model import System, Signal, SignalState, Block, Port, Clock
+    from modypy.blocks.aerodyn import Propeller
+    from modypy.blocks.elmech import DCMotor
     from modypy.blocks.sources import constant
     from modypy.simulation import Simulator
 
-We will re-use the ``DCMotor``, ``StaticPropeller`` and ``Engine`` classes as
-well as the system definition from the previous excercise:
+We will re-use the ``Engine`` class as well as the system definition from the
+previous exercise:
 
 .. code-block:: python
 
-    # Define the DC-motor block
-    class DCMotor(Block):
-        # ...
-
-    # Define the static propeller block
-    class StaticPropeller(Block):
-        # ...
-
-
-    # Define the engine
     class Engine(Block):
         # ...
-
 
     # Create the system and the engine
     system = System()

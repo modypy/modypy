@@ -1,15 +1,15 @@
 import bisect
 import math
-import pytest
+
 import numpy as np
 import numpy.testing as npt
+import pytest
 import scipy.signal as signal
 
 from fixtures.models import \
     first_order_lag, first_order_lag_no_input, \
     damped_oscillator, damped_oscillator_with_events, \
     BouncingBall
-
 from modypy.blocks.discrete import zero_order_hold
 from modypy.blocks.linear import LTISystem
 from modypy.blocks.sources import constant

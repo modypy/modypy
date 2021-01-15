@@ -27,13 +27,13 @@ system = System()
 
 # Create the engine, consisting of the motor and a propeller
 dcmotor = DCMotor(system,
-                  Kv=789.E-6,
-                  R=43.3E-3,
-                  L=1.9E-3,
-                  J=5.284E-6)
+                  motor_constant=789.E-6,
+                  resistance=43.3E-3,
+                  inductance=1.9E-3,
+                  moment_of_inertia=5.284E-6)
 propeller = Propeller(system,
-                      thrust_coeff=thrust_coeff,
-                      power_coeff=torque_coeff,
+                      thrust_coefficient=thrust_coeff,
+                      power_coefficient=torque_coeff,
                       diameter=8*25.4E-3)
 
 # Connect the motor and propeller to each other

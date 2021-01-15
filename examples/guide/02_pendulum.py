@@ -21,12 +21,13 @@ system = System()
 
 # Define the derivatives of the states
 def alpha_dt(data):
+    """Calculate the derivative of the angle"""
     return data.states[omega]
 
 
 def omega_dt(data):
+    """Calculate the derivative of the angular velocity"""
     return -GRAVITY/LENGTH * np.sin(data.states[alpha])
-    pass
 
 
 # Create the alpha state

@@ -21,10 +21,12 @@ system = System()
 
 # The system states
 def height_dt(data):
+    """Calculate the derivative of the height"""
     return data.states[velocity]
 
 
 def velocity_dt(data):
+    """Calculate the derivative of the vertical speed"""
     return -G
 
 
@@ -38,6 +40,7 @@ velocity = State(system,
 
 # Define the zero-crossing-event
 def bounce_event_function(data):
+    """Define the value of the event function for detecting bounces"""
     return data.states[height]
 
 
@@ -47,6 +50,7 @@ bounce_event = ZeroCrossEventSource(system,
 
 # Define the event-handler
 def bounce_event_handler(data):
+    """Reverse the direction of motion after a bounce"""
     data.states[height] = np.abs(data.states[height])
     data.states[velocity] = -DELTA*data.states[velocity]
 

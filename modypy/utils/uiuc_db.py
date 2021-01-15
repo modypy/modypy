@@ -21,7 +21,7 @@ def load_static_propeller(path,
         `volume-2/data/apcff_4.2x4_static_0615rd.txt`
     :param urlopen_options: Dictionary of options passed to `urllib.request.urlopen`
     :param interp_options: Dictionary of options passed to `scipy.interpolate.interp1d`
-    :return:  thrust_coeff, power_coeff - Functions for determining the thrust-
+    :return:  thrust_coefficient, power_coefficient - Functions for determining the thrust-
         and power-coefficient based on the speed (in 1/s)
     """
 
@@ -38,4 +38,3 @@ def load_static_propeller(path,
 
         return interp1d(speed, thrust_coeff, **interp_options), \
             interp1d(speed, power_coeff, **interp_options)
-
