@@ -30,9 +30,9 @@ DEFAULT_ROOTFINDER_OPTIONS = {
 class SimulationResult:
     """The results provided by a simulation.
 
-    A `SimulationResult` object captures the time series provided by a simulation.
-    It has properties `t`, `state` and `output` representing the time, state vector and
-    output vector for each individual sample.
+    A `SimulationResult` object captures the time series provided by a
+    simulation. It has properties `t`, `state` and `output` representing the
+    time, state vector and output vector for each individual sample.
     """
 
     def __init__(self, system: System):
@@ -136,8 +136,8 @@ class Simulator:
 
         The simulator is written with the interface of
         `scipy.integrate.OdeSolver` in mind for the integrator, specifically
-        using the constructor, the `step` and the `state_trajectory` functions as
-        well as the `status` property. However, it is possible to use other
+        using the constructor, the `step` and the `state_trajectory` functions
+        as well as the `status` property. However, it is possible to use other
         integrators if they honor this interface.
 
         Similarly, the rootfinder is expected to comply with the interface of
@@ -236,7 +236,8 @@ class Simulator:
 
         # Check if there is a clock event before the given boundary time.
         # If so, we must not advance beyond that event.
-        if len(self.clock_queue) > 0 and self.clock_queue[0].tick_time < t_bound:
+        if len(self.clock_queue) > 0 \
+                and self.clock_queue[0].tick_time < t_bound:
             t_bound = self.clock_queue[0].tick_time
 
         last_time = self.current_time
@@ -280,8 +281,8 @@ class Simulator:
             # Run the event handlers on the event to update the state
             self.run_event_listeners(first_event)
         else:
-            # No event occurred, so we simply accept the integrator end-point as the
-            # next sample point.
+            # No event occurred, so we simply accept the integrator end-point as
+            # the next sample point.
             self.current_time = integrator.t
             self.current_state = integrator.y
 
@@ -347,7 +348,11 @@ class Simulator:
         # Update the state
         self.current_state = state_updater.new_state
 
-    def find_first_event(self, state_trajectory, start_time, end_time, events_occurred):
+    def find_first_event(self,
+                         state_trajectory,
+                         start_time,
+                         end_time,
+                         events_occurred):
         """Determine the event that occurred first.
 
         Args:
@@ -410,7 +415,8 @@ class Simulator:
         return None
 
     def state_derivative(self, time, state):
-        """The state derivative function used for integrating the state over time.
+        """The state derivative function used for integrating the state over
+        time.
 
         Args:
           time: The current time

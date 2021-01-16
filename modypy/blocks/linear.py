@@ -4,11 +4,11 @@ from modypy.model import Block, Port, State, Signal
 
 
 class LTISystem(Block):
-    """Implementation of a linear, time-invariant block of the following format::
-    
+    """Implementation of a linear, time-invariant block of the following format:
+
       dx/dt = system_matrix * x +        input_matrix * u
       y     = output_matrix * x + feed_through_matrix * u
-    
+
     The matrices ``system_matrix``, ``input_matrix``, ``output_matrix`` and
     ``feed_through_matrix`` define the state and output behaviour of the block.
     """
@@ -70,12 +70,13 @@ class LTISystem(Block):
         """Calculates the output for the system"""
         state = data.states[self.state]
         inputs = data.signals[self.input]
-        return (self.output_matrix @ state) + (self.feed_through_matrix @ inputs)
+        return (self.output_matrix @ state) \
+            + (self.feed_through_matrix @ inputs)
 
 
 class Gain(Block):
     """A simple linear gain block.
-    
+
     Provides the input scaled by the constant gain as output.
     """
 
@@ -101,13 +102,13 @@ class Gain(Block):
 
 class Sum(Block):
     """A linear weighted sum block.
-    
+
     This block may have a number of inputs which are interpreted as vectors of
     common dimension. The output of the block is calculated as the weighted
     sum of the inputs.
-    
-    The ``channel_weights`` give the factors by which the individual channels are
-    weighted in the sum.
+
+    The ``channel_weights`` give the factors by which the individual channels
+    are weighted in the sum.
     """
 
     def __init__(self,

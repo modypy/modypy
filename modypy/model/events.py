@@ -20,7 +20,8 @@ class EventPort:
 
     @property
     def reference(self):
-        """The event port that is referenced by connection to this event port."""
+        """The event port that is referenced by connection to this event
+        port."""
         if self._reference is not self:
             self._reference = self._reference.reference
         return self._reference
@@ -91,11 +92,11 @@ class EventPort:
 class AbstractEventSource(EventPort, ABC):
     """An event source defines the circumstances under which an event occurs.
     Events are occurrences of special occurrence that may require a reaction.
-    
+
     Events can be reacted upon by updating the state of the system. For this
     purpose, event listeners can be registered which are called upon occurrence
     of the event.
-    
+
     ``AbstractEventSource`` is the abstract base class for all event sources."""
 
     @property
@@ -105,9 +106,10 @@ class AbstractEventSource(EventPort, ABC):
 
 
 class ZeroCrossEventSource(AbstractEventSource):
-    """A ``ZeroCrossEventSource`` defines an event source by the change of sign of
-    a special event function. Such zero-cross events are specifically monitored
-    and the values of event functions are recorded by the simulator."""
+    """A ``ZeroCrossEventSource`` defines an event source by the change of sign
+    of a special event function. Such zero-cross events are specifically
+    monitored and the values of event functions are recorded by the simulator.
+    """
 
     def __init__(self, owner, event_function):
         AbstractEventSource.__init__(self, owner)

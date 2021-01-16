@@ -15,25 +15,25 @@ def find_steady_state(system,
                       solver_options=None,
                       **kwargs):
     """Find the constrained steady state of a system.
-    
+
     A system is said to be in a *steady state* if its state does not change over
     time. As there maybe multiple steady states, additional constraints may be
     required.
-    
+
     These constraints are expressed by enforcing the value of specified signals
     to be zero. Inputs can be specified by using the ``InputSignal`` class.
-    
+
     The search begins at the initial values of signals and states.
-    
-    Note that for time-dependent systems, ``find_steady_state`` can only identify
-    the steady state at a specific time.
-    
+
+    Note that for time-dependent systems, ``find_steady_state`` can only
+    identify the steady state at a specific time.
+
     This function uses ``scipy.optimize.root`` for finding the root of the
     constraint functions.
-    
+
     If the search is successful, the values of all input signals in the system
     will be set to the respective input value identified for the steady state.
-    
+
     NOTE: This function currently does not honor clocks.
 
     Args:
@@ -43,7 +43,7 @@ def find_steady_state(system,
         `scipy.optimize.root` for more information on the available methods.
         (Default value = "lm")
       solver_options: The options to pass to the solver. (Default value = None)
-      **kwargs: 
+      **kwargs:
 
     Returns:
       An `scipy.optimize.OptimizeResult` object and the state vector at
@@ -82,14 +82,14 @@ def system_jacobian(system,
                     single_matrix=False):
     """Numerically determine the jacobian of the system at the given state and
     input setting.
-    
+
     The function uses polygonal interpolation of the given order on the
     components of the system derivative and output function, chosing
     interpolation points in distance `step` from the given state and input.
-    
+
     This can be used in conjunction with `find_steady_state` to determine
     an LTI approximating the behaviour around the steady state.
-    
+
     NOTE: This function currently does not honor clocks.
 
     Args:
@@ -147,9 +147,9 @@ def _system_function(system, time, x_ref):
     """
 
     Args:
-      system: 
-      time: 
-      x_ref: 
+      system:
+      time:
+      x_ref:
 
     Returns:
 

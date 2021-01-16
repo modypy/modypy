@@ -89,8 +89,8 @@ class OutputPort(Port):
 
     @property
     def output_slice(self):
-        """A slice object that represents the indices of this port in the outputs
-        vector."""
+        """A slice object that represents the indices of this port in the
+        outputs vector."""
         return slice(self.output_index,
                      self.output_index+self.size)
 
@@ -121,8 +121,8 @@ class Signal(Port):
 
 
 class InputSignal(Signal):
-    """An ``InputSignal`` is a special kind of signal that is considered an input
-    into the system. In simulation and linearization, input signals play a
+    """An ``InputSignal`` is a special kind of signal that is considered an
+    input into the system. In simulation and linearization, input signals play a
     special role."""
     def __init__(self, owner, shape: ShapeType = 1, value=0):
         Signal.__init__(self, owner, shape, value)

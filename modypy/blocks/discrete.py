@@ -5,7 +5,7 @@ from modypy.model import Block, SignalState, Port, EventPort
 class ZeroOrderHold(Block):
     """A zero-order-hold block which samples an input signal when the connected
     event occurs.
-    
+
     The block provides an event port ``event_input`` that should be connected
     to the event source that shall trigger the sampling.
     """
@@ -48,7 +48,8 @@ def zero_order_hold(system, input_port, event_port, initial_condition=None):
       system: The system the ``ZeroOrderHold`` block shall be added to.
       input_port: The input port to sample.
       event_port: The event port to use as a sampling signal
-      initial_condition: The initial condition of the ``ZeroOrderHold`` block. (Default value = None)
+      initial_condition: The initial condition of the ``ZeroOrderHold`` block.
+        (Default value = None)
 
     Returns:
         The output signal of the zero-order hold

@@ -50,22 +50,26 @@ class RigidBody6DOFFlatEarth(Block):
         if initial_transformation is None:
             initial_transformation = np.eye(3)
 
-        self.velocity_earth = SignalState(self,
-                                          shape=3,
-                                          derivative_function=self.velocity_earth_dot,
-                                          initial_condition=initial_velocity_earth)
-        self.position_earth = SignalState(self,
-                                          shape=3,
-                                          derivative_function=self.position_earth_dot,
-                                          initial_condition=initial_position_earth)
-        self.omega_earth = SignalState(self,
-                                       shape=3,
-                                       derivative_function=self.omega_earth_dot,
-                                       initial_condition=initial_angular_rates_earth)
-        self.dcm = SignalState(self,
-                               shape=(3, 3),
-                               derivative_function=self.dcm_dot,
-                               initial_condition=initial_transformation)
+        self.velocity_earth = \
+            SignalState(self,
+                        shape=3,
+                        derivative_function=self.velocity_earth_dot,
+                        initial_condition=initial_velocity_earth)
+        self.position_earth = \
+            SignalState(self,
+                        shape=3,
+                        derivative_function=self.position_earth_dot,
+                        initial_condition=initial_position_earth)
+        self.omega_earth = \
+            SignalState(self,
+                        shape=3,
+                        derivative_function=self.omega_earth_dot,
+                        initial_condition=initial_angular_rates_earth)
+        self.dcm = \
+            SignalState(self,
+                        shape=(3, 3),
+                        derivative_function=self.dcm_dot,
+                        initial_condition=initial_transformation)
 
         self.velocity_body = Signal(self,
                                     shape=3,
