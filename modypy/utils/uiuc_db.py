@@ -13,16 +13,20 @@ UIUC_PROP_DB = "https://m-selig.ae.illinois.edu/props/"
 def load_static_propeller(path,
                           urlopen_options=None,
                           interp_options=None):
-    """
-    Retrieve data about the static performance of a given propeller and provide
-    interpolation functions for the thrust and power coefficient.
+    """Retrieve data about the static performance of a given propeller and
+    provide interpolation functions for the thrust and power coefficient.
 
-    :param path:  The relative path of the respective input file, e.g.
+    Args:
+      path: The relative path of the respective input file, e.g.
         `volume-2/data/apcff_4.2x4_static_0615rd.txt`
-    :param urlopen_options: Dictionary of options passed to `urllib.request.urlopen`
-    :param interp_options: Dictionary of options passed to `scipy.interpolate.interp1d`
-    :return:  thrust_coefficient, power_coefficient - Functions for determining the thrust-
-        and power-coefficient based on the speed (in 1/s)
+      urlopen_options: Dictionary of options passed to `urllib.request.urlopen`
+        (Default value = None)
+      interp_options: Dictionary of options passed to
+        `scipy.interpolate.interp1d` (Default value = None)
+
+    Returns:
+      Functions for determining the thrust- and power-coefficient based on the
+      speed (in 1/s)
     """
 
     urlopen_options = urlopen_options or {}

@@ -3,10 +3,9 @@ from modypy.model import Block, SignalState, Port, EventPort
 
 
 class ZeroOrderHold(Block):
-    """
-    A zero-order-hold block which samples an input signal when the connected
+    """A zero-order-hold block which samples an input signal when the connected
     event occurs.
-
+    
     The block provides an event port ``event_input`` that should be connected
     to the event source that shall trigger the sampling.
     """
@@ -15,10 +14,11 @@ class ZeroOrderHold(Block):
         """
         Constructor for ``ZeroOrderHold``
 
-        :param owner: The owner of the block (system or block)
-        :param shape: The shape of the input and output signal
-        :param initial_condition: The initial state of the sampling output
-            (before the first tick of the block)
+        Args:
+            owner: The owner of the block (system or block)
+            shape: The shape of the input and output signal
+            initial_condition: The initial state of the sampling output
+                (before the first tick of the block)
         """
         Block.__init__(self, owner)
 
@@ -31,21 +31,27 @@ class ZeroOrderHold(Block):
                                   derivative_function=None)
 
     def update_state(self, data):
-        """Update the state on a clock event"""
+        """Update the state on a clock event
+
+        Args:
+          data: The time, states and signals of the system
+        """
         data.states[self.output] = data.signals[self.input]
 
 
 def zero_order_hold(system, input_port, event_port, initial_condition=None):
-    """
-    Create a ``ZeroOrderHold`` instance that samples the given input port.
+    """Create a ``ZeroOrderHold`` instance that samples the given input port.
     This is a convenience function that returns the single output port of the
     zero-order-hold block.
 
-    :param system: The system the ``ZeroOrderHold`` block shall be added to.
-    :param input_port: The input port to sample.
-    :param event_port: The event port to use as a sampling signal
-    :param initial_condition: The initial condition of the ``ZeroOrderHold`` block.
-    :return:
+    Args:
+      system: The system the ``ZeroOrderHold`` block shall be added to.
+      input_port: The input port to sample.
+      event_port: The event port to use as a sampling signal
+      initial_condition: The initial condition of the ``ZeroOrderHold`` block. (Default value = None)
+
+    Returns:
+        The output signal of the zero-order hold
     """
 
     hold = ZeroOrderHold(system,

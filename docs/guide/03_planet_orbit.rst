@@ -30,7 +30,7 @@ where
 - :math:`m` is the mass of the planet,
 - :math:`r` is the distance of the planet from the sun, and
 - :math:`G` is the gravitational constant, with a value of approximately
-  :math:`6.67\dot 10^{-11} \frac{\text{m}^3}{\text{kg}\text{s}^2}`.
+  :math:`6.67\times 10^{-11} \frac{\text{m}^3}{\text{kg}\text{s}^2}`.
 
 Thus, the acceleration of the planet is given by:
 

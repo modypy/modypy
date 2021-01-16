@@ -11,19 +11,17 @@ from .states import State
 
 
 class AlgebraicLoopError(RuntimeError):
-    """Exception raised when an algebraic loop is encountered"""
+    """Exception raised when an algebraic loop is detected on evaluation"""
 
 
 class PortNotConnectedError(RuntimeError):
-    """Exception raised when requesting the value of a port that is not connected
-    to any signal"""
+    """Exception when a port is evaluated that is not connected to a signal"""
 
 
 class Evaluator:
-    """
-    This class allows to evaluate the individual aspects (signals, state
-    derivatives, ...) of a system at any given time.
-    """
+    """This class allows to evaluate the individual aspects (signals, state
+    derivatives, ...) of a system at any given time."""
+
     def __init__(self, time, system: System, state=None, inputs=None):
         self.time = time
         self.system = system
@@ -96,27 +94,33 @@ class Evaluator:
         return self._event_values
 
     def get_state_value(self, state: State):
-        """
-        Determine the value of a given state.
+        """Determine the value of a given state.
 
-        :param state: The state
-        :return:  The value of the state
+        Args:
+          state: The state
+
+        Returns:
+          The value of the state
         """
         return self._state[state.state_slice].reshape(state.shape)
 
     def get_port_value(self, port: Port):
-        """
-        Determine the value of the given port.
+        """Determine the value of the given port.
 
         If the value has not yet been calculated, it will be calculated before
         this method returns. If an algebraic loop is encountered during
         calculation, an ``AlgebraicLoopError`` will be raised.
 
-        :param port: The port for which the value shall be determined
-        :return: The value of the port
-        :raises AlgebraicLoopError: if an algebraic loop is encountered
-            while evaluating the value of the signal
-        :raises PortNotConnectedError: if the port is not connected to a signal
+        Args:
+          port: The port for which the value shall be determined
+
+        Returns:
+          The value of the port
+
+        Raises:
+          AlgebraicLoopError: if an algebraic loop is encountered while
+            evaluating the value of the signal
+          PortNotConnectedError: if the port is not connected to a signal
         """
 
         if port.size == 0:
@@ -170,37 +174,50 @@ class Evaluator:
         return signal_value.reshape(signal.shape)
 
     def get_state_derivative(self, state):
-        """
-        Get the state derivative of the given state.
+        """Get the state derivative of the given state.
 
-        :param state: The state for which the derivative shall be determined
-        :return: The state derivative
-        :raises AlgebraicLoopError: if an algebraic loop is encountered
-            while evaluating the derivative of the state instance
+        Args:
+          state: The state for which the derivative shall be determined
+
+        Returns:
+          The state derivative
+
+        Raises:
+          AlgebraicLoopError: if an algebraic loop is encountered while
+            evaluating the derivative of the state instance
+
         """
         if state in self.valid_state_derivatives:
-            return self._state_derivative[state.state_slice].reshape(state.shape)
+            return self._state_derivative[state.state_slice]\
+                .reshape(state.shape)
         if state.derivative_function is not None:
             data = DataProvider(self.time,
                                 StateProvider(self),
                                 PortProvider(self))
             state_derivative = state.derivative_function(data)
-            state_derivative = np.asarray(state_derivative).reshape(state.shape)
-            self._state_derivative[state.state_slice] = state_derivative.flatten()
+            state_derivative = \
+                np.asarray(state_derivative).reshape(state.shape)
+            self._state_derivative[state.state_slice] = \
+                state_derivative.flatten()
         else:
             state_derivative = self._state_derivative[state.state_slice]
         self.valid_state_derivatives.add(state)
         return state_derivative
 
     def get_event_value(self, event):
-        """
-        Get the value of the event function of the given event
+        """Get the value of the event function of the given event
 
-        :param event: The event for which to calculate the value
-        :return: The value of the event function
-        :raises AlgebraicLoopError: if an algebraic loop is encountered
-            while evaluating the value of the event function
+        Args:
+          event: The event for which to calculate the value
+
+        Returns:
+          The value of the event function
+
+        Raises:
+          AlgebraicLoopError: if an algebraic loop is encountered while
+            evaluating the value of the event function
         """
+
         if event in self.valid_event_values:
             return self._event_values[event.event_index]
         data = DataProvider(self.time,
@@ -213,8 +230,7 @@ class Evaluator:
 
 
 class DataProvider:
-    """
-    A ``DataProvider`` provides access to the data about the current point in
+    """A ``DataProvider`` provides access to the data about the current point in
     time in the simulation. It has the following properties:
 
     ``time``
@@ -237,13 +253,13 @@ class DataProvider:
         warnings.warn(DeprecationWarning("The ``inputs`` property of the "
                                          "``DataProvider`` class is deprecated "
                                          "and will be removed in the future. "
-                                         "Use the ``signals`` property instead."))
+                                         "Use the ``signals`` property "
+                                         "instead."))
         return self.signals
 
 
 class StateProvider:
-    """
-    A ``StateProvider`` provides access to the state via indexing using the
+    """A ``StateProvider`` provides access to the state via indexing using the
     ``State`` objects.
     """
     def __init__(self, evaluator):
@@ -254,8 +270,7 @@ class StateProvider:
 
 
 class PortProvider:
-    """
-    A ``PortProvider`` provides access to the signals via indexing using the
+    """A ``PortProvider`` provides access to the signals via indexing using the
     ``Port`` objects.
     """
     def __init__(self, evaluator):

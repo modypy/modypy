@@ -12,10 +12,8 @@ ShapeType = Union[int, Sequence[int]]
 
 
 class Port:
-    """
-    A port is a structural element of a system that can be connected to a
-    signal.
-    """
+    """A port is a structural element of a system that can be connected to a
+    signal."""
 
     def __init__(self, owner, shape: ShapeType = 1):
         self.owner = owner
@@ -30,6 +28,7 @@ class Port:
     @property
     def signal(self):
         """The signal this port is connected to or None."""
+
         if self.reference == self:
             return None
         return self.reference.signal
@@ -40,12 +39,14 @@ class Port:
         return self.signal.signal_slice
 
     def connect(self, other):
-        """
-        Connect this port to another port.
+        """Connect this port to another port.
 
-        :param other: The other port to connect to
-        :raises ShapeMismatchError: if the shapes of the ports do not match
-        :raises MultipleSignalsError: if both ports are already connected to
+        Args:
+          other: The other port to connect to
+
+        Raises:
+          ShapeMismatchError: if the shapes of the ports do not match
+          MultipleSignalsError: if both ports are already connected to
             different signals
         """
         if self.shape != other.shape:
@@ -78,11 +79,9 @@ class ShapeMismatchError(RuntimeError):
 
 
 class OutputPort(Port):
-    """
-    An ``OutputPort`` is a special port that is considered to be an output of
+    """An ``OutputPort`` is a special port that is considered to be an output of
     the system. In simulation or steady-state determination, output ports play
-    a special role.
-    """
+    a special role."""
     def __init__(self, owner, shape=1):
         Port.__init__(self, owner, shape)
         self.output_index = self.owner.system.allocate_output_lines(self.size)
@@ -90,18 +89,14 @@ class OutputPort(Port):
 
     @property
     def output_slice(self):
-        """
-        A slice object that represents the indices of this port in the outputs
-        vector.
-        """
+        """A slice object that represents the indices of this port in the outputs
+        vector."""
         return slice(self.output_index,
                      self.output_index+self.size)
 
 
 class Signal(Port):
-    """
-    A signal provides the value for all ports connected to it.
-    """
+    """A signal provides the value for all ports connected to it."""
 
     def __init__(self, owner, shape: ShapeType = 1, value=0):
         Port.__init__(self, owner, shape)
@@ -126,11 +121,9 @@ class Signal(Port):
 
 
 class InputSignal(Signal):
-    """
-    An ``InputSignal`` is a special kind of signal that is considered an input
+    """An ``InputSignal`` is a special kind of signal that is considered an input
     into the system. In simulation and linearization, input signals play a
-    special role.
-    """
+    special role."""
     def __init__(self, owner, shape: ShapeType = 1, value=0):
         Signal.__init__(self, owner, shape, value)
         self.input_index = self.owner.system.allocate_input_lines(self.size)

@@ -11,9 +11,12 @@ setuptools.setup(
     description="A framework for hierarchical modelling and simulation of dynamic systems",
     long_description=long_description,
     long_description_content_type="text/x-rst",
-    url="https://github.com/ralfgerlich/simtree",
+    url="https://github.com/ralfgerlich/modypy",
     license="BSD 2-clause \"Simplified\" License",
     packages=setuptools.find_packages(),
+    project_urls={
+        'documentation': 'https://modypy.readthedocs.io/',
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: BSD License",

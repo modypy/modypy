@@ -1,6 +1,8 @@
 A DC-Motor with Propeller
 =========================
 
+.. contents::
+
 Until now, we have created our states individually and referenced them directly.
 However, in practical simulation you might want to define reusable building
 blocks and connect their inputs and outputs dynamically.
@@ -241,8 +243,6 @@ So, we define our static propeller block:
             n = data.signals[self.speed_rps]
             return self.power_coefficient / (2 * np.pi) * \
                    rho * self.diameter ** 5 * n ** 2
-
-Nothing new here.
 
 Building an Engine Block
 ------------------------

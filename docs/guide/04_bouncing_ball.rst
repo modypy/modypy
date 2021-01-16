@@ -23,7 +23,7 @@ However, once we hit the ground, the velocity will change its direction. Also,
 its magnitude will be diminished due to friction losses inside the ball, so we
 will have the new state and velocity after the bounce to be:
 
-.. math:
+.. math::
     h'\left(t\right) &= \left|h\left(t\right)\right| \\
     v'\left(t\right) &= - \delta \times v\left(t\right)
 
@@ -137,4 +137,3 @@ see, our ball bounces happily.
     :alt: Results of bouncing ball simulation
 
     Bouncing ball simulation
-

@@ -11,9 +11,7 @@ class MultipleEventSourcesError(RuntimeError):
 
 
 class EventPort:
-    """
-    An event port is a port that can be connected to other event ports.
-    """
+    """An event port is a port that can be connected to other event ports."""
 
     def __init__(self, owner):
         self.owner = owner
@@ -22,9 +20,7 @@ class EventPort:
 
     @property
     def reference(self):
-        """
-        The event port that is referenced by connection to this event port.
-        """
+        """The event port that is referenced by connection to this event port."""
         if self._reference is not self:
             self._reference = self._reference.reference
         return self._reference
@@ -50,10 +46,15 @@ class EventPort:
         return self.reference.listeners
 
     def connect(self, other):
-        """
-        Connect an event port to another event port.
+        """Connect an event port to another event port.
 
-        :param other: The other event port
+        Args:
+            other: The other event port
+
+        Raises:
+            MultipleEventSourcesError: raised when two ports that are already
+                connected to two different sources shall be connected to each
+                other
         """
 
         if self.source is not None and other.source is not None:
@@ -79,25 +80,23 @@ class EventPort:
                 other.reference.reference = self.reference
 
     def register_listener(self, listener):
-        """
-        Register a listener for this event port.
+        """Register a listener for this event port.
 
-        :param listener: The listener to register
+        Args:
+          listener: The listener to register
         """
         self.listeners.add(listener)
 
 
 class AbstractEventSource(EventPort, ABC):
-    """
-    An event source defines the circumstances under which an event occurs.
+    """An event source defines the circumstances under which an event occurs.
     Events are occurrences of special occurrence that may require a reaction.
-
+    
     Events can be reacted upon by updating the state of the system. For this
     purpose, event listeners can be registered which are called upon occurrence
     of the event.
-
-    ``AbstractEventSource`` is the abstract base class for all event sources.
-    """
+    
+    ``AbstractEventSource`` is the abstract base class for all event sources."""
 
     @property
     def source(self):
@@ -106,11 +105,9 @@ class AbstractEventSource(EventPort, ABC):
 
 
 class ZeroCrossEventSource(AbstractEventSource):
-    """
-    A ``ZeroCrossEventSource`` defines an event source by the change of sign of
+    """A ``ZeroCrossEventSource`` defines an event source by the change of sign of
     a special event function. Such zero-cross events are specifically monitored
-    and the values of event functions are recorded by the simulator.
-    """
+    and the values of event functions are recorded by the simulator."""
 
     def __init__(self, owner, event_function):
         AbstractEventSource.__init__(self, owner)
@@ -119,9 +116,7 @@ class ZeroCrossEventSource(AbstractEventSource):
 
 
 class Clock(AbstractEventSource):
-    """
-    A clock is an event source that generates a periodic event.
-    """
+    """A clock is an event source that generates a periodic event."""
 
     def __init__(self,
                  owner,
@@ -139,12 +134,13 @@ class Clock(AbstractEventSource):
         clock will also generate ticks before the time defined by
         ``start_time``.
 
-        :param owner: The owner object of this clock (a system or a block)
-        :param period:  The period of the clock
-        :param start_time: The start time of the clock (default: 0)
-        :param end_time: The end time of the clock (default: ``None``)
-        :param run_before_start: Flag indicating whether the clock shall already
-            run before the start time (default: ``False``)
+        Args:
+            owner: The owner object of this clock (a system or a block)
+            period: The period of the clock
+            start_time: The start time of the clock (default: 0)
+            end_time: The end time of the clock (default: ``None``)
+            run_before_start: Flag indicating whether the clock shall already
+                run before the start time (default: ``False``)
         """
 
         AbstractEventSource.__init__(self, owner)
@@ -156,13 +152,14 @@ class Clock(AbstractEventSource):
         self.owner.system.register_clock(self)
 
     def tick_generator(self, not_before):
-        """
-        Return a generate that will yield the times of the ticks of
+        """Return a generate that will yield the times of the ticks of
         this clock.
 
-        :param not_before: The ticks shown shall not be before the given
-            time
-        :return: A generator for ticks
+        Args:
+          not_before: The ticks shown shall not be before the given time
+
+        Returns:
+          A generator for ticks
         """
 
         k = ceil((not_before - self.start_time) / self.period)

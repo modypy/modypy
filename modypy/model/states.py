@@ -10,10 +10,13 @@ from modypy.model import Signal
 
 
 class State:
-    """
-    A state describes a portion of the state of a block.
-    """
-    def __init__(self, owner, derivative_function, shape=1, initial_condition=None):
+    """A state describes a portion of the state of a block."""
+
+    def __init__(self,
+                 owner,
+                 derivative_function,
+                 shape=1,
+                 initial_condition=None):
         self.owner = owner
         self.derivative_function = derivative_function
         if isinstance(shape, int):
@@ -38,9 +41,7 @@ class State:
 
 
 class SignalState(State, Signal):
-    """
-    A state that also provides itself as an output signal.
-    """
+    """A state that also provides itself as an output signal."""
     def __init__(self, owner, derivative_function=None, shape=1, initial_condition=None):
         State.__init__(self, owner, derivative_function, shape, initial_condition)
         Signal.__init__(self, owner, shape, value=self.output_function)

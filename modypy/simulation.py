@@ -28,8 +28,7 @@ DEFAULT_ROOTFINDER_OPTIONS = {
 
 
 class SimulationResult:
-    """
-    The results provided by a simulation.
+    """The results provided by a simulation.
 
     A `SimulationResult` object captures the time series provided by a simulation.
     It has properties `t`, `state` and `output` representing the time, state vector and
@@ -78,15 +77,15 @@ class SimulationResult:
         return self._outputs[0:self.current_idx]
 
     def append(self, time, inputs, state, signals, events, outputs):
-        """
-        Append an entry to the result vectors.
+        """Append an entry to the result vectors.
 
-        :param time: The time tag for the entry
-        :param inputs: The input vector
-        :param state: The state vector
-        :param signals: The signals vector
-        :param events: The events vector
-        :param outputs: The outputs vector
+        Args:
+          time: The time tag for the entry
+          inputs: The input vector
+          state: The state vector
+          signals: The signals vector
+          events: The events vector
+          outputs: The outputs vector
         """
 
         if self.current_idx >= self._t.size:
@@ -101,9 +100,7 @@ class SimulationResult:
         self.current_idx += 1
 
     def extend_space(self):
-        """
-        Extend the storage space for the vectors
-        """
+        """Extend the storage space for the vectors"""
         self._t = np.r_[self._t,
                         np.empty(RESULT_SIZE_EXTENSION)]
         self._inputs = np.r_[self._inputs,
@@ -124,9 +121,7 @@ class SimulationResult:
 
 
 class Simulator:
-    """
-    Simulator for dynamic systems.
-    """
+    """Simulator for dynamic systems."""
 
     def __init__(self,
                  system,
@@ -148,19 +143,20 @@ class Simulator:
         Similarly, the rootfinder is expected to comply with the interface of
         `scipy.optimize.brentq`.
 
-        :param system: The system to be simulated
-        :param start_time: The start time of the simulation
-        :param initial_condition: The initial condition (optional)
-        :param integrator_constructor: The constructor function for the
-            ODE integrator to be used; optional: if not given,
-            ``DEFAULT_INTEGRATOR`` is used.
-        :param integrator_options: The options for ``integrator_constructor``;
-            optional: if not given, ``DEFAULT_INTEGRATOR_OPTIONS`` is used.
-        :param rootfinder_constructor: The constructor function for the
-            root finder to be used; optional: if not given,
-            ``DEFAULT_ROOTFINDER`` is used.
-        :param rootfinder_options: The options for ``rootfinder_constructor``;
-            optional: if not given, ``DEFAULT_ROOTFINDER_OPTIONS`` is used
+        Args:
+            system: The system to be simulated
+            start_time: The start time of the simulation
+            initial_condition: The initial condition (optional)
+            integrator_constructor: The constructor function for the
+                ODE integrator to be used; optional: if not given,
+                ``DEFAULT_INTEGRATOR`` is used.
+            integrator_options: The options for ``integrator_constructor``;
+                optional: if not given, ``DEFAULT_INTEGRATOR_OPTIONS`` is used.
+            rootfinder_constructor: The constructor function for the
+                root finder to be used; optional: if not given,
+                ``DEFAULT_ROOTFINDER`` is used.
+            rootfinder_options: The options for ``rootfinder_constructor``;
+                optional: if not given, ``DEFAULT_ROOTFINDER_OPTIONS`` is used
         """
 
         self.system = system
@@ -229,11 +225,13 @@ class Simulator:
                 pass
 
     def step(self, t_bound):
-        """
-        Execute a single execution step.
+        """Execute a single execution step.
 
-        :param t_bound: The maximum time until which the simulation may proceed
-        :return: ``None`` if successful, a message string otherwise
+        Args:
+          t_bound: The maximum time until which the simulation may proceed
+
+        Returns:
+          ``None`` if successful, a message string otherwise
         """
 
         # Check if there is a clock event before the given boundary time.
@@ -308,9 +306,7 @@ class Simulator:
         return None
 
     def run_clock_ticks(self):
-        """
-        Run all the pending clock ticks.
-        """
+        """Run all the pending clock ticks."""
 
         while (len(self.clock_queue) > 0 and
                self.clock_queue[0].tick_time <= self.current_time):
@@ -334,11 +330,7 @@ class Simulator:
                 pass
 
     def run_event_listeners(self, event_source):
-        """
-        Run the event listeners on the given event.
-
-        :param event_source:
-        :return:
+        """Run the event listeners on the given event.
         """
 
         update_evaluator = Evaluator(system=self.system,
@@ -356,18 +348,19 @@ class Simulator:
         self.current_state = state_updater.new_state
 
     def find_first_event(self, state_trajectory, start_time, end_time, events_occurred):
-        """
-        Determine the event that occurred first.
+        """Determine the event that occurred first.
 
-        :param state_trajectory: A callable that accepts a time in the interval
+        Args:
+          state_trajectory: A callable that accepts a time in the interval
             given by ``start_time`` and ``end_time`` and provides the state
             vector for that point in time.
-        :param start_time: The lower limit of the time range to be considered.
-        :param end_time: The upper limit of the time range to be considered.
-        :param events_occurred: The list of events that occurred within the
+          start_time: The lower limit of the time range to be considered.
+          end_time: The upper limit of the time range to be considered.
+          events_occurred: The list of events that occurred within the
             given time interval.
-        :return: A tuple `(event, time)`, giving the event that occurred first
-            and the time at which it occurred.
+
+        Returns: A tuple ``(event, time)``, with ``event`` being the event that
+            occurred first and ``time`` being the time at which it occurred.
         """
 
         # For each event that occurred we determine the exact time that it
@@ -379,8 +372,7 @@ class Simulator:
 
         for list_index, event in zip(itertools.count(), events_occurred):
             def objective_function(time):
-                """
-                Determine the value of the event at different points in
+                """Determine the value of the event at different points in
                 time.
                 """
 
@@ -403,11 +395,13 @@ class Simulator:
         return first_event, first_event_time
 
     def run_until(self, time_boundary):
-        """
-        Run the simulation until the given end time
+        """Run the simulation until the given end time
 
-        :param time_boundary: The end time
-        :return: ``None`` if successful, a message string otherwise
+        Args:
+          time_boundary: The end time
+
+        Returns:
+          ``None`` if successful, a message string otherwise
         """
         while self.current_time < time_boundary:
             message = self.step(time_boundary)
@@ -416,12 +410,14 @@ class Simulator:
         return None
 
     def state_derivative(self, time, state):
-        """
-        The state derivative function used for integrating the state over time.
+        """The state derivative function used for integrating the state over time.
 
-        :param time: The current time
-        :param state: The current state vector
-        :return: The time-derivative of the state vector
+        Args:
+          time: The current time
+          state: The current state vector
+
+        Returns:
+          The time-derivative of the state vector
         """
 
         evaluator = Evaluator(system=self.system, time=time, state=state)
@@ -430,8 +426,7 @@ class Simulator:
 
 
 class StateUpdater:
-    """
-    A ``StateUpdater`` provides access to the states via indexing using the
+    """A ``StateUpdater`` provides access to the states via indexing using the
     ``State`` objects. It also allows the state vector to be updated.
     """
     def __init__(self, evaluator):
@@ -449,8 +444,7 @@ class StateUpdater:
 
 
 class TickEntry:
-    """
-    A ``TickEntry`` holds information about the next tick of a given clock.
+    """A ``TickEntry`` holds information about the next tick of a given clock.
     An order over ``TickEntry`` instances is defined by their time.
     """
 

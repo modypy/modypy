@@ -8,8 +8,7 @@ from modypy.model import Block, Port, Signal, SignalState
 
 
 class RigidBody6DOFFlatEarth(Block):
-    """
-    A block representing the motion of a rigid body in 6 degrees of freedom
+    """A block representing the motion of a rigid body in 6 degrees of freedom
     relative to a flat earth reference frame.
 
     The flat earth reference frame assumes the x-axis pointing to the north,
@@ -76,23 +75,27 @@ class RigidBody6DOFFlatEarth(Block):
                                  value=self.omega_body_output)
 
     def velocity_earth_dot(self, data):
-        """Calculates the acceleration in the earth reference frame"""
+        """Calculates the acceleration in the earth reference frame
+        """
         forces_earth = data.states[self.dcm] @ data.signals[self.forces_body]
         accel_earth = forces_earth / self.mass
         return accel_earth
 
     def position_earth_dot(self, data):
-        """Calculates the velocity in the earth reference frame"""
+        """Calculates the velocity in the earth reference frame
+        """
         return data.states[self.velocity_earth]
 
     def omega_earth_dot(self, data):
-        """Calculate the angular acceleration in the earth reference frame"""
+        """Calculate the angular acceleration in the earth reference frame
+        """
         moments_earth = data.states[self.dcm] @ data.signals[self.moments_body]
         ang_accel_earth = linalg.solve(self.moment_of_inertia, moments_earth)
         return ang_accel_earth
 
     def dcm_dot(self, data):
-        """Calculate the derivative of the direct cosine matrix"""
+        """Calculate the derivative of the direct cosine matrix
+        """
         omega_earth = data.states[self.omega_earth]
         skew_sym_matrix = np.array([
             [0, -omega_earth[2], omega_earth[1]],
@@ -102,21 +105,22 @@ class RigidBody6DOFFlatEarth(Block):
         return skew_sym_matrix @ data.states[self.dcm]
 
     def velocity_body_output(self, data):
-        """Calculate the velocity in the body reference frame"""
+        """Calculate the velocity in the body reference frame
+        """
         dcm = data.states[self.dcm]
         velocity_earth = data.states[self.velocity_earth]
         return dcm.T @ velocity_earth
 
     def omega_body_output(self, data):
-        """Calculate the angular velocity in the body reference frame"""
+        """Calculate the angular velocity in the body reference frame
+        """
         dcm = data.states[self.dcm]
         omega_earth = data.states[self.omega_earth]
         return dcm.T @ omega_earth
 
 
 class DirectCosineToEuler(Block):
-    """
-    A block translating a direct cosine matrix to Euler angles.
+    """A block translating a direct cosine matrix to Euler angles.
 
     This block has a 3x3 direct cosine matrix (DCM) as input and
     provides the euler angles (psi, theta, phi, in radians) for yaw,
@@ -134,16 +138,19 @@ class DirectCosineToEuler(Block):
         self.roll = Signal(self, shape=1, value=self.calculate_roll)
 
     def calculate_yaw(self, data):
-        """Calculate the yaw angle for the given direct cosine matrix"""
+        """Calculate the yaw angle for the given direct cosine matrix
+        """
         dcm = data.signals[self.dcm]
         return np.arctan2(dcm[1, 0], dcm[0, 0])
 
     def calculate_pitch(self, data):
-        """Calculate the pitch angle for the given direct cosine matrix"""
+        """Calculate the pitch angle for the given direct cosine matrix
+        """
         dcm = data.signals[self.dcm]
         return np.arctan2(-dcm[2, 0], np.sqrt(dcm[0, 0]**2 + dcm[1, 0]**2))
 
     def calculate_roll(self, data):
-        """Calculate the roll angle for the given direct cosine matrix"""
+        """Calculate the roll angle for the given direct cosine matrix
+        """
         dcm = data.signals[self.dcm]
         return np.arctan2(dcm[2, 1], dcm[2, 2])

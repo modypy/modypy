@@ -98,7 +98,7 @@ our state. In our case, this is simply the current value of our input signal.
 
 Now, our system is already complete. We have our signal source and our integrator
 state. Let's have a look at the motion of our system. For that, we create a
-:class:`simulator <modypy.simulation.Simulator>`:
+:class:`Simulator <modypy.simulation.Simulator>`:
 
 .. code-block:: python
 

@@ -5,9 +5,7 @@ import numpy as np
 
 
 class System:
-    """
-    A system is a composition of states, signals and events.
-    """
+    """A system is a composition of states, signals and events."""
     def __init__(self):
         self.num_signals = 0
         self.signals = list()
@@ -50,66 +48,83 @@ class System:
         return initial_inputs
 
     def allocate_signal_lines(self, count):
-        """
-        Allocate a sequence of consecutive signal lines.
+        """Allocate a sequence of consecutive signal lines.
 
-        :param count: The number of signal lines to allocate
-        :return: The index of the first signal line allocated
+        Args:
+          count: The number of signal lines to allocate
+
+        Returns:
+          The index of the first signal line allocated
+
         """
         start_index = self.num_signals
         self.num_signals += count
         return start_index
 
     def allocate_state_lines(self, count):
-        """
-        Allocate a sequence of consecutive state lines.
+        """Allocate a sequence of consecutive state lines.
 
-        :param count: The number of state lines to allocate
-        :return: The index of the first state line allocated
+        Args:
+          count: The number of state lines to allocate
+
+        Returns:
+          The index of the first state line allocated
+
         """
         start_index = self.num_states
         self.num_states += count
         return start_index
 
     def allocate_input_lines(self, count):
-        """
-        Allocate a sequence of consecutive input lines.
+        """Allocate a sequence of consecutive input lines.
 
-        :param count: The number of input lines to allocate
-        :return: The index of the first input line allocated
+        Args:
+          count: The number of input lines to allocate
+
+        Returns:
+          The index of the first input line allocated
+
         """
         start_index = self.num_inputs
         self.num_inputs += count
         return start_index
 
     def allocate_output_lines(self, count):
-        """
-        Allocate a sequence of consecutive input lines.
+        """Allocate a sequence of consecutive input lines.
 
-        :param count: The number of input lines to allocate
-        :return: The index of the first input line allocated
+        Args:
+          count: The number of input lines to allocate
+
+        Returns:
+          The index of the first input line allocated
+
         """
         start_index = self.num_outputs
         self.num_outputs += count
         return start_index
 
     def register_event(self, event):
-        """
-        Register an event.
+        """Register an event.
 
-        :param event: The event to register
-        :return: The index of the event line allocated for the event
+        Args:
+          event: The event to register
+
+        Returns:
+          The index of the event line allocated for the event
+
         """
         event_index = len(self.events)
         self.events.append(event)
         return event_index
 
     def register_clock(self, clock):
-        """
-        Register a clock.
+        """Register a clock.
 
-        :param clock: The clock to register.
-        :return:
+        Args:
+          clock: The clock to register.
+
+        Returns:
+
         """
         self.clocks.add(clock)
 
@@ -120,9 +135,7 @@ class System:
 
 
 class Block:
-    """
-    A block is a re-usable building block for systems.
-    """
+    """A block is a re-usable building block for systems."""
     def __init__(self, parent):
         self.parent = parent
         self.system = self.parent.system
