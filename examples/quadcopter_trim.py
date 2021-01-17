@@ -22,8 +22,8 @@ class Engine(Block):
     """
     def __init__(self,
                  parent,
-                 ct, cp, diameter,
-                 Kv, R, L, J,
+                 thrust_coefficient, power_coefficient, diameter,
+                 motor_constant, resistance, inductance, moment_of_inertia,
                  direction, vector, arm):
         Block.__init__(self, parent)
 
@@ -32,12 +32,12 @@ class Engine(Block):
         self.density = Port(self, shape=1)
 
         # Create the motor
-        self.dcmotor = DCMotor(self, Kv, R, L, J, initial_omega=1)
+        self.dcmotor = DCMotor(self, motor_constant, resistance, inductance, moment_of_inertia, initial_omega=1)
 
         # Create the propeller
         self.propeller = Propeller(self,
-                                   thrust_coefficient=ct,
-                                   power_coefficient=cp,
+                                   thrust_coefficient=thrust_coefficient,
+                                   power_coefficient=power_coefficient,
                                    diameter=diameter)
 
         # Create a thruster that converts the scalar thrust and torque into
@@ -82,8 +82,8 @@ parameters = {
     'resistance': 43.3E-3,
     'inductance': 1.9E-3,
     'moment_of_inertia': 5.284E-6,
-    'ct': thrust_coeff,
-    'cp': torque_coeff,
+    'thrust_coefficient': thrust_coeff,
+    'power_coefficient': torque_coeff,
     'diameter': 8*25.4E-3
 }
 
