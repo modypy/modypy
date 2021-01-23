@@ -240,9 +240,6 @@ class Simulator:
                 and self.clock_queue[0].tick_time < t_bound:
             t_bound = self.clock_queue[0].tick_time
 
-        last_time = self.current_time
-        last_event_values = self.current_event_values
-
         # Integrate for a single step
         integrator = self.integrator_constructor(fun=self.state_derivative,
                                                  t0=self.current_time,
@@ -253,38 +250,10 @@ class Simulator:
         if message is not None:
             return message
 
-        evaluator = Evaluator(system=self.system,
-                              time=integrator.t,
-                              state=integrator.y)
-
-        # Check for events
-        event_indices = np.flatnonzero(np.sign(last_event_values) !=
-                                       np.sign(evaluator.event_values))
-        if len(event_indices) > 0:
-            events_occurred = [self.system.events[idx] for idx in event_indices]
-            state_interpolator = integrator.dense_output()
-            start_time = last_time
-            end_time = integrator.t
-
-            # Identify the first event that occurred
-            first_event, first_event_time = \
-                self.find_first_event(state_interpolator,
-                                      start_time,
-                                      end_time,
-                                      events_occurred)
-
-            # We will continue immediately after that event
-            self.current_time = first_event_time + 1.E-3
-            # Get the state at the event time
-            self.current_state = state_interpolator(self.current_time)
-
-            # Run the event handlers on the event to update the state
-            self.run_event_listeners(first_event)
-        else:
-            # No event occurred, so we simply accept the integrator end-point as
-            # the next sample point.
-            self.current_time = integrator.t
-            self.current_state = integrator.y
+        # Handle continuous-time events
+        self.handle_continuous_time_events(new_time=integrator.t,
+                                           new_state=integrator.y,
+                                           state_interpolator=integrator.dense_output())
 
         # Execute any pending clock ticks
         self.run_clock_ticks()
@@ -305,6 +274,58 @@ class Simulator:
                            events=self.current_event_values,
                            outputs=self.current_outputs)
         return None
+
+    def handle_continuous_time_events(self,
+                                      new_time,
+                                      new_state,
+                                      state_interpolator):
+        """
+        Determine if any zero-crossing events occurred, and if so, handle
+        them.
+
+        Args:
+            new_time: The time until which simulation has progressed.
+            new_state: The state of the system at the new time, given continuous
+                simulation
+            state_interpolator: A callable for determining the state at any
+                given time between ``self.current_time`` and ``new_time``.
+        """
+
+        last_time = self.current_time
+        last_event_values = self.current_event_values
+
+        # Determine the event values for the new state
+        evaluator = Evaluator(system=self.system,
+                              time=new_time,
+                              state=new_state)
+        new_event_values = evaluator.event_values
+
+        # Check for events
+        event_indices = np.flatnonzero(np.sign(last_event_values) !=
+                                       np.sign(new_event_values))
+        if len(event_indices) > 0:
+            events_occurred = [self.system.events[idx] for idx in event_indices]
+
+            # Identify the first event that occurred
+            first_event, first_event_time = \
+                self.find_first_event(state_interpolator,
+                                      last_time,
+                                      new_time,
+                                      events_occurred)
+
+            # We will continue immediately after that event
+            self.current_time = first_event_time + 1.E-3
+            # Get the state at the event time
+            self.current_state = state_interpolator(self.current_time)
+
+            # Run the event handlers on the event to update the state
+            self.run_event_listeners(first_event)
+        else:
+            # No event occurred, so we simply accept the integrator end-point as
+            # the next sample point.
+            self.current_time = new_time
+            self.current_state = new_state
+
 
     def run_clock_ticks(self):
         """Run all the pending clock ticks."""
