@@ -21,6 +21,12 @@ def test_evaluator():
                                        [4, 5, 6],
                                        [7, 8, 9]],
                     derivative_function=(lambda data: data.signals[input_a]))
+    state_a_dep = State(system,
+                        shape=(3, 3),
+                        initial_condition=[[1, 2, 3],
+                                           [4, 5, 6],
+                                           [7, 8, 9]],
+                        derivative_function=(lambda data: data.inputs[input_a]))
     state_b = State(system,
                     shape=3,
                     initial_condition=[10, 11, 12],
@@ -49,6 +55,8 @@ def test_evaluator():
     # Check the initial state
     npt.assert_almost_equal(evaluator.state[state_a.state_slice],
                             state_a.initial_condition.flatten())
+    npt.assert_almost_equal(evaluator.state[state_a_dep.state_slice],
+                            state_a_dep.initial_condition.flatten())
     npt.assert_almost_equal(evaluator.state[state_b.state_slice],
                             state_b.initial_condition.flatten())
     npt.assert_almost_equal(evaluator.state[state_b1.state_slice],
@@ -58,6 +66,8 @@ def test_evaluator():
 
     # Check the derivative property
     npt.assert_almost_equal(evaluator.state_derivative[state_a.state_slice],
+                            input_a.value.flatten())
+    npt.assert_almost_equal(evaluator.state_derivative[state_a_dep.state_slice],
                             input_a.value.flatten())
     npt.assert_almost_equal(evaluator.state_derivative[state_b.state_slice],
                             state_b.derivative_function(None).flatten())
@@ -103,6 +113,8 @@ def test_evaluator():
     # Check the get_state_value function
     npt.assert_almost_equal(evaluator.get_state_value(state_a),
                             state_a.initial_condition)
+    npt.assert_almost_equal(evaluator.get_state_value(state_a_dep),
+                            state_a_dep.initial_condition)
     npt.assert_almost_equal(evaluator.get_state_value(state_b),
                             state_b.initial_condition)
 
