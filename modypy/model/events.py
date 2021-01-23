@@ -111,9 +111,30 @@ class ZeroCrossEventSource(AbstractEventSource):
     monitored and the values of event functions are recorded by the simulator.
     """
 
-    def __init__(self, owner, event_function):
+    def __init__(self, owner, event_function, direction=0):
+        """
+        Create a new zero-crossing event-source.
+
+        Args:
+            owner: The system or block this event belongs to
+            event_function: The callable used to calculate the value of the
+                event function
+            direction: The direction of the sign change to consider.
+                Possible values:
+
+                ``1``
+                    Consider only changes from negative to positive
+
+                ``-1``
+                    Consider only changes from positive to negative
+
+                ``0`` (default)
+                    Consider all changes
+        """
+
         AbstractEventSource.__init__(self, owner)
         self.event_function = event_function
+        self.direction = direction
         self.event_index = self.owner.system.register_event(self)
 
 

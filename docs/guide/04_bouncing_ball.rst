@@ -82,11 +82,17 @@ our bounce-event:
 
 
     bounce_event = ZeroCrossEventSource(system,
-                                        event_function=bounce_event_function)
+                                        event_function=bounce_event_function,
+                                        direction=-1)
 
 The function ``bounce_event_function`` is defined in such a way so that its
 value changes its sign exactly when our ball hits the ground (we assume that our
 ball is infinitely small -- we do physics after all).
+
+The parameter ``direction`` tells the simulator that only changes from positive
+to negative sign should be considered. Sign changes in the opposite directions
+would not be considered. However, as our ball is falling down all the time, it
+does not make much of a difference.
 
 Adding this event source to our system instructs the simulator to observe the
 value of the event function over time and to take special note of when its value

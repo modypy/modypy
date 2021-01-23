@@ -179,6 +179,10 @@ class Simulator:
         else:
             self.rootfinder_options = rootfinder_options
 
+        # Collect information about zero-crossing events
+        self.event_directions = np.array([event.direction
+                                          for event in self.system.events])
+
         self.result = SimulationResult(system)
 
         # Set up the state of the system
@@ -291,6 +295,7 @@ class Simulator:
                 given time between ``self.current_time`` and ``new_time``.
         """
 
+        # Capture the time and event values of the preceding state
         last_time = self.current_time
         last_event_values = self.current_event_values
 
@@ -300,18 +305,26 @@ class Simulator:
                               state=new_state)
         new_event_values = evaluator.event_values
 
-        # Check for events
-        event_indices = np.flatnonzero(np.sign(last_event_values) !=
-                                       np.sign(new_event_values))
+        # Determine the events for which sign changes occurred and the direction
+        # of the change
+        sign_changed = np.sign(last_event_values) != np.sign(new_event_values)
+        sign_change_direction = np.sign(new_event_values - last_event_values)
+
+        # Determine for which events the conditions are met
+        event_occurred = (sign_changed &
+                          ((self.event_directions == 0) |
+                           (self.event_directions == sign_change_direction)))
+
+        event_indices = np.flatnonzero(event_occurred)
         if len(event_indices) > 0:
-            events_occurred = [self.system.events[idx] for idx in event_indices]
+            occurred_event = [self.system.events[idx] for idx in event_indices]
 
             # Identify the first event that occurred
             first_event, first_event_time = \
                 self.find_first_event(state_interpolator,
                                       last_time,
                                       new_time,
-                                      events_occurred)
+                                      occurred_event)
 
             # We will continue immediately after that event
             self.current_time = first_event_time + 1.E-3
@@ -325,7 +338,6 @@ class Simulator:
             # the next sample point.
             self.current_time = new_time
             self.current_state = new_state
-
 
     def run_clock_ticks(self):
         """Run all the pending clock ticks."""

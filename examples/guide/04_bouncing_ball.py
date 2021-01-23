@@ -45,7 +45,8 @@ def bounce_event_function(data):
 
 
 bounce_event = ZeroCrossEventSource(system,
-                                    event_function=bounce_event_function)
+                                    event_function=bounce_event_function,
+                                    direction=-1)
 
 
 # Define the event-handler

@@ -3,3 +3,4 @@
 
 .. automodule:: modypy.model.events
     :members:
+    :special-members: __init__
