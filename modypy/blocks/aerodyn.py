@@ -70,7 +70,7 @@ class Propeller(Block):
         speed_rps = data.signals[self.speed_rps]
         density = data.signals[self.density]
         return self.thrust_coefficient(speed_rps) \
-               * density * self.diameter ** 4 * speed_rps ** 2
+            * density * self.diameter ** 4 * speed_rps ** 2
 
     def torque_output(self, data):
         """Function used to calculate the ``torque`` output
