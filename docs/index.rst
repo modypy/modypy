@@ -3,6 +3,15 @@ MoDyPy
 
 .. image:: https://badge.fury.io/py/modypy.svg
     :alt: PyPi Version
+    :target: https://pypi.org/project/modypy/
+
+.. image:: https://img.shields.io/pypi/pyversions/modypy
+    :alt: PyPI - Python Version
+    :target: https://pypi.org/project/modypy/
+
+.. image:: https://readthedocs.org/projects/modypy/badge/?version=latest&style=flat
+    :alt: Readthedocs status
+    :target: https://modypy.readthedocs.org/
 
 .. image:: https://travis-ci.com/ralfgerlich/modypy.svg?branch=master
     :alt: Build Status
@@ -14,9 +23,11 @@ MoDyPy
 
 .. image:: https://www.code-inspector.com/project/17342/score/svg
     :alt: Code Quality Store
+    :target: https://frontend.code-inspector.com/public/project/17342/modypy/dashboard
 
 .. image:: https://www.code-inspector.com/project/17342/status/svg
     :alt: Code Grade
+    :target: https://frontend.code-inspector.com/public/project/17342/modypy/dashboard
 
 MoDyPy (rhymes with "modify") is a Python framework for *Mo*\ delling *dy*\ namic
 systems in *Py*\ thon. The framework provides methods for describing
@@ -36,7 +47,7 @@ refer to the :doc:`Programmer's Guide <guide>` and the
 :doc:`API Documentation <api/api>`.
 
 Main Features
-=============
+-------------
 
 - Simple architecture based on states, signals and connectible ports
 - Enables hierarchical modelling
@@ -48,7 +59,7 @@ Main Features
 - Tested for 100% statement and branch coverage
 
 Installation
-============
+------------
 
 MoDyPy is available via the *pip* installer:
 
@@ -64,7 +75,7 @@ To install the development version,
   $ pip install -e modypy
 
 Examples
-========
+--------
 
 .. figure:: guide/06_dc_engine_sampling.png
     :align: center

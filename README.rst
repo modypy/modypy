@@ -1,6 +1,9 @@
 .. image:: https://badge.fury.io/py/modypy.svg
     :alt: PyPi Version
 
+.. image:: https://img.shields.io/pypi/pyversions/modypy
+    :alt: PyPI - Python Version
+
 .. image:: https://travis-ci.com/ralfgerlich/modypy.svg?branch=master
     :alt: Build Status
     :target: https://travis-ci.com/ralfgerlich/modypy
@@ -30,7 +33,7 @@ reusable blocks with input and output ports can be easily built. For more
 details refer to the `documentation <https://modypy.readthedocs.io/>`_.
 
 Main Features
-=============
+-------------
 
 - Simple architecture based on states, signals and connectible ports
 - Enables hierarchical modelling
@@ -42,7 +45,7 @@ Main Features
 - Tested for 100% statement and branch coverage
 
 Installation
-============
+------------
 
 MoDyPy is available via the *pip* installer:
 
@@ -58,7 +61,7 @@ To install the development version,
   $ pip install -e modypy
 
 Examples
-========
+--------
 
 .. figure:: docs/guide/06_dc_engine_sampling.png
     :align: center
