@@ -1,0 +1,10 @@
+graft tests
+graft examples
+graft docs
+prune docs/_build
+include .travis.yml
+include pylintrc
+include requirements*.txt
+include tox.ini
+global-exclude .coverage *.py[cod]
+recursive-exclude examples *.png
