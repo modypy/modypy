@@ -14,7 +14,7 @@ class State:
 
     def __init__(self,
                  owner,
-                 derivative_function,
+                 derivative_function=None,
                  shape=1,
                  initial_condition=None):
         self.owner = owner
