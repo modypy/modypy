@@ -11,7 +11,7 @@ from modypy.model import Block, Port, System, InputSignal, OutputPort
 from modypy.blocks.aerodyn import Propeller, Thruster
 from modypy.blocks.elmech import DCMotor
 from modypy.blocks.sources import constant
-from modypy.blocks.linear import Sum
+from modypy.blocks.linear import sum_signal
 from modypy.linearization import find_steady_state, system_jacobian
 from modypy.utils.uiuc_db import load_static_propeller
 
@@ -130,32 +130,28 @@ torque_output = OutputPort(system, shape=3)
 # Provide the air density as input
 density = constant(system, value=1.29)
 
-# Set up the sums of forces and torques
-force_sum = Sum(system, channel_weights=np.ones(5), output_size=3)
-torque_sum = Sum(system, channel_weights=np.ones(5), output_size=3)
-
 # Connect the engines
 for idx, engine in zip(itertools.count(), engines):
     # Provide voltage and density to the engine
     voltages[idx].connect(engine.voltage)
     density.connect(engine.density)
 
-    # Connect the thruster outputs to the respective sum nodes
-    engine.thrust_vector.connect(force_sum.inputs[idx])
-    engine.torque_vector.connect(torque_sum.inputs[idx])
-
 # We consider gravity and a possible counter torque that need to be compensated
 # by thrust and torque
 gravity_source = constant(system, value=np.r_[0, 0, 1.5*9.81])
 counter_torque = constant(system, value=np.r_[0, 0, 0])
 
-# Connect these to the force and torque sums
-gravity_source.connect(force_sum.inputs[-1])
-counter_torque.connect(torque_sum.inputs[-1])
+# Determine the sum of forces and torques
+forces_sum = sum_signal(system,
+                        [engine.thrust_vector for engine in engines]+
+                        [gravity_source])
+torques_sum = sum_signal(system,
+                         [engine.torque_vector for engine in engines]+
+                         [counter_torque])
 
 # Connect the force and torque sums to the respective outputs
-force_output.connect(force_sum.output)
-torque_output.connect(torque_sum.output)
+force_output.connect(forces_sum)
+torque_output.connect(torques_sum)
 
 # Find the steady state of the system
 sol, x0, u0 = find_steady_state(system,

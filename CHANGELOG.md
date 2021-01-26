@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added discrete-time block library, including a zero-order-hold block.
 - Added a user's guide to the documentation.
 - The direction of change for zero-crossing-events can be specified now.
+- Introduced ``sum_signal`` and ``gain`` in ``modypy.linear`` to replace
+  ``Gain`` and ``Sum``
 ### Changed
 - Improved documentation
 - Modified the event system to include clocks and event ports, similar to signal
@@ -20,8 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The ``t_bounds`` parameter of ``run_until`` is now called ``time_boundary``  
 ### Deprecated
 - The ``inputs`` property on the ``DataProvider`` object passed to derivative,
-  signal, event and event handler functions is deprecated and will be removed
-  in a future release.
+  signal, event and event handler functions is deprecated.
+- The ``Gain`` and ``Sum`` blocks in ``modypy.linear`` are deprecated.
 ### Fixed
 - Fixed several issues with the packaging (content type of long description,
   versioning, inclusion of documentation, tests and examples in source package).

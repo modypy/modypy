@@ -6,34 +6,12 @@ import numpy.testing as npt
 
 from modypy.blocks.aerodyn import Propeller, Thruster
 from modypy.blocks.elmech import DCMotor
-from modypy.blocks.linear import Sum
+from modypy.blocks.linear import sum_signal
 from modypy.blocks.sources import constant
 from modypy.blocks.rigid import RigidBody6DOFFlatEarth, DirectCosineToEuler
 from modypy.linearization import find_steady_state
 from modypy.model import System, InputSignal, Evaluator, OutputPort
 from modypy.simulation import Simulator
-
-
-@pytest.mark.parametrize(
-    "channel_weights, output_size, inputs, expected_output",
-    [
-        ([1, 1], 1, [1, -1], [0]),
-        ([1, 2], 2, [[1, 2], [3, 4]], [7, 10]),
-        ([1, 2, 3], 3, [[1, 2, 3], [4, 5, 6], [7, 8, 9]], [30, 36, 42]),
-    ]
-)
-def test_sum_block(channel_weights, output_size, inputs, expected_output):
-    system = System()
-    sum_block = Sum(system,
-                    channel_weights=channel_weights,
-                    output_size=output_size)
-    for idx in range(len(inputs)):
-        input_signal = InputSignal(system, shape=output_size, value=inputs[idx])
-        sum_block.inputs[idx].connect(input_signal)
-
-    evaluator = Evaluator(time=0, system=system)
-    actual_output = evaluator.signals[sum_block.output.signal_slice]
-    npt.assert_almost_equal(actual_output, expected_output)
 
 
 @pytest.mark.parametrize(
@@ -61,7 +39,6 @@ def test_aerodyn_blocks(thrust_coefficient, power_coefficient):
                         direction=1)
     density = constant(system, value=1.29)
     gravity = constant(system, value=[0, 0, 1.5/4*9.81])
-    force_sum = Sum(system, channel_weights=[1, 1], output_size=3)
     voltage = InputSignal(system)
 
     voltage.connect(dcmotor.voltage)
@@ -71,13 +48,14 @@ def test_aerodyn_blocks(thrust_coefficient, power_coefficient):
     propeller.thrust.connect(thruster.scalar_thrust)
     dcmotor.torque.connect(thruster.scalar_torque)
 
-    thruster.thrust_vector.connect(force_sum.inputs[0])
-    gravity.connect(force_sum.inputs[1])
+    force_sum = sum_signal(system,
+                           (thruster.thrust_vector,
+                            gravity))
 
     force_target = OutputPort(system, shape=3)
     torque_target = OutputPort(system, shape=3)
 
-    force_sum.output.connect(force_target)
+    force_sum.connect(force_target)
     thruster.torque_vector.connect(torque_target)
 
     # Determine the steady state

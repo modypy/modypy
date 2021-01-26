@@ -1,4 +1,6 @@
 """Blocks for linear, time-invariant systems"""
+from functools import partial
+
 import numpy as np
 from modypy.model import Block, Port, State, Signal
 
@@ -71,13 +73,15 @@ class LTISystem(Block):
         state = data.states[self.state]
         inputs = data.signals[self.input]
         return (self.output_matrix @ state) \
-            + (self.feed_through_matrix @ inputs)
+               + (self.feed_through_matrix @ inputs)
 
 
 class Gain(Block):
     """A simple linear gain block.
 
     Provides the input scaled by the constant gain as output.
+
+    This class is deprecated. Use ``gain`` instead.
     """
 
     def __init__(self, parent, k):
@@ -100,6 +104,46 @@ class Gain(Block):
         return self.k @ data.signals[self.input]
 
 
+def _gain_function(gain_matrix, input_signal, data):
+    """
+    Calculate the product of the given gain matrix and the value of the signal.
+
+    Args:
+        gain_matrix: The gain (matrix) to apply
+        input_signal: The input signal
+        data: The data provider
+
+    Returns:
+        The product of the gain matrix and the value of the signal
+    """
+
+    return gain_matrix @ data.signals[input_signal]
+
+
+def gain(owner, gain_matrix, input_signal):
+    """
+    Create a signal that represents the product of the given gain matrix and the
+    value of the given input signal.
+
+    Args:
+        owner: The owner of the result signal
+        gain_matrix: The gain matrix
+        input_signal: The input signal to consider
+
+    Returns:
+        A signal that represents the product of the gain matrix and the value of
+        the input signal.
+    """
+
+    # Determine the shape of the output signal
+    output_shape = (gain_matrix @ np.zeros(input_signal.shape)).shape
+    return Signal(owner=owner,
+                  shape=output_shape,
+                  value=partial(_gain_function,
+                                gain_matrix,
+                                input_signal))
+
+
 class Sum(Block):
     """A linear weighted sum block.
 
@@ -109,6 +153,8 @@ class Sum(Block):
 
     The ``channel_weights`` give the factors by which the individual channels
     are weighted in the sum.
+
+    This class is deprecated. Use ``sum_signal`` instead.
     """
 
     def __init__(self,
@@ -139,3 +185,58 @@ class Sum(Block):
         for port_idx in range(len(self.inputs)):
             inputs[port_idx] = data.signals[self.inputs[port_idx]]
         return self.channel_weights @ inputs
+
+
+def _sum_function(signals, gains, data):
+    """
+    Calculate the sum of the values of the given signals multiplied by the
+    given gains.
+
+    Args:
+        signals: A tuple of signals
+        gains: A tuple of gains
+        data: The data provider
+
+    Returns:
+        The sum of the values of the given signals multiplied by the given
+        gains
+    """
+
+    signal_sum = 0
+    for signal, gain in zip(signals, gains):
+        signal_sum = signal_sum + gain * data.signals[signal]
+    return signal_sum
+
+
+def sum_signal(owner, input_signals, gains=None):
+    """
+    Create a signal that represents the sum of the input signals multiplied by
+    the given gains.
+
+    The signals must have the same shape and there must be exactly as many
+    entries in the ``gains`` tuple as there are input signals.
+
+    Args:
+        owner: The owner of the sum signal
+        input_signals: A tuple of input signals
+        gains:  A tuple of gains for the input signals. Optional: Default value
+            is all ones.
+
+    Returns:
+        A signal that represents the sum of the input signals
+    """
+
+    if gains is None:
+        gains = np.ones(len(input_signals))
+
+    shape = input_signals[0].shape
+    if any(signal.shape != shape for signal in input_signals):
+        raise ValueError("The shapes of the input signals do not match")
+    if len(input_signals) != len(gains):
+        raise ValueError("There must be as many gains as there are input signals")
+
+    return Signal(owner=owner,
+                  shape=shape,
+                  value=partial(_sum_function,
+                                input_signals,
+                                gains))
