@@ -13,7 +13,7 @@ from fixtures.models import \
 from modypy.blocks.discrete import zero_order_hold
 from modypy.blocks.linear import LTISystem
 from modypy.blocks.sources import constant
-from modypy.model import Evaluator, System, Clock
+from modypy.model import Evaluator, System, Clock, State
 from modypy.simulation import Simulator
 
 
@@ -212,3 +212,26 @@ def test_clock_handling():
                             reference2)
     npt.assert_almost_equal(simulator.result.signals[:, hold3.signal_slice].flatten(),
                             initial_value)
+
+
+def test_discrete_only():
+    """Test a system with only discrete-time states."""
+
+    system = System()
+    clock = Clock(system,
+                  period=1.0)
+    counter = State(system)
+
+
+    def increase_counter(data):
+        data.states[counter] += 1
+
+    clock.register_listener(increase_counter)
+
+    simulator = Simulator(system, start_time=0.0);
+    assert(simulator.run_until(time_boundary=10.0) is None)
+
+    npt.assert_almost_equal(simulator.result.time,
+                            np.arange(start=0.0, stop=11.0))
+    npt.assert_almost_equal(simulator.result.state[:, counter.state_slice],
+                            np.arange(start=1.0, stop=12.0).reshape(-1, 1))

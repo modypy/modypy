@@ -183,6 +183,12 @@ class Simulator:
         self.event_directions = np.array([event.direction
                                           for event in self.system.events])
 
+        # Check if we have continuous-time states
+        self.have_continuous_time_states = any(
+            state.derivative_function is not None
+            for state in self.system.states
+        )
+
         self.result = SimulationResult(system)
 
         # Set up the state of the system
@@ -244,20 +250,28 @@ class Simulator:
                 and self.clock_queue[0].tick_time < t_bound:
             t_bound = self.clock_queue[0].tick_time
 
-        # Integrate for a single step
-        integrator = self.integrator_constructor(fun=self.state_derivative,
-                                                 t0=self.current_time,
-                                                 y0=self.current_state,
-                                                 t_bound=t_bound,
-                                                 **self.integrator_options)
-        message = integrator.step()
-        if message is not None:
-            return message
+        if self.have_continuous_time_states:
+            # We have at least one continuous time state, so we integrate for a
+            # single step
+            integrator = self.integrator_constructor(fun=self.state_derivative,
+                                                     t0=self.current_time,
+                                                     y0=self.current_state,
+                                                     t_bound=t_bound,
+                                                     **self.integrator_options)
+            message = integrator.step()
+            if message is not None:
+                return message
 
-        # Handle continuous-time events
-        self.handle_continuous_time_events(new_time=integrator.t,
-                                           new_state=integrator.y,
-                                           state_interpolator=integrator.dense_output())
+            # Handle continuous-time events
+            self.handle_continuous_time_events(new_time=integrator.t,
+                                               new_state=integrator.y,
+                                               state_interpolator=integrator.dense_output())
+        else:
+            # We have no continuous states, so simply advance to the
+            # boundary time. We do this to avoid running the integrator on an
+            # all-zero derivative, which at least leads the scipy integrators
+            # to select an unnecessarily small step size.
+            self.current_time = t_bound
 
         # Execute any pending clock ticks
         self.run_clock_ticks()
