@@ -82,6 +82,24 @@ They can be run from the sources using, e.g.,
 Note that some of the examples require ``matplotlib`` to run and display the
 results.
 
+Contributing
+------------
+
+Contributions are welcome! Check out the
+`GitHub Project Page <https://github.com/ralfgerlich/modypy>`_ for issues and
+ideas on how to add to the project.
+
+Contributions must adhere to the following conditions:
+
+- New features must be accompanied by appropriate pytest tests.
+- New features should at least carry Python Docstrings for API documentation
+  following the general style of the existing API documentation.
+- Coding style should adhere to
+  `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_ as per the settings of the
+  ``pylintrc`` file in the project directory.
+- Contributors must accept publishing their contribution under the licensing
+  conditions laid out in the ``LICENSE`` file.
+
 .. toctree::
     :glob:
     :hidden:
