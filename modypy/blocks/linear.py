@@ -2,7 +2,7 @@
 from functools import partial
 
 import numpy as np
-from modypy.model import Block, Port, State, Signal
+from modypy.model import Block, Port, State, Signal, SignalState
 
 
 class LTISystem(Block):
@@ -240,3 +240,32 @@ def sum_signal(owner, input_signals, gains=None):
                   value=partial(_sum_function,
                                 input_signals,
                                 gains))
+
+
+def _integrator_derivative(input_signal, data):
+    """Derivative function for an integrator"""
+
+    return data.signals[input_signal]
+
+
+def integrator(owner, input_signal, initial_condition=None):
+    """
+    Create a state-signal that provides the integrated value of the input signal.
+
+    The resulting signal will have the same shape as the input signal.
+
+    Args:
+        owner: The owner of the integrator
+        input_signal: The input signal to integrate
+        initial_condition: The initial condition of the integrator
+            (default: ``None``)
+
+    Returns:
+        A state-signal that provides the integrated value of the input signal
+    """
+
+    return SignalState(owner,
+                       shape=input_signal.shape,
+                       derivative_function=partial(_integrator_derivative,
+                                                   input_signal),
+                       initial_condition=initial_condition)

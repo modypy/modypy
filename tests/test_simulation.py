@@ -11,7 +11,7 @@ from fixtures.models import \
     damped_oscillator, damped_oscillator_with_events, \
     BouncingBall
 from modypy.blocks.discrete import zero_order_hold
-from modypy.blocks.linear import LTISystem
+from modypy.blocks.linear import LTISystem, integrator
 from modypy.blocks.sources import constant
 from modypy.model import Evaluator, System, Clock, State
 from modypy.simulation import Simulator
@@ -22,11 +22,21 @@ from modypy.simulation import Simulator
 
     first_order_lag_no_input(time_constant=1, initial_value=10),
 
-    damped_oscillator(mass=100, spring_coefficient=1., damping_coefficient=20),  # critically damped
-    damped_oscillator(mass=100, spring_coefficient=0.5, damping_coefficient=20),  # overdamped
-    damped_oscillator(mass=100, spring_coefficient=2., damping_coefficient=20),  # underdamped
+    damped_oscillator(mass=100,
+                      spring_coefficient=1.,
+                      damping_coefficient=20),  # critically damped
+    damped_oscillator(mass=100,
+                      spring_coefficient=0.5,
+                      damping_coefficient=20),  # overdamped
+    damped_oscillator(mass=100,
+                      spring_coefficient=2.,
+                      damping_coefficient=20),  # underdamped
 
-    damped_oscillator_with_events(mass=100, spring_coefficient=2., damping_coefficient=20),  # underdamped
+    damped_oscillator_with_events(mass=100,
+                                  spring_coefficient=2.,
+                                  damping_coefficient=20),  # underdamped
+
+
 ])
 def lti_system_with_reference(request):
     system, lti_system, ref_time = request.param
@@ -228,10 +238,24 @@ def test_discrete_only():
 
     clock.register_listener(increase_counter)
 
-    simulator = Simulator(system, start_time=0.0);
+    simulator = Simulator(system, start_time=0.0)
     assert(simulator.run_until(time_boundary=10.0) is None)
 
     npt.assert_almost_equal(simulator.result.time,
                             np.arange(start=0.0, stop=11.0))
     npt.assert_almost_equal(simulator.result.state[:, counter.state_slice],
                             np.arange(start=1.0, stop=12.0).reshape(-1, 1))
+
+
+def test_integrator():
+    """Test an integrator"""
+
+    system = System()
+    int_input = constant(system, 1.0)
+    int_output = integrator(system, int_input)
+
+    simulator = Simulator(system, start_time=0.0)
+    assert(simulator.run_until(time_boundary=10.0) is None)
+
+    npt.assert_almost_equal(simulator.result.signals[:, int_output.signal_slice].flatten(),
+                            simulator.result.time)
