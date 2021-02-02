@@ -16,6 +16,9 @@ Linear blocks (:mod:`modypy.blocks.linear`)
 Discrete-Time blocks (:mod:`modypy.blocks.discrete`)
     are special blocks for use in discrete-time or mixed systems.
 
+Discontuity blocks (:mod:`modypy.blocks.discont`)
+    are blocks that implement discontinuities.
+
 Electro-mechanical blocks (:mod:`modypy.blocks.elmech`)
     are useful for modelling electro-mechanical systems. The main constituent of
     this module currently is the :class:`modypy.blocks.elmech.DCMotor` class for
