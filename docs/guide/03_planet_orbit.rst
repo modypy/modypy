@@ -1,5 +1,5 @@
-A Planet Orbit
-==============
+Multi-Dimensional States: A Planet Orbit
+========================================
 
 In this exercise we will model the system of a sun and a planet orbiting around
 it. We will model the two-dimensional position and velocity of the planet.

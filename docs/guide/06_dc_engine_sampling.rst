@@ -1,5 +1,5 @@
-Sampling a DC-Engine
-====================
+Discrete-Time: Sampling a DC-Engine
+===================================
 
 In the previous examples in this guide we only used continuous-time simulation.
 However, MoDyPy is also capable of modelling systems that mix continuous-

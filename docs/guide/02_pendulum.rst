@@ -1,5 +1,5 @@
-A Pendulum
-==========
+Multiple States: A Pendulum
+===========================
 
 In this exercise we will model a simple pendulum: A mass suspended by a stiff
 connector from a fixed support. We will model the angle and angular velocity of

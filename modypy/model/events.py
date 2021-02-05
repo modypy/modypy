@@ -1,6 +1,4 @@
 """
-Provides classes for defining events and event ports.
-
 Events are instances in time when some specific condition about the system
 changes. For example, clocks split the domain of the time variable into a
 possibly infinite sequence of continuous and disjoint intervals, each as long

@@ -1,5 +1,5 @@
-A Bouncing Ball
-===============
+Zero-Crossing Events: A Bouncing Ball
+=====================================
 
 So far we have only modeled systems without any discontinuities. Now we want to
 model a bouncing ball without explicitly modelling the elasticity of the ball.

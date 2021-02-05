@@ -1,14 +1,26 @@
 """
-Provides classes for creating ports and signals.
+Values in a model are transported by signals. In MoDyPy signals are always
+real-valued, and may be multi-dimensional.
+
+The value of a signal is defined by a value function, which may depend on the
+value of any system state or signal, which are made accessible by the
+:class:`DataProvider <modypy.model.evaluation.DataProvider>` object passed to it.
+
+Signals differ from states in that they do not have their own memory - although
+they may be based on the values of states, which represent memory.
+
+Ports serve as symbolic placeholders for signals, and may be connected to each
+other and to signals using the ``connect`` method. In fact, each signal is also
+a port.
 """
 import functools
 import operator
-from typing import Union, Sequence
+from typing import Union, Sequence, Tuple
 
 import numpy as np
 
 
-ShapeType = Union[int, Sequence[int]]
+ShapeType = Union[int, Sequence[int], Tuple[int]]
 
 
 class Port:
@@ -82,7 +94,7 @@ class OutputPort(Port):
     """An ``OutputPort`` is a special port that is considered to be an output of
     the system. In simulation or steady-state determination, output ports play
     a special role."""
-    def __init__(self, owner, shape=1):
+    def __init__(self, owner, shape: ShapeType = 1):
         Port.__init__(self, owner, shape)
         self.output_index = self.owner.system.allocate_output_lines(self.size)
         self.owner.system.outputs.append(self)

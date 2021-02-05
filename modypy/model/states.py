@@ -1,5 +1,17 @@
 """
-Provides classes for defining states.
+States represent the memory of a dynamical system. In MoDyPy, states are always
+real-valued, and may be multi-dimensional.
+
+For each state, a derivative function may be defined which describes the
+evolution of the value of the state over time. The value of that derivative
+function may depend on the value of any system state or signal, which are made
+accessible by the :class:`DataProvider <modypy.model.evaluation.DataProvider>`
+object passed to it.
+
+States may also be updated by :mod:`event listeners <modypy.model.events>`.
+
+States are represented as instances of the :class:`State` class. In addition,
+:class:`SignalState` instances are states that are also signals.
 """
 import functools
 import operator
@@ -10,7 +22,15 @@ from modypy.model import Signal
 
 
 class State:
-    """A state describes a portion of the state of a block."""
+    """A state describes a portion of the state of a block.
+
+    Args:
+        owner: The owner of the state
+        derivative_function: The derivative function of the state
+            (Default: 0)
+        shape: The shape of the state (Default: 1)
+        initial_condition: The initial value of the state (Default: 0)
+    """
 
     def __init__(self,
                  owner,
@@ -42,6 +62,7 @@ class State:
 
 class SignalState(State, Signal):
     """A state that also provides itself as an output signal."""
+
     def __init__(self,
                  owner,
                  derivative_function=None,

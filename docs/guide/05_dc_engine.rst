@@ -1,5 +1,5 @@
-A DC-Motor with Propeller
-=========================
+Ports and Blocks: A DC-Motor with Propeller
+===========================================
 
 .. contents::
 

@@ -1,5 +1,5 @@
-A Simple Integrator
-===================
+Single States: A Simple Integrator
+==================================
 
 As our first model, we will describe a simple integrator with a sine wave input.
 As output we should also get a sine wave, just shifted in phase. After this
