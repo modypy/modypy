@@ -1,6 +1,39 @@
 """
 Provides classes for defining events and event ports.
+
+Events are instances in time when some specific condition about the system
+changes. For example, clocks split the domain of the time variable into a
+possibly infinite sequence of continuous and disjoint intervals, each as long
+as a period of the clock. Whenever the continuous time variable leaves one of
+these intervals - and thereby enters the succeeding interval - a clock tick
+occurs.
+
+Similarly, zero-crossing events occur when the sign of a specific event function
+changes. That event function may depend on the time and on the value of signals
+and states.
+
+Listeners are special functions that may change the value of states in the
+system. They may be bound to events, meaning that they are executed whenever the
+respective event occurs. Note that any listener may be bound to multiple events.
+
+As each event may have multiple listeners bound to it, each occurrence of an
+event may lead to multiple listeners being executed. Similarly, multiple events
+may occur at any point in time, also possibly leading to multiple listeners
+being executed.
+
+The order of execution of listeners in this situation is undefined. Thus,
+model developers should make sure that listeners acting on the same parts of the
+state are confluent, i.e., that the final states resulting from different orders
+of execution of listeners are equivalent to each other. What is considered
+`equivalent` may depend on the application.
+
+Further, listeners may change the state in such a way that the sign of the
+event function of a zero-crossing event changes. Thus, one event may lead to the
+occurrence of another, and it is possible that a single event results in an
+endless event loop. Thus, event listeners need to be expressed carefully so that
+they do not trigger any unwanted events.
 """
+
 from abc import ABC
 from math import ceil
 

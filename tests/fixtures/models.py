@@ -125,7 +125,9 @@ class BouncingBall(Block):
                               derivative_function=self.velocity_derivative,
                               initial_condition=initial_velocity)
         self.posy = Signal(self, shape=1, value=self.posy_output)
-        self.ground = ZeroCrossEventSource(self, event_function=self.ground_event)
+        self.ground = ZeroCrossEventSource(self,
+                                           event_function=self.ground_event,
+                                           direction=-1)
         self.ground.register_listener(self.on_ground_event)
         self.gravity = gravity
         self.gamma = gamma

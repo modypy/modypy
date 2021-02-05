@@ -263,9 +263,10 @@ class Simulator:
                 return message
 
             # Handle continuous-time events
-            self.handle_continuous_time_events(new_time=integrator.t,
-                                               new_state=integrator.y,
-                                               state_interpolator=integrator.dense_output())
+            self.handle_continuous_time_events(
+                new_time=integrator.t,
+                new_state=integrator.y,
+                state_interpolator=integrator.dense_output())
         else:
             # We have no continuous states, so simply advance to the
             # boundary time. We do this to avoid running the integrator on an
@@ -319,26 +320,16 @@ class Simulator:
                               state=new_state)
         new_event_values = evaluator.event_values
 
-        # Determine the events for which sign changes occurred and the direction
-        # of the change
-        sign_changed = np.sign(last_event_values) != np.sign(new_event_values)
-        sign_change_direction = np.sign(new_event_values - last_event_values)
+        occurred_events = \
+            self.find_occurred_events(last_event_values, new_event_values)
 
-        # Determine for which events the conditions are met
-        event_occurred = (sign_changed &
-                          ((self.event_directions == 0) |
-                           (self.event_directions == sign_change_direction)))
-
-        event_indices = np.flatnonzero(event_occurred)
-        if len(event_indices) > 0:
-            occurred_event = [self.system.events[idx] for idx in event_indices]
-
+        if len(occurred_events) > 0:
             # Identify the first event that occurred
             first_event, first_event_time = \
                 self.find_first_event(state_interpolator,
                                       last_time,
                                       new_time,
-                                      occurred_event)
+                                      occurred_events)
 
             # We will continue immediately after that event
             self.current_time = first_event_time + 1.E-3
@@ -346,23 +337,49 @@ class Simulator:
             self.current_state = state_interpolator(self.current_time)
 
             # Run the event handlers on the event to update the state
-            self.run_event_listeners(first_event)
+            self.run_event_listeners((first_event,))
         else:
             # No event occurred, so we simply accept the integrator end-point as
             # the next sample point.
             self.current_time = new_time
             self.current_state = new_state
 
+    def find_occurred_events(self, last_event_values, new_event_values):
+        """
+        Determine the events for which sign changes occurred and the direction
+        of the change.
+
+        Args:
+            last_event_values: The old event function values
+            new_event_values: The new event function values
+
+        Returns:
+            A list-like of events that occurred
+        """
+        sign_changed = np.sign(last_event_values) != np.sign(new_event_values)
+        sign_change_direction = np.sign(new_event_values - last_event_values)
+
+        # Determine for which events the conditions are met
+        event_occurred = (sign_changed &
+                          ((self.event_directions == 0) |
+                           (self.event_directions == sign_change_direction)))
+        event_indices = np.flatnonzero(event_occurred)
+        occurred_event = [self.system.events[idx] for idx in event_indices]
+        return occurred_event
+
     def run_clock_ticks(self):
         """Run all the pending clock ticks."""
+
+        # We collect the clocks to tick here and executed all their listeners
+        # later.
+        clocks_to_tick = set()
 
         while (len(self.clock_queue) > 0 and
                self.clock_queue[0].tick_time <= self.current_time):
             tick_entry = heapq.heappop(self.clock_queue)
             clock = tick_entry.clock
 
-            # Execute all the listeners on the clock
-            self.run_event_listeners(clock)
+            clocks_to_tick.add(clock)
 
             try:
                 # Get the next tick for the clock
@@ -377,23 +394,54 @@ class Simulator:
                 # ignore it from now on.
                 pass
 
-    def run_event_listeners(self, event_source):
-        """Run the event listeners on the given event.
+        # Run all the event listeners
+        self.run_event_listeners(clocks_to_tick)
+
+    def run_event_listeners(self, event_sources):
+        """Run the event listeners on the given events.
         """
 
-        update_evaluator = Evaluator(system=self.system,
-                                     time=self.current_time,
-                                     state=self.current_state)
-        state_updater = StateUpdater(update_evaluator)
-        port_provider = PortProvider(update_evaluator)
-        data_provider = DataProvider(time=self.current_time,
-                                     states=state_updater,
-                                     signals=port_provider)
-        for listener in event_source.listeners:
-            listener(data_provider)
+        while len(event_sources) > 0:
+            update_evaluator = Evaluator(system=self.system,
+                                         time=self.current_time,
+                                         state=self.current_state)
+            state_updater = StateUpdater(update_evaluator)
+            port_provider = PortProvider(update_evaluator)
+            data_provider = DataProvider(time=self.current_time,
+                                         states=state_updater,
+                                         signals=port_provider)
 
-        # Update the state
-        self.current_state = state_updater.new_state
+            # Determine the values of all event functions before running the event
+            # listeners.
+            last_event_values = update_evaluator.event_values
+
+            # Collect all listeners associated with the events
+            # Note that we run each listener only once, even if it is associated
+            # with multiple events
+            listeners = set(listener
+                            for event_source in event_sources
+                            for listener in event_source.listeners)
+
+            # Run the event listeners
+            # Note that we do not guarantee any specific order of execution here.
+            # Listeners thus must be written in such a way that their effects are
+            # the same independent of the order in which they are run.
+            for listener in listeners:
+                listener(data_provider)
+
+            # Update the state
+            self.current_state = state_updater.new_state
+
+            # Determine the value of event functions after running the event
+            # listeners
+            post_update_evaluator = Evaluator(system=self.system,
+                                              time=self.current_time,
+                                              state=self.current_state)
+            new_event_values = post_update_evaluator.event_values
+
+            # Determine which events occurred as a result of the changed state
+            event_sources = self.find_occurred_events(last_event_values,
+                                                      new_event_values)
 
     def find_first_event(self,
                          state_trajectory,
