@@ -13,8 +13,8 @@ from fixtures.models import \
 from modypy.blocks.discrete import zero_order_hold
 from modypy.blocks.linear import LTISystem, integrator
 from modypy.blocks.sources import constant
-from modypy.model import Evaluator, System, Clock, State
-from modypy.simulation import Simulator
+from modypy.model import Evaluator, System, Clock, State, ZeroCrossEventSource
+from modypy.simulation import Simulator, ExcessiveEventError
 
 
 @pytest.fixture(params=[
@@ -154,7 +154,7 @@ def test_zero_crossing_event_detection():
                           start_time=0,
                           initial_condition=initial_condition,
                           rootfinder_options=rootfinder_options)
-    message = simulator.run_until(time_boundary=10.0)
+    message = simulator.run_until(time_boundary=8.0)
 
     # Check for successful run
     assert message is None
@@ -169,6 +169,34 @@ def test_zero_crossing_event_detection():
     vy = simulator.result.state[:, bouncing_ball.velocity.state_slice][:, 1]
 
     assert np.sign(vy[idx-1]) != np.sign(vy[idx+1])
+
+    # Check detection of excessive event error
+    with pytest.raises(ExcessiveEventError):
+        simulator.run_until(time_boundary=10.0)
+
+
+def test_excessive_events_second_level():
+    """Test the detection of excessive events when it is introduced by
+    toggling the same event over and over."""
+
+    system = System()
+    state = State(system,
+                  derivative_function=(lambda data: -1),
+                  initial_condition=5)
+    event = ZeroCrossEventSource(system,
+                                 event_function=(lambda data: data.states[state]))
+
+
+    def event_handler(data):
+        """Event handler for the zero-crossing event"""
+        data.states[state] = -data.states[state]
+
+    event.register_listener(event_handler)
+
+    simulator = Simulator(system, start_time=0)
+
+    with pytest.raises(ExcessiveEventError):
+        simulator.run_until(6)
 
 
 def test_clock_handling():

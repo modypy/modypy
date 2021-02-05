@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added discrete-time block library, including a zero-order-hold block.
 - Added a user's guide to the documentation.
 - Added integrator and saturation blocks.
+- Added detection of excessive zero-crossing events.
 - Event listeners can now trigger other zero-crossing events.
 - The direction of change for zero-crossing-events can be specified now.
 - Introduced ``sum_signal`` and ``gain`` in ``modypy.linear`` to replace

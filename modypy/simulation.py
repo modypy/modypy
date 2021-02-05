@@ -28,6 +28,13 @@ DEFAULT_ROOTFINDER_OPTIONS = {
 }
 
 
+class ExcessiveEventError(RuntimeError):
+    """
+    Exception raised when an excessive number of successive events occurs.
+    """
+    pass
+
+
 class SimulationResult:
     """The results provided by a simulation.
 
@@ -128,6 +135,7 @@ class Simulator:
                  system,
                  start_time,
                  initial_condition=None,
+                 max_successive_event_count=1000,
                  integrator_constructor=DEFAULT_INTEGRATOR,
                  integrator_options=None,
                  rootfinder_constructor=DEFAULT_ROOTFINDER,
@@ -168,6 +176,8 @@ class Simulator:
         else:
             self.initial_condition = self.system.initial_condition
 
+        self.max_successive_event_count = max_successive_event_count
+
         self.integrator_constructor = integrator_constructor
         if integrator_options is None:
             self.integrator_options = DEFAULT_INTEGRATOR_OPTIONS
@@ -195,6 +205,9 @@ class Simulator:
         # Set up the state of the system
         self.current_time = self.start_time
         self.current_state = self.initial_condition
+
+        # Reset the count of successive events
+        self.successive_event_count = 0
 
         # Start all the clocks
         self.clock_queue = []
@@ -332,8 +345,13 @@ class Simulator:
                                       new_time,
                                       occurred_events)
 
+            # Check for excessive counts of successive events
+            self.successive_event_count += 1
+            if self.successive_event_count > self.max_successive_event_count:
+                raise ExcessiveEventError()
+
             # We will continue immediately after that event
-            self.current_time = first_event_time + 1.E-3
+            self.current_time = first_event_time + self.rootfinder_options['xtol']
             # Get the state at the event time
             self.current_state = state_interpolator(self.current_time)
 
@@ -344,6 +362,9 @@ class Simulator:
             # the next sample point.
             self.current_time = new_time
             self.current_state = new_state
+
+            # Also, we reset the count of successive events
+            self.successive_event_count = 0
 
     def find_occurred_events(self, last_event_values, new_event_values):
         """
@@ -443,6 +464,12 @@ class Simulator:
             # Determine which events occurred as a result of the changed state
             event_sources = self.find_occurred_events(last_event_values,
                                                       new_event_values)
+
+            if len(event_sources) > 0:
+                # Check for excessive counts of successive events
+                self.successive_event_count += 1
+                if self.successive_event_count > self.max_successive_event_count:
+                    raise ExcessiveEventError()
 
     def find_first_event(self,
                          state_trajectory,
