@@ -3,6 +3,7 @@ Provide classes for simulation.
 """
 import itertools
 import heapq
+from functools import partial
 
 import numpy as np
 import scipy.integrate
@@ -471,20 +472,10 @@ class Simulator:
         event_times = np.empty(len(events_occurred))
 
         for list_index, event in zip(itertools.count(), events_occurred):
-            def objective_function(time):
-                """Determine the value of the event at different points in
-                time.
-                """
-
-                intermediate_state = state_trajectory(time)
-                intermediate_evaluator = Evaluator(system=self.system,
-                                                   time=time,
-                                                   state=intermediate_state)
-                event_value = intermediate_evaluator.get_event_value(event)
-                return event_value
-
             event_times[list_index] = \
-                self.rootfinder_constructor(f=objective_function,
+                self.rootfinder_constructor(f=partial(self.objective_function,
+                                                      state_trajectory,
+                                                      event),
                                             a=start_time,
                                             b=end_time,
                                             **self.rootfinder_options)
@@ -524,6 +515,27 @@ class Simulator:
         evaluator = Evaluator(system=self.system, time=time, state=state)
         state_derivative = evaluator.state_derivative
         return state_derivative
+
+    def objective_function(self, state_trajectory, event, time):
+        """
+        Determine the value of the event at different points in
+        time.
+
+        Args:
+            state_trajectory: A function determining the state at any given time
+            event: The event to consider
+            time: The time for which to evaluate the event function
+
+        Returns:
+            The value of the event function at the given time
+        """
+
+        intermediate_state = state_trajectory(time)
+        intermediate_evaluator = Evaluator(system=self.system,
+                                           time=time,
+                                           state=intermediate_state)
+        event_value = intermediate_evaluator.get_event_value(event)
+        return event_value
 
 
 class StateUpdater:

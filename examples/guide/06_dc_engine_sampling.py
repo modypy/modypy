@@ -4,10 +4,10 @@ generated thrust at regular intervals.
 """
 import matplotlib.pyplot as plt
 
-from modypy.model import System, Signal, SignalState, Block, Port, Clock
 from modypy.blocks.aerodyn import Propeller
 from modypy.blocks.elmech import DCMotor
 from modypy.blocks.sources import constant
+from modypy.model import System, SignalState, Block, Clock
 from modypy.simulation import Simulator
 
 

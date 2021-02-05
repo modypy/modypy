@@ -20,6 +20,7 @@ class Engine(Block):
     """
     An engine block consisting of a propeller and a DC-motor.
     """
+
     def __init__(self,
                  parent,
                  thrust_coefficient, power_coefficient, diameter,
@@ -84,7 +85,7 @@ parameters = {
     'moment_of_inertia': 5.284E-6,
     'thrust_coefficient': thrust_coeff,
     'power_coefficient': torque_coeff,
-    'diameter': 8*25.4E-3
+    'diameter': 8 * 25.4E-3
 }
 
 # Set up the positions of the engines
@@ -138,15 +139,15 @@ for idx, engine in zip(itertools.count(), engines):
 
 # We consider gravity and a possible counter torque that need to be compensated
 # by thrust and torque
-gravity_source = constant(system, value=np.r_[0, 0, 1.5*9.81])
+gravity_source = constant(system, value=np.r_[0, 0, 1.5 * 9.81])
 counter_torque = constant(system, value=np.r_[0, 0, 0])
 
 # Determine the sum of forces and torques
 forces_sum = sum_signal(system,
-                        [engine.thrust_vector for engine in engines]+
+                        [engine.thrust_vector for engine in engines] +
                         [gravity_source])
 torques_sum = sum_signal(system,
-                         [engine.torque_vector for engine in engines]+
+                         [engine.torque_vector for engine in engines] +
                          [counter_torque])
 
 # Connect the force and torque sums to the respective outputs

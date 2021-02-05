@@ -73,7 +73,7 @@ class LTISystem(Block):
         state = data.states[self.state]
         inputs = data.signals[self.input]
         return (self.output_matrix @ state) \
-               + (self.feed_through_matrix @ inputs)
+            + (self.feed_through_matrix @ inputs)
 
 
 class Gain(Block):
@@ -203,8 +203,8 @@ def _sum_function(signals, gains, data):
     """
 
     signal_sum = 0
-    for signal, gain in zip(signals, gains):
-        signal_sum = signal_sum + gain * data.signals[signal]
+    for signal, gain_value in zip(signals, gains):
+        signal_sum = signal_sum + gain_value * data.signals[signal]
     return signal_sum
 
 
