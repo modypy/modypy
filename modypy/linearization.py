@@ -46,8 +46,8 @@ def find_steady_state(system,
       **kwargs:
 
     Returns:
-      An `scipy.optimize.OptimizeResult` object and the state vector at
-        which the steady state occurs
+      An `scipy.optimize.OptimizeResult` object, the state vector and the input
+        values at which the steady state occurs
     """
 
     if system.num_inputs > system.num_outputs:

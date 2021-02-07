@@ -186,7 +186,6 @@ def test_excessive_events_second_level():
     event = ZeroCrossEventSource(system,
                                  event_function=(lambda data: data.states[state]))
 
-
     def event_handler(data):
         """Event handler for the zero-crossing event"""
         data.states[state] = -data.states[state]
