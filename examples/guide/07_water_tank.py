@@ -6,7 +6,7 @@ import numpy as np
 from modypy.model import System, SignalState, InputSignal, OutputPort
 from modypy.blocks.sources import constant
 from modypy.blocks.linear import sum_signal
-from modypy.linearization import find_steady_state
+from modypy.linearization import find_steady_state, system_jacobian
 
 # Constants
 G = 9.81    # Gravity
@@ -50,3 +50,15 @@ print("Steady state inflow: %f" % steady_inputs[inflow_velocity.input_slice])
 print("Theoretical state state inflow: %f" % (
     np.sqrt(2*G*TARGET_HEIGHT)*A2/A1
 ))
+
+# Find the system jacobian at the steady state
+jac_A, jac_B, jac_C, jac_D = system_jacobian(system,
+                                             time=0,
+                                             x_ref=steady_state,
+                                             u_ref=steady_inputs,
+                                             single_matrix=False)
+print("Linearization at steady-state point:")
+print("A=%s" % jac_A)
+print("B=%s" % jac_B)
+print("C=%s" % jac_C)
+print("D=%s" % jac_D)
