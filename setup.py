@@ -13,7 +13,6 @@ setuptools.setup(
     long_description_content_type="text/x-rst",
     url="https://github.com/ralfgerlich/modypy",
     license="BSD 2-clause \"Simplified\" License",
-    license_file="LICENCE",
     packages=setuptools.find_packages(),
     project_urls={
         'documentation': 'https://modypy.readthedocs.io/',
