@@ -5,6 +5,8 @@ python:
    - "3.8"
    - "3.9"
    - "3.9-dev"
+git:
+   depth: false
 install:
    - pip install -r requirements-test.txt
    - pip install pytest-cov
