@@ -47,8 +47,17 @@ class Port:
 
     @property
     def signal_slice(self):
-        """A slice object that can be used to index signal vectors"""
+        """A slice object that represents the indices of this port in the
+        signals vector."""
+
         return self.signal.signal_slice
+
+    @property
+    def signal_range(self):
+        """A range object that represents the indices of this port in the
+        signals vector."""
+
+        return self.signal.signal_range
 
     def connect(self, other):
         """Connect this port to another port.
@@ -101,9 +110,16 @@ class OutputPort(Port):
 
     @property
     def output_slice(self):
-        """A slice object that represents the indices of this port in the
+        """A slice object that represents the indices of this output in the
         outputs vector."""
         return slice(self.output_index,
+                     self.output_index+self.size)
+
+    @property
+    def output_range(self):
+        """A range object that represents the indices of this output in the
+        outputs vector."""
+        return range(self.output_index,
                      self.output_index+self.size)
 
 
@@ -127,10 +143,17 @@ class Signal(Port):
 
     @property
     def signal_slice(self):
-        """A slice object that can be used to index signal vectors"""
+        """A slice object that represents the indices of this signal in the
+        signals vector."""
         return slice(self.signal_index,
                      self.signal_index+self.size)
 
+    @property
+    def signal_range(self):
+        """A range object that represents the indices of this signal in the
+        signals vector."""
+        return range(self.signal_index,
+                     self.signal_index+self.size)
 
 class InputSignal(Signal):
     """An ``InputSignal`` is a special kind of signal that is considered an
@@ -143,6 +166,16 @@ class InputSignal(Signal):
 
     @property
     def input_slice(self):
-        """A slice object that can be used to index input vectors"""
+        """A slice object that represents the indices of this input in the
+        inputs vector."""
+
         return slice(self.input_index,
+                     self.input_index+self.size)
+
+    @property
+    def input_range(self):
+        """A range object that represents the indices of this input in the
+        inputs vector."""
+
+        return range(self.input_index,
                      self.input_index+self.size)

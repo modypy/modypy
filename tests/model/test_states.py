@@ -31,6 +31,10 @@ def test_state():
     assert state_c.state_slice == slice(state_c.state_index,
                                         state_c.state_index + state_c.size)
 
+    # Test the range property
+    assert state_c.state_range == range(state_c.state_index,
+                                        state_c.state_index + state_c.size)
+
 
 def test_signal_state():
     """Test the ``SignalState`` class"""

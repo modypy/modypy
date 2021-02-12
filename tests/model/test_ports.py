@@ -77,6 +77,10 @@ def test_output_port():
     assert output_port.output_slice == slice(output_port.output_index,
                                              output_port.output_index+output_port.size)
 
+    # Test the output_range method
+    assert output_port.output_range == range(output_port.output_index,
+                                             output_port.output_index+output_port.size)
+
 
 def test_signal():
     """Test the ``Signal`` class"""
@@ -100,6 +104,11 @@ def test_signal():
                                           signal_a.signal_index+signal_a.size)
     assert port_a.signal_slice == signal_a.signal_slice
 
+    # Test the signal_range method
+    assert signal_a.signal_range == range(signal_a.signal_index,
+                                          signal_a.signal_index+signal_a.size)
+    assert port_a.signal_range == signal_a.signal_range
+
     # Test the connection of ports with the same signal
     port_a.connect(port_b)
 
@@ -112,4 +121,8 @@ def test_input_signal():
 
     # Test the input_slice method
     assert input_signal.input_slice == slice(input_signal.input_index,
+                                             input_signal.input_index+input_signal.size)
+
+    # Test the input_range method
+    assert input_signal.input_range == range(input_signal.input_index,
                                              input_signal.input_index+input_signal.size)

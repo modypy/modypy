@@ -55,8 +55,18 @@ class State:
 
     @property
     def state_slice(self):
-        """A slice that can be used to index state vectors"""
+        """A slice object that represents the indices of this state in the
+        states vector."""
+
         return slice(self.state_index,
+                     self.state_index + self.size)
+
+    @property
+    def state_range(self):
+        """A range object that represents the indices of this state in the
+        states vector."""
+
+        return range(self.state_index,
                      self.state_index + self.size)
 
 
