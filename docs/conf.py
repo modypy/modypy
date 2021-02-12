@@ -48,6 +48,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.imgconverter',
+    'sphinx.ext.intersphinx',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -60,6 +61,14 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # Enable numeric reference for figures
 numfig = True
+
+# Intersphinx mappings
+intersphinx_mapping = {
+    'Python 3': ('https://docs.python.org/3', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
+    'matplotlib': ('https://matplotlib.org', None),
+}
 
 # -- Options for HTML output -------------------------------------------------
 
