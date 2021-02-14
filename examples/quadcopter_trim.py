@@ -12,7 +12,8 @@ from modypy.blocks.aerodyn import Propeller, Thruster
 from modypy.blocks.elmech import DCMotor
 from modypy.blocks.sources import constant
 from modypy.blocks.linear import sum_signal
-from modypy.linearization import find_steady_state, system_jacobian
+from modypy.steady_state import SteadyStateConfiguration, find_steady_state
+from modypy.linearization import system_jacobian
 from modypy.utils.uiuc_db import load_static_propeller
 
 
@@ -150,26 +151,47 @@ torques_sum = sum_signal(system,
                          [engine.torque_vector for engine in engines] +
                          [counter_torque])
 
+# Determine the sum of all currents
+total_current = sum_signal(system,
+                           [engine.dcmotor.current for engine in engines])
+
 # Connect the force and torque sums to the respective outputs
 force_output.connect(forces_sum)
 torque_output.connect(torques_sum)
 
+# Configure the steady-state finder
+steady_state_config = SteadyStateConfiguration(system)
+# Minimize total current
+steady_state_config.objective = total_current
+# Force that the input voltages are non-negative
+steady_state_config.input_bounds[:, 0] = 0
+# Force that currents and speeds are non-negative
+steady_state_config.state_bounds[:, 0] = 0
+# Enforce the total torque to be zero
+steady_state_config.signal_bounds[torques_sum.signal_slice, :] = 0
+# Enforce the total vertical force to be zero
+# Note that we only force the vertical force to zero, as otherwise we'd have
+# too many equality constraints.
+# There are the following free variables
+# - The four voltage inputs
+# - The eight state variables
+# There are the following equality constraints
+# - The eight state derivatives (which are constrained to zero)
+# - The three components of the torque vector
+# - The vertical component of the thrust vector
+steady_state_config.signal_bounds[forces_sum.signal_index+2, :] = 0
+
 # Find the steady state of the system
-sol, x0, u0 = find_steady_state(system,
-                                time=0,
-                                solver_options={
-                                    'maxiter': 500 * (12 + 1),
-                                    'xtol': 1E-15
-                                })
+sol = find_steady_state(steady_state_config)
 
 if sol.success:
     # The function was successful in finding the steady state
     print("Steady state determination was successful")
-    print("\tstates =%s" % x0)
-    print("\tinputs =%s" % u0)
+    print("\tstates =%s" % sol.state)
+    print("\tinputs =%s" % sol.inputs)
 
     # Determine the jacobian of the whole system at the steady state
-    A, B, C, D = system_jacobian(system, 0, x0, u0)
+    A, B, C, D = system_jacobian(system, 0, sol.state, sol.inputs)
     print("A:")
     print(A)
     print("B:")
@@ -180,3 +202,4 @@ if sol.success:
     print(D)
 else:
     print("Steady state determination failed with message=%s" % sol.message)
+    print(sol)
