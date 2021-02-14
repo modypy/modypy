@@ -94,6 +94,9 @@ def find_steady_state(config: SteadyStateConfiguration):
             The state part of the solution
         inputs: ndarray
             The input part of the solution
+        evaluator: modypy.model.evaluation.Evaluator
+            An :class:`Evaluator <modypy.model.evaluation.Evaluator>` object,
+            configured to evaluate the system at the determined steady-state
     """
 
     # Set up the initial estimate
@@ -106,14 +109,14 @@ def find_steady_state(config: SteadyStateConfiguration):
 
     if (~np.isnan(config.signal_bounds)).any():
         # Set up the signal constraint
-        constraints.append(SignalConstraint(config))
+        constraints.append(_SignalConstraint(config))
 
     if config.objective is not None:
         # We have an actual objective function, so we can use the steady-state
         # constraint as actual constraint.
         if any(config.steady_states):
             # Set up the state derivative constraint
-            constraints.append(StateDerivativeConstraint(config))
+            constraints.append(_StateDerivativeConstraint(config))
 
         # Translate the objective function
         if isinstance(config.objective, Port):
@@ -127,7 +130,7 @@ def find_steady_state(config: SteadyStateConfiguration):
         # No objective function was specified, but we can use the steady-state
         # constraint function. The value of this function is intended to be zero,
         # so the minimum value of its square is zero.
-        steady_state_constraint = StateDerivativeConstraint(config)
+        steady_state_constraint = _StateDerivativeConstraint(config)
         objective_function = steady_state_constraint.evaluate_squared
     else:
         # We have neither an objective function to minimize nor do we have any
@@ -146,11 +149,15 @@ def find_steady_state(config: SteadyStateConfiguration):
     result.config = config
     result.state = result.x[:config.system.num_states]
     result.inputs = result.x[config.system.num_states:]
+    result.evaluator = Evaluator(time=config.time,
+                                 system=config.system,
+                                 state=result.state,
+                                 inputs=result.inputs)
 
     return result
 
 
-class StateDerivativeConstraint(opt.NonlinearConstraint):
+class _StateDerivativeConstraint(opt.NonlinearConstraint):
     """Represents the steady-state constraints on the state derivatives"""
 
     def __init__(self, config: SteadyStateConfiguration):
@@ -205,11 +212,12 @@ class StateDerivativeConstraint(opt.NonlinearConstraint):
         return np.sum(np.square(self.evaluate(x)))
 
 
-class SignalConstraint(opt.NonlinearConstraint):
+class _SignalConstraint(opt.NonlinearConstraint):
     """Represents the constraints on signals"""
 
     def __init__(self, config: SteadyStateConfiguration):
         self.config = config
+
         # Signal constraints can be defined on individual signal components.
         # To optimize evaluation, we only evaluate those signals that have at
         # least one of their components constrained.
@@ -229,6 +237,17 @@ class SignalConstraint(opt.NonlinearConstraint):
             chain.from_iterable(signal.signal_range
                                 for signal in self.constrained_signals))
         bounds = self.config.signal_bounds[indices]
+        # Ensure that no nans are in the bounds
+        np.nan_to_num(bounds[:, 0],
+                      posinf=np.inf,
+                      neginf=np.inf,
+                      nan=-np.inf,
+                      copy=False)
+        np.nan_to_num(bounds[:, 1],
+                      posinf=np.inf,
+                      neginf=np.inf,
+                      nan=np.inf,
+                      copy=False)
 
         opt.NonlinearConstraint.__init__(self,
                                          fun=self.evaluate,
