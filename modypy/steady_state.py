@@ -79,7 +79,7 @@ class SteadyStateConfiguration:
                                      fill_value=(np.nan, np.nan))
         # Flags indicating which states need to be steady
         # (by default, all states are steady states)
-        self.steady_states = (True,) * self.system.num_states
+        self.steady_states = [True,] * self.system.num_states
         # Set up the dictionary for solver options
         self.solver_options = dict()
 
@@ -245,12 +245,12 @@ class _SignalConstraint(opt.NonlinearConstraint):
         # Ensure that no nans are in the bounds
         np.nan_to_num(bounds[:, 0],
                       posinf=np.inf,
-                      neginf=np.inf,
+                      neginf=-np.inf,
                       nan=-np.inf,
                       copy=False)
         np.nan_to_num(bounds[:, 1],
                       posinf=np.inf,
-                      neginf=np.inf,
+                      neginf=-np.inf,
                       nan=np.inf,
                       copy=False)
 

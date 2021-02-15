@@ -4,8 +4,6 @@ Steady-state determination for a water tank.
 import numpy as np
 
 from modypy.model import System, SignalState, InputSignal, OutputPort
-from modypy.blocks.sources import constant
-from modypy.blocks.linear import sum_signal
 from modypy.linearization import system_jacobian
 from modypy.steady_state import SteadyStateConfiguration, find_steady_state
 
