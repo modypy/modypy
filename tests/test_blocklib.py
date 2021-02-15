@@ -9,9 +9,9 @@ from modypy.blocks.elmech import DCMotor
 from modypy.blocks.linear import sum_signal
 from modypy.blocks.sources import constant
 from modypy.blocks.rigid import RigidBody6DOFFlatEarth, DirectCosineToEuler
-from modypy.linearization import find_steady_state
-from modypy.model import System, InputSignal, Evaluator, OutputPort
+from modypy.model import System, InputSignal, OutputPort
 from modypy.simulation import Simulator
+from modypy.steady_state import SteadyStateConfiguration, find_steady_state
 
 
 @pytest.mark.parametrize(
@@ -52,25 +52,21 @@ def test_aerodyn_blocks(thrust_coefficient, power_coefficient):
                            (thruster.thrust_vector,
                             gravity))
 
-    force_target = OutputPort(system, shape=3)
-    torque_target = OutputPort(system, shape=3)
-
-    force_sum.connect(force_target)
-    thruster.torque_vector.connect(torque_target)
-
     # Determine the steady state
-    sol, states, inputs = find_steady_state(system=system,
-                                            time=0,
-                                            solver_options={
-                                                'maxiter': 2000
-                                            })
+    steady_state_config = SteadyStateConfiguration(system)
+    # Enforce the sum of forces to be zero
+    steady_state_config.signal_bounds[force_sum.signal_index+2, :] = 0
+    # Ensure that the input voltage is non-negative
+    sol = find_steady_state(steady_state_config)
     assert sol.success
 
-    npt.assert_almost_equal(states, [494.5280238,  22.3374414])
-    npt.assert_almost_equal(inputs, [1.3573938])
+    npt.assert_almost_equal(sol.state, [856.57715753,  67.01693871])
+    npt.assert_almost_equal(sol.inputs, [3.5776728])
 
-    evaluator = Evaluator(system=system, time=0, state=states, inputs=inputs)
-    npt.assert_almost_equal(evaluator.get_port_value(propeller.power), 8.7156812)
+    npt.assert_almost_equal(sol.evaluator.get_port_value(propeller.power),
+                            45.2926865)
+    npt.assert_almost_equal(sol.evaluator.get_port_value(thruster.torque_vector),
+                            [-3.67875  ,  3.67875  , -0.0528764])
 
 
 def test_rigidbody_movement():

@@ -51,6 +51,8 @@ class SteadyStateConfiguration:
             system. The entry ``steady_states[k]`` is a boolean indicating
             whether the state ``k`` shall be steady, i.e. whether its derivative
             shall be zero. By default, all states are set to be steady.
+        solver_options
+            Dictionary with additional keyword options for the solver.
     """
 
     def __init__(self,
@@ -78,6 +80,8 @@ class SteadyStateConfiguration:
         # Flags indicating which states need to be steady
         # (by default, all states are steady states)
         self.steady_states = (True,) * self.system.num_states
+        # Set up the dictionary for solver options
+        self.solver_options = dict()
 
 
 def find_steady_state(config: SteadyStateConfiguration):
@@ -144,7 +148,8 @@ def find_steady_state(config: SteadyStateConfiguration):
                           x0=x0,
                           method="trust-constr",
                           bounds=bounds,
-                          constraints=constraints)
+                          constraints=constraints,
+                          options=config.solver_options)
 
     result.config = config
     result.state = result.x[:config.system.num_states]

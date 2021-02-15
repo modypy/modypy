@@ -1,76 +1,12 @@
 """
-Provides functions to determine the steady state of a system and the jacobi
-matrix for linearizing the system around a steady state.
+Provides functions to determine the jacobi matrix for linearizing the system
+around a given state with specified inputs.
 """
 import numpy as np
 from scipy.optimize import root
 from scipy.misc import central_diff_weights
 
 from modypy.model.evaluation import Evaluator
-
-
-def find_steady_state(system,
-                      time,
-                      method="lm",
-                      solver_options=None,
-                      **kwargs):
-    """Find the constrained steady state of a system.
-
-    A system is said to be in a *steady state* if its state does not change over
-    time. As there maybe multiple steady states, additional constraints may be
-    required.
-
-    These constraints are expressed by enforcing the value of specified signals
-    to be zero. Inputs can be specified by using the ``InputSignal`` class.
-
-    The search begins at the initial values of signals and states.
-
-    Note that for time-dependent systems, ``find_steady_state`` can only
-    identify the steady state at a specific time.
-
-    This function uses ``scipy.optimize.root`` for finding the root of the
-    constraint functions.
-
-    If the search is successful, the values of all input signals in the system
-    will be set to the respective input value identified for the steady state.
-
-    NOTE: This function currently does not honor clocks.
-
-    Args:
-      system: The system to analyze.
-      time: The time at which to determine the steady state. Default: 0
-      method: The solver method to use. Refer to the documentation for
-        `scipy.optimize.root` for more information on the available methods.
-        (Default value = "lm")
-      solver_options: The options to pass to the solver. (Default value = None)
-      **kwargs:
-
-    Returns:
-      An `scipy.optimize.OptimizeResult` object, the state vector and the input
-        values at which the steady state occurs
-    """
-
-    if system.num_inputs > system.num_outputs:
-        raise ValueError(
-            "The system must have at least as many constraints as inputs")
-
-    if system.num_states + system.num_inputs == 0:
-        raise ValueError(
-            "Cannot find steady-state in system without states and inputs")
-
-    initial_value = np.concatenate((system.initial_condition,
-                                    system.initial_input))
-
-    sol = root(fun=(lambda x: _system_function(system, time, x)),
-               x0=initial_value,
-               method=method,
-               options=solver_options,
-               **kwargs)
-
-    states = sol.x[:system.num_states]
-    inputs = sol.x[system.num_states:]
-
-    return sol, states, inputs
 
 
 def system_jacobian(system,
