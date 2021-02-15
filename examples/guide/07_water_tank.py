@@ -31,10 +31,6 @@ def height_derivative(data):
 
 height_state = SignalState(system, derivative_function=height_derivative)
 
-# Configure the height as output for the linearization
-height_output = OutputPort(system)
-height_output.connect(height_state)
-
 # Configure for steady-state determination
 steady_state_config = SteadyStateConfiguration(system)
 # Enforce the inflow to be non-negative
@@ -51,6 +47,10 @@ print("Steady state derivative: %s" % result.evaluator.state_derivative)
 print("Theoretical steady state inflow: %f" % (
     np.sqrt(2*G*TARGET_HEIGHT)*A2/A1
 ))
+
+# Configure the height as output for the linearization
+height_output = OutputPort(system)
+height_output.connect(height_state)
 
 # Find the system jacobian at the steady state
 jac_A, jac_B, jac_C, jac_D = system_jacobian(system,

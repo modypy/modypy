@@ -1,11 +1,10 @@
-import pytest
-
 import numpy as np
 import numpy.testing as npt
+import pytest
 
+from fixtures.models import first_order_lag, first_order_lag_no_input, damped_oscillator
 from modypy.linearization import system_jacobian
 from modypy.model import System, OutputPort
-from fixtures.models import first_order_lag, first_order_lag_no_input, damped_oscillator, lti_gain
 from modypy.steady_state import SteadyStateConfiguration, find_steady_state
 
 

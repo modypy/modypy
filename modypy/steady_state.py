@@ -5,13 +5,13 @@ To determine a steady state, set up a :class:`SteadyStateConfiguration` object
 and pass it to :func:`find_steady_state`.
 """
 from functools import partial
-from itertools import accumulate, chain, islice
-from typing import Union, List
+from itertools import accumulate, chain
+from typing import Union
 
 import numpy as np
 import scipy.optimize as opt
 
-from modypy.model import Evaluator, Port, State, System
+from modypy.model import Evaluator, Port, System
 from modypy.model.evaluation import StateProvider, PortProvider, DataProvider
 
 
@@ -23,7 +23,7 @@ class SteadyStateConfiguration:
             The system for which a steady state analysis shall be carried out
         time
             The system time for which the steady state analysis shall be carried
-            out
+            out.
         objective
             An objective to minimize. This is either `None` (default), a
             callable or a `Port`. If no objective is specified, any steady state
@@ -79,7 +79,7 @@ class SteadyStateConfiguration:
                                      fill_value=(np.nan, np.nan))
         # Flags indicating which states need to be steady
         # (by default, all states are steady states)
-        self.steady_states = [True,] * self.system.num_states
+        self.steady_states = [True, ] * self.system.num_states
         # Set up the dictionary for solver options
         self.solver_options = dict()
 

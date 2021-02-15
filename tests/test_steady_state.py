@@ -1,13 +1,12 @@
 """
 Test the steady-state determination algorithm.
 """
-import pytest
-
 import numpy as np
 import numpy.testing as npt
+import pytest
 
 from modypy.blocks.aerodyn import Propeller
-from modypy.blocks.linear import sum_signal, gain
+from modypy.blocks.linear import sum_signal
 from modypy.blocks.sources import constant
 from modypy.model import System, InputSignal, SignalState, State
 from modypy.steady_state import SteadyStateConfiguration, find_steady_state

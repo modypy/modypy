@@ -12,11 +12,9 @@ In this example we will model the outflow from a water tank and determine the
 amount of inflow necessary to keep the height at a specific level. After this
 example you will know
 
-- how to explicitly model inputs to a system,
-- how to express constraints on specific signals in a system using output ports,
-  and
+- how to explicitly model inputs to a system, and
 - how to use the steady-state determination functionality of `MoDyPy` to find a
-  steady state that fulfills the constraints.
+  steady state that fulfills a given set of constraints.
 
 A Water Tank
 ------------
@@ -64,9 +62,8 @@ create a new system:
     import numpy as np
 
     from modypy.model import System, SignalState, InputSignal, OutputPort
-    from modypy.blocks.sources import constant
-    from modypy.blocks.linear import sum_signal
-    from modypy.linearization import find_steady_state
+    from modypy.linearization import system_jacobian
+    from modypy.steady_state import SteadyStateConfiguration, find_steady_state
 
     # Constants
     G = 9.81    # Gravity
@@ -102,42 +99,48 @@ Now we can define our fill height as a state:
 
     height_state = SignalState(system, derivative_function=height_derivative)
 
-We have one constraint, which is that the height shall be at the value given by
-`TARGET_HEIGHT`. We model this by determining the difference between the current
-and the target height. To tell the steady-state determination algorithm that we
-want this difference to be zero, we declare an
-:class:`OutputPort <modypy.model.port.OutputPort>` and connect it to the signal
-showing the difference:
+Our steady state is characterized by three properties:
+
+- the derivative of the state is zero, i.e. the state would not change over
+  time,
+- the inflow is non-negative, and
+- the height equals `TARGET_HEIGHT`.
+
+To tell the steady-state algorithm about these constraints, we define a
+:class:`SteadyStateConfiguration <modypy.steady_state.SteadyStateConfiguration>`
+instance. This instance is automatically configured in such a way that the
+algorithm searches for a state in which the state derivative is zero. If we
+wanted, we could change that by assigning `False` to the respective entries of
+the `steady_states` property of the configuration object.
+
+To constrain the height we define lower and upper bounds for the value of the
+`height` state. Similarly, we can specify a lower bound for the inflow input.
 
 .. code-block:: python
 
-    # Define the target height
-    target_height = constant(system, TARGET_HEIGHT)
-
-    # Express the output constraint
-    height_delta = sum_signal(system,
-                              input_signals=(height_state, target_height),
-                              gains=(1, -1))
-    height_delta_target = OutputPort(system)
-    height_delta_target.connect(height_delta)
+    # Configure for steady-state determination
+    steady_state_config = SteadyStateConfiguration(system)
+    # Enforce the inflow to be non-negative
+    steady_state_config.input_bounds[inflow_velocity.input_slice, 0] = 0
+    # Enforce the height to equal the target height
+    steady_state_config.state_bounds[height_state.state_slice] = TARGET_HEIGHT
 
 Now our system including its constraints and inputs is defined and we can run
-the steady-state algorithm. The algorithm returns a tuple consisting of
-
-- a :class:`scipy.optimize.OptimizeResult` object showing whether the search
-  converged,
-- an array giving the state at which the steady state situation occurs, and
-- an array giving the values of the input ports for which the steady state
-  situation occurs.
+the steady-state algorithm. The algorithm returns an
+:class:`OptimizeResult <scipy.optimize.OptimizeResult>` object showing whether
+the search converged and if so, providing the state and the input vector which
+satisfy our constraints.
 
 We will print these together with the theoretical steady state of our system:
 
 .. code-block:: python
 
+    result = find_steady_state(steady_state_config)
     print("Target height: %f" % TARGET_HEIGHT)
-    print("Steady state height: %f" % steady_state[height_state.state_slice])
-    print("Steady state inflow: %f" % steady_inputs[inflow_velocity.input_slice])
-    print("Theoretical state state inflow: %f" % (
+    print("Steady state height: %f" % result.state[height_state.state_slice])
+    print("Steady state inflow: %f" % result.inputs[inflow_velocity.input_slice])
+    print("Steady state derivative: %s" % result.evaluator.state_derivative)
+    print("Theoretical steady state inflow: %f" % (
         np.sqrt(2*G*TARGET_HEIGHT)*A2/A1
     ))
 
@@ -147,8 +150,9 @@ Running this code should give us the following output:
 
     Target height: 5.000000
     Steady state height: 5.000000
-    Steady state inflow: 19.809089
-    Theoretical state state inflow: 19.809089
+    Steady state inflow: 19.809153
+    Steady state derivative: [3.22346662e-06]
+    Theoretical steady state inflow: 19.809089
 
 We see that the determined and the theoretical inflow coincide and that the
 height is at the target that we want it to be. Playing around with the target
@@ -158,5 +162,6 @@ height we get different values:
 
     Target height: 7.000000
     Steady state height: 7.000000
-    Steady state inflow: 23.438430
-    Theoretical state state inflow: 23.438430
+    Steady state inflow: 23.439796
+    Steady state derivative: [6.82950784e-05]
+    Theoretical steady state inflow: 23.438430

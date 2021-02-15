@@ -3,7 +3,6 @@ Provides functions to determine the jacobi matrix for linearizing the system
 around a given state with specified inputs.
 """
 import numpy as np
-from scipy.optimize import root
 from scipy.misc import central_diff_weights
 
 from modypy.model.evaluation import Evaluator

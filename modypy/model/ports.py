@@ -155,6 +155,7 @@ class Signal(Port):
         return range(self.signal_index,
                      self.signal_index+self.size)
 
+
 class InputSignal(Signal):
     """An ``InputSignal`` is a special kind of signal that is considered an
     input into the system. In simulation and linearization, input signals play a

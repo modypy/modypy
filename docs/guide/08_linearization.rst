@@ -11,17 +11,27 @@ we will extend our imports:
 
 .. code-block:: python
 
-    from modypy.linearization import find_steady_state, system_jacobian
+    from modypy.linearization import system_jacobian
 
-At the end of our example code, we add a call to the `system_jacobian`-function:
+At the end of our example code, we add an output port to the system that
+represents the output we want to observe. In this case, we want to observe the
+height of the fluid in our tank:
+
+.. code-block:: python
+
+    # Configure the height as output for the linearization
+    height_output = OutputPort(system)
+    height_output.connect(height_state)
+
+Then we call the `system_jacobian`-function:
 
 .. code-block:: python
 
     # Find the system jacobian at the steady state
     jac_A, jac_B, jac_C, jac_D = system_jacobian(system,
                                                  time=0,
-                                                 x_ref=steady_state,
-                                                 u_ref=steady_inputs,
+                                                 x_ref=result.state,
+                                                 u_ref=result.inputs,
                                                  single_matrix=False)
     print("Linearization at steady-state point:")
     print("A=%s" % jac_A)
@@ -35,8 +45,9 @@ Running the example again, we get this output:
 
     Target height: 5.000000
     Steady state height: 5.000000
-    Steady state inflow: 19.809089
-    Theoretical state state inflow: 19.809089
+    Steady state inflow: 19.809153
+    Steady state derivative: [3.22346662e-06]
+    Theoretical steady state inflow: 19.809089
     Linearization at steady-state point:
     A=[[-0.0990504]]
     B=[[0.05]]
@@ -60,5 +71,5 @@ by increasing the inflow.
 
 The matrices :math:`C` and :math:`D` describe the relationship of our state and
 input signals to the value of the output ports.
-Clearly, our output is the height difference, as we defined it, and the inflow
-velocity does not directly influence it.
+Clearly, our output is the height difference, and the inflow velocity does not
+directly influence it.
