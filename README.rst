@@ -8,6 +8,10 @@
     :alt: Build Status
     :target: https://travis-ci.com/ralfgerlich/modypy
 
+.. image:: https://readthedocs.org/projects/modypy/badge/
+    :alt: ReadTheDocs Build Status
+    :target: https://modypy.readthedocs.io/
+
 .. image:: https://codecov.io/gh/ralfgerlich/modypy/branch/master/graph/badge.svg
     :alt: Cove Coverage
     :target: https://codecov.io/gh/ralfgerlich/modypy
