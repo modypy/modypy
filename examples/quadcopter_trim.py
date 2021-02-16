@@ -34,7 +34,12 @@ class Engine(Block):
         self.density = Port(self, shape=1)
 
         # Create the motor
-        self.dcmotor = DCMotor(self, motor_constant, resistance, inductance, moment_of_inertia, initial_omega=1)
+        self.dcmotor = DCMotor(self,
+                               motor_constant,
+                               resistance,
+                               inductance,
+                               moment_of_inertia,
+                               initial_omega=1)
 
         # Create the propeller
         self.propeller = Propeller(self,
@@ -74,19 +79,19 @@ class Engine(Block):
 
 # Import thrust and torque coefficients from the UIUC propeller database
 thrust_coeff, torque_coeff = \
-    load_static_propeller('volume-1/data/apcsf_8x3.8_static_2777rd.txt',
+    load_static_propeller("volume-1/data/apcsf_8x3.8_static_2777rd.txt",
                           interp_options={"bounds_error": False,
                                           "fill_value": "extrapolate"})
 
 # Set up a general parameters vector for all four engines
 parameters = {
-    'motor_constant': 789.E-6,
-    'resistance': 43.3E-3,
-    'inductance': 1.9E-3,
-    'moment_of_inertia': 5.284E-6,
-    'thrust_coefficient': thrust_coeff,
-    'power_coefficient': torque_coeff,
-    'diameter': 8 * 25.4E-3
+    "motor_constant": 789.E-6,
+    "resistance": 43.3E-3,
+    "inductance": 1.9E-3,
+    "moment_of_inertia": 5.284E-6,
+    "thrust_coefficient": thrust_coeff,
+    "power_coefficient": torque_coeff,
+    "diameter": 8 * 25.4E-3
 }
 
 # Set up the positions of the engines
@@ -100,16 +105,24 @@ system = System()
 # Note how the positions and the directions alternate between the engines.
 engines = [
     Engine(system,
-           vector=np.c_[0, 0, -1], arm=np.c_[+POSITION_X, +POSITION_Y, 0], direction=1,
+           vector=np.c_[0, 0, -1],
+           arm=np.c_[+POSITION_X, +POSITION_Y, 0],
+           direction=1,
            **parameters),
     Engine(system,
-           vector=np.c_[0, 0, -1], arm=np.c_[-POSITION_X, +POSITION_Y, 0], direction=-1,
+           vector=np.c_[0, 0, -1],
+           arm=np.c_[-POSITION_X, +POSITION_Y, 0],
+           direction=-1,
            **parameters),
     Engine(system,
-           vector=np.c_[0, 0, -1], arm=np.c_[-POSITION_X, -POSITION_Y, 0], direction=1,
+           vector=np.c_[0, 0, -1],
+           arm=np.c_[-POSITION_X, -POSITION_Y, 0],
+           direction=1,
            **parameters),
     Engine(system,
-           vector=np.c_[0, 0, -1], arm=np.c_[+POSITION_X, -POSITION_Y, 0], direction=-1,
+           vector=np.c_[0, 0, -1],
+           arm=np.c_[+POSITION_X, -POSITION_Y, 0],
+           direction=-1,
            **parameters),
 ]
 

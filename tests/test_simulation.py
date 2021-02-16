@@ -75,26 +75,28 @@ def test_lti_simulation(lti_system_with_reference):
         npt.assert_almost_equal(evaluator.outputs, outputs)
 
     # Determine the system response and state values of the reference system
-    ref_time, ref_output, ref_state = signal.lsim2(ref_system,
-                                                   X0=sys.initial_condition,
-                                                   T=simulator.result.time,
-                                                   U=None,
-                                                   rtol=simulator.integrator_options['rtol'],
-                                                   atol=simulator.integrator_options['atol'])
+    ref_time, ref_output, ref_state = signal.lsim2(
+        ref_system,
+        X0=sys.initial_condition,
+        T=simulator.result.time,
+        U=None,
+        rtol=simulator.integrator_options["rtol"],
+        atol=simulator.integrator_options["atol"])
 
-    # Determine the output values at the simulated times as per the reference value
+    # Determine the output values at the simulated times
+    # as per the reference value
     npt.assert_allclose(ref_time,
                         simulator.result.time,
-                        rtol=simulator.integrator_options['rtol'],
-                        atol=simulator.integrator_options['atol'])
+                        rtol=simulator.integrator_options["rtol"],
+                        atol=simulator.integrator_options["atol"])
     npt.assert_allclose(simulator.result.state,
                         ref_state,
-                        rtol=simulator.integrator_options['rtol']*1E2,
-                        atol=simulator.integrator_options['atol']*1E2)
+                        rtol=simulator.integrator_options["rtol"]*1E2,
+                        atol=simulator.integrator_options["atol"]*1E2)
     npt.assert_allclose(simulator.result.outputs,
                         ref_output.reshape(-1, sys.num_outputs),
-                        rtol=simulator.integrator_options['rtol']*1E2,
-                        atol=simulator.integrator_options['atol']*1E2)
+                        rtol=simulator.integrator_options["rtol"]*1E2,
+                        atol=simulator.integrator_options["atol"]*1E2)
 
 
 class MockupIntegrator:
@@ -146,8 +148,8 @@ def test_zero_crossing_event_detection():
     initial_condition[bouncing_ball.velocity.state_slice] = [vx0, vy0]
     initial_condition[bouncing_ball.position.state_slice] = [x0, y0]
     rootfinder_options = {
-        'xtol': 1.E-9,
-        'maxiter': 1000
+        "xtol": 1.E-9,
+        "maxiter": 1000
     }
 
     simulator = Simulator(system,
@@ -184,7 +186,7 @@ def test_excessive_events_second_level():
                   derivative_function=(lambda data: -1),
                   initial_condition=5)
     event = ZeroCrossEventSource(system,
-                                 event_function=(lambda data: data.states[state]))
+                                 event_function=(lambda d: d.states[state]))
 
     def event_handler(data):
         """Event handler for the zero-crossing event"""
@@ -239,16 +241,20 @@ def test_clock_handling():
 
     time_floor1 = np.floor(simulator.result.time/clock1.period)*clock1.period
     time_floor2 = np.minimum(clock2.end_time,
-                             np.floor(simulator.result.time/clock2.period)*clock2.period)
+                             (np.floor(simulator.result.time/clock2.period) *
+                              clock2.period))
     reference1 = initial_value*np.exp(-time_floor1 / time_constant)
     reference2 = initial_value*np.exp(-time_floor2 / time_constant)
 
-    npt.assert_almost_equal(simulator.result.signals[:, hold1.signal_slice].flatten(),
-                            reference1)
-    npt.assert_almost_equal(simulator.result.signals[:, hold2.signal_slice].flatten(),
-                            reference2)
-    npt.assert_almost_equal(simulator.result.signals[:, hold3.signal_slice].flatten(),
-                            initial_value)
+    npt.assert_almost_equal(
+        simulator.result.signals[:, hold1.signal_slice].flatten(),
+        reference1)
+    npt.assert_almost_equal(
+        simulator.result.signals[:, hold2.signal_slice].flatten(),
+        reference2)
+    npt.assert_almost_equal(
+        simulator.result.signals[:, hold3.signal_slice].flatten(),
+        initial_value)
 
 
 def test_discrete_only():
@@ -266,7 +272,7 @@ def test_discrete_only():
     clock.register_listener(increase_counter)
 
     simulator = Simulator(system, start_time=0.0)
-    assert(simulator.run_until(time_boundary=10.0) is None)
+    assert simulator.run_until(time_boundary=10.0) is None
 
     npt.assert_almost_equal(simulator.result.time,
                             np.arange(start=0.0, stop=11.0))
@@ -282,7 +288,8 @@ def test_integrator():
     int_output = integrator(system, int_input)
 
     simulator = Simulator(system, start_time=0.0)
-    assert(simulator.run_until(time_boundary=10.0) is None)
+    assert simulator.run_until(time_boundary=10.0) is None
 
-    npt.assert_almost_equal(simulator.result.signals[:, int_output.signal_slice].flatten(),
-                            simulator.result.time)
+    npt.assert_almost_equal(
+        simulator.result.signals[:, int_output.signal_slice].flatten(),
+        simulator.result.time)

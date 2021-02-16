@@ -63,10 +63,12 @@ def test_aerodyn_blocks(thrust_coefficient, power_coefficient):
     npt.assert_almost_equal(sol.state, [856.57715753,  67.01693871])
     npt.assert_almost_equal(sol.inputs, [3.5776728])
 
-    npt.assert_almost_equal(sol.evaluator.get_port_value(propeller.power),
-                            45.2926865)
-    npt.assert_almost_equal(sol.evaluator.get_port_value(thruster.torque_vector),
-                            [-3.67875  ,  3.67875  , -0.0528764])
+    npt.assert_almost_equal(
+        sol.evaluator.get_port_value(propeller.power),
+        45.2926865)
+    npt.assert_almost_equal(
+        sol.evaluator.get_port_value(thruster.torque_vector),
+        [-3.67875  ,  3.67875  , -0.0528764])
 
 
 def test_rigidbody_movement():
@@ -128,8 +130,10 @@ def test_rigidbody_defaults():
                                      mass=mass,
                                      moment_of_inertia=moment_of_inertia)
     dcm_to_euler = DirectCosineToEuler(system)
-    thrust = constant(system, value=np.r_[0, 0, 0])
-    moment = constant(system, value=moment_of_inertia @ np.r_[0, 0, math.pi/30**2])
+    thrust = constant(system,
+                      value=np.r_[0, 0, 0])
+    moment = constant(system,
+                      value=moment_of_inertia @ np.r_[0, 0, math.pi/30**2])
 
     thrust.connect(rb_6dof.forces_body)
     moment.connect(rb_6dof.moments_body)

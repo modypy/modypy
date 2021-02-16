@@ -233,7 +233,8 @@ def sum_signal(owner, input_signals, gains=None):
     if any(signal.shape != shape for signal in input_signals):
         raise ValueError("The shapes of the input signals do not match")
     if len(input_signals) != len(gains):
-        raise ValueError("There must be as many gains as there are input signals")
+        raise ValueError("There must be as many gains as there are "
+                         "input signals")
 
     return Signal(owner=owner,
                   shape=shape,
@@ -250,7 +251,8 @@ def _integrator_derivative(input_signal, data):
 
 def integrator(owner, input_signal, initial_condition=None):
     """
-    Create a state-signal that provides the integrated value of the input signal.
+    Create a state-signal that provides the integrated value of the input
+    signal.
 
     The resulting signal will have the same shape as the input signal.
 

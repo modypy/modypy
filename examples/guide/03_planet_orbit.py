@@ -17,7 +17,8 @@ PLANET_ORBIT_TIME = 365.256
 # Define the initial state
 PLANET_VELOCITY = 2 * np.pi * PLANET_ORBIT / PLANET_ORBIT_TIME
 X_0 = np.c_[PLANET_ORBIT, 0]
-V_0 = 0.9*PLANET_VELOCITY * np.c_[np.sin(np.deg2rad(20)), np.cos(np.deg2rad(20))]
+V_0 = 0.9*PLANET_VELOCITY * np.c_[np.sin(np.deg2rad(20)),
+                                  np.cos(np.deg2rad(20))]
 
 # Create the system
 system = System()
@@ -52,7 +53,7 @@ velocity = State(system,
 simulator = Simulator(system,
                       start_time=0.0,
                       integrator_options={
-                          'rtol': 1E-6
+                          "rtol": 1E-6
                       })
 msg = simulator.run_until(time_boundary=PLANET_ORBIT_TIME)
 

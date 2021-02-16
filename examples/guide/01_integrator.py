@@ -49,11 +49,11 @@ else:
     input_line, integrator_line = \
         plt.plot(simulator.result.time,
                  simulator.result.signals[:, input_signal.signal_slice],
-                 'r',
+                 "r",
                  simulator.result.time,
                  simulator.result.state[:, integrator_state.state_slice],
-                 'g')
-    plt.legend((input_line, integrator_line), ('Input', 'Integrator State'))
+                 "g")
+    plt.legend((input_line, integrator_line), ("Input", "Integrator State"))
     plt.title("Integrator")
     plt.xlabel("Time")
     plt.savefig("01_integrator_simulation.png")

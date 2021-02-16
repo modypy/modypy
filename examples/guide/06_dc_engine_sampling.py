@@ -99,11 +99,11 @@ else:
     # Plot the result
     plt.plot(simulator.result.time,
              simulator.result.signals[:, engine.thrust.signal_slice],
-             'r',
+             "r",
              label="Continuous-Time")
     plt.step(simulator.result.time,
              simulator.result.signals[:, sample_state.signal_slice],
-             'g',
+             "g",
              where="post",
              label="Sampled")
     plt.title("Engine with DC-Motor and Static Propeller")

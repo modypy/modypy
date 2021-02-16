@@ -56,10 +56,16 @@ message = sim.run_until(time_boundary=120.0)
 assert message is None
 
 # Plot the Euler angles
-fig_euler, (ax_yaw, ax_pitch, ax_roll) = plt.subplots(nrows=3, sharex='row')
-ax_yaw.plot(sim.result.time, np.rad2deg(sim.result.signals[:, dcm_to_euler.yaw.signal_slice]))
-ax_pitch.plot(sim.result.time, np.rad2deg(sim.result.signals[:, dcm_to_euler.pitch.signal_slice]))
-ax_roll.plot(sim.result.time, np.rad2deg(sim.result.signals[:, dcm_to_euler.roll.signal_slice]))
+fig_euler, (ax_yaw, ax_pitch, ax_roll) = plt.subplots(nrows=3, sharex="row")
+ax_yaw.plot(sim.result.time,
+            np.rad2deg(
+                sim.result.signals[:, dcm_to_euler.yaw.signal_slice]))
+ax_pitch.plot(sim.result.time,
+              np.rad2deg(
+                  sim.result.signals[:,dcm_to_euler.pitch.signal_slice]))
+ax_roll.plot(sim.result.time,
+             np.rad2deg(
+                 sim.result.signals[:, dcm_to_euler.roll.signal_slice]))
 ax_yaw.set_title("Yaw")
 ax_pitch.set_title("Pitch")
 ax_roll.set_title("Roll")

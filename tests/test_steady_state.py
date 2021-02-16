@@ -151,7 +151,7 @@ def test_steady_state(config):
     """Test the find_steady_state function"""
 
     # Adjust solver options
-    config.solver_options['gtol'] = 1E-17
+    config.solver_options["gtol"] = 1E-17
 
     sol = find_steady_state(config)
     assert sol.success is True

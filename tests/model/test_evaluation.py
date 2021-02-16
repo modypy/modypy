@@ -120,7 +120,8 @@ def test_evaluator():
 
 
 def test_evaluator_with_initial_state():
-    """Test the ``Evaluator`` class with an explicitly specified initial state"""
+    """Test the ``Evaluator`` class with an explicitly specified initial
+    state"""
 
     system = System()
     State(system,

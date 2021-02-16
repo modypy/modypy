@@ -74,12 +74,14 @@ def test_output_port():
     output_port = OutputPort(system, shape=(3, 3))
 
     # Test the output_slice method
-    assert output_port.output_slice == slice(output_port.output_index,
-                                             output_port.output_index+output_port.size)
+    assert (output_port.output_slice ==
+            slice(output_port.output_index,
+                  output_port.output_index+output_port.size))
 
     # Test the output_range method
-    assert output_port.output_range == range(output_port.output_index,
-                                             output_port.output_index+output_port.size)
+    assert (output_port.output_range ==
+            range(output_port.output_index,
+                  output_port.output_index+output_port.size))
 
 
 def test_signal():
@@ -120,9 +122,11 @@ def test_input_signal():
     input_signal = InputSignal(system, shape=(3, 3))
 
     # Test the input_slice method
-    assert input_signal.input_slice == slice(input_signal.input_index,
-                                             input_signal.input_index+input_signal.size)
+    assert (input_signal.input_slice ==
+            slice(input_signal.input_index,
+                  input_signal.input_index+input_signal.size))
 
     # Test the input_range method
-    assert input_signal.input_range == range(input_signal.input_index,
-                                             input_signal.input_index+input_signal.size)
+    assert (input_signal.input_range ==
+            range(input_signal.input_index,
+                  input_signal.input_index+input_signal.size))

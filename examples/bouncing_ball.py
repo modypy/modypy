@@ -13,16 +13,23 @@ class BouncingBall(Block):
     """
     Block for modelling a bouncing ball.
 
-    This block has states ``position`` and ``velocity`` with the obvious meaning.
+    This block has states ``position`` and ``velocity`` with the obvious
+    meaning.
 
     The coefficient of restitution ``gamma`` gives the ratio of the final to the
     initial velocity on impact.
 
     The block has a single event which represents the impact on ground by
     monitoring the y-coordinate of the position for sign changes. Upon impact,
-    the y-coordinate is set to be positive and the sign of y-velocity is reversed.
+    the y-coordinate is set to be positive and the sign of y-velocity is
+    reversed.
     """
-    def __init__(self, parent, gravity=-9.81, gamma=0.7, initial_velocity=None, initial_position=None):
+    def __init__(self,
+                 parent,
+                 gravity=-9.81,
+                 gamma=0.7,
+                 initial_velocity=None,
+                 initial_position=None):
         Block.__init__(self, parent)
         self.position = State(self,
                               shape=2,
@@ -59,7 +66,8 @@ class BouncingBall(Block):
     def on_ground_event(self, data):
         """The handler for the ground event"""
         data.states[self.position][1] = abs(data.states[self.position][1])
-        data.states[self.velocity][1] = - self.gamma * data.states[self.velocity][1]
+        data.states[self.velocity][1] = (
+                - self.gamma * data.states[self.velocity][1])
 
 
 # Create a system containing the bouncing ball model

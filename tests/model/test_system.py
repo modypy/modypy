@@ -35,14 +35,16 @@ def test_system():
     assert system.num_states == state_a.size+state_b.size
     assert system.num_events == 2
 
-    # Check the initial condition (this also checks that state indices are disjoint)
+    # Check the initial condition
+    # This also checks that state indices are disjoint.
     initial_condition = system.initial_condition
     npt.assert_almost_equal(initial_condition[state_a.state_slice],
                             state_a.initial_condition.flatten())
     npt.assert_almost_equal(initial_condition[state_b.state_slice],
                             state_b.initial_condition.flatten())
 
-    # Check the initial inputs (this also checks that input indices are disjoint)
+    # Check the initial inputs
+    # This also checks that input indices are disjoint.
     initial_input = system.initial_input
     npt.assert_almost_equal(initial_input[input_c.input_slice],
                             np.atleast_1d(input_c.value).flatten())
@@ -71,4 +73,3 @@ def test_block():
     # Check the system property
     assert block_a.system == system
     assert block_b.system == system
-

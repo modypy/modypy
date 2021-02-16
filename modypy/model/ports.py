@@ -4,7 +4,8 @@ real-valued, and may be multi-dimensional.
 
 The value of a signal is defined by a value function, which may depend on the
 value of any system state or signal, which are made accessible by the
-:class:`DataProvider <modypy.model.evaluation.DataProvider>` object passed to it.
+:class:`DataProvider <modypy.model.evaluation.DataProvider>` object passed to
+it.
 
 Signals differ from states in that they do not have their own memory - although
 they may be based on the values of states, which represent memory.

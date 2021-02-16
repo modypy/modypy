@@ -16,7 +16,7 @@ from modypy.utils.uiuc_db import load_static_propeller
 # Import thrust and torque coefficients from the UIUC propeller database
 thrust_coeff, torque_coeff = \
     load_static_propeller(
-        'volume-1/data/apcsf_8x3.8_static_2777rd.txt',
+        "volume-1/data/apcsf_8x3.8_static_2777rd.txt",
         interp_options={
             "bounds_error": False,
             "fill_value": "extrapolate"

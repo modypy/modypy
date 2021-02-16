@@ -132,8 +132,8 @@ def find_steady_state(config: SteadyStateConfiguration):
                              "a callable")
     elif any(config.steady_states):
         # No objective function was specified, but we can use the steady-state
-        # constraint function. The value of this function is intended to be zero,
-        # so the minimum value of its square is zero.
+        # constraint function. The value of this function is intended to be
+        # zero, so the minimum value of its square is zero.
         steady_state_constraint = _StateDerivativeConstraint(config)
         objective_function = steady_state_constraint.evaluate_squared
     else:
@@ -169,7 +169,8 @@ class _StateDerivativeConstraint(opt.NonlinearConstraint):
         self.config = config
         # Steady-state constraints can be defined on the level of individual
         # state components. To optimize evaluation, we only evaluate derivatives
-        # of those states that have at least one of their components constrained.
+        # of those states that have at least one of their components
+        # constrained.
         self.constrained_states = [
             state for state in self.config.system.states
             if any(self.config.steady_states[state.state_slice])]

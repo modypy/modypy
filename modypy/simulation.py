@@ -351,7 +351,8 @@ class Simulator:
                 raise ExcessiveEventError()
 
             # We will continue immediately after that event
-            self.current_time = first_event_time + self.rootfinder_options['xtol']
+            self.current_time = first_event_time + \
+                                self.rootfinder_options['xtol']
             # Get the state at the event time
             self.current_state = state_interpolator(self.current_time)
 
@@ -433,8 +434,8 @@ class Simulator:
                                          states=state_updater,
                                          signals=port_provider)
 
-            # Determine the values of all event functions before running the event
-            # listeners.
+            # Determine the values of all event functions before running the
+            # event listeners.
             last_event_values = update_evaluator.event_values
 
             # Collect all listeners associated with the events
@@ -445,9 +446,10 @@ class Simulator:
                             for listener in event_source.listeners)
 
             # Run the event listeners
-            # Note that we do not guarantee any specific order of execution here.
-            # Listeners thus must be written in such a way that their effects are
-            # the same independent of the order in which they are run.
+            # Note that we do not guarantee any specific order of execution
+            # here. Listeners thus must be written in such a way that their
+            # effects are the same independent of the order in which they are
+            # run.
             for listener in listeners:
                 listener(data_provider)
 
@@ -468,7 +470,8 @@ class Simulator:
             if len(event_sources) > 0:
                 # Check for excessive counts of successive events
                 self.successive_event_count += 1
-                if self.successive_event_count > self.max_successive_event_count:
+                if (self.successive_event_count >
+                        self.max_successive_event_count):
                     raise ExcessiveEventError()
 
     def find_first_event(self,
