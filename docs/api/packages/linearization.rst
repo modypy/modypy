@@ -1,5 +1,5 @@
-Steady-State Determination and Linearization
-============================================
+Linearization
+=============
 
 .. automodule:: modypy.linearization
     :members:
