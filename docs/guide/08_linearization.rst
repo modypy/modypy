@@ -11,27 +11,34 @@ we will extend our imports:
 
 .. code-block:: python
 
-    from modypy.linearization import system_jacobian
+    from modypy.linearization import system_jacobian,\
+        LinearizationConfiguration,\
+        OutputDescriptor
 
-At the end of our example code, we add an output port to the system that
-represents the output we want to observe. In this case, we want to observe the
-height of the fluid in our tank:
+We set up an instance of :class:`LinearizationConfiguration
+<modypy.linearization.LinearizationConfiguration>` to specify at what point we
+want to perform the linearization and which ports we are interested in as
+outputs:
 
 .. code-block:: python
 
-    # Configure the height as output for the linearization
-    height_output = OutputPort(system)
-    height_output.connect(height_state)
+    # Set up the configuration for finding the system jacobian
+    jacobian_config = LinearizationConfiguration(system,
+                                                 state=result.state,
+                                                 inputs=result.inputs)
+    # We want to have the height as output
+    output_1 = OutputDescriptor(jacobian_config, height_state)
+
+The :class:`OutputDescriptor <modypy.linearization.OutputDescriptor>` objects
+provides us with information about where in the output and feed-through matrices
+the respective output is represented.
 
 Then we call the `system_jacobian`-function:
 
 .. code-block:: python
 
     # Find the system jacobian at the steady state
-    jac_A, jac_B, jac_C, jac_D = system_jacobian(system,
-                                                 time=0,
-                                                 x_ref=result.state,
-                                                 u_ref=result.inputs,
+    jac_A, jac_B, jac_C, jac_D = system_jacobian(jacobian_config,
                                                  single_matrix=False)
     print("Linearization at steady-state point:")
     print("A=%s" % jac_A)

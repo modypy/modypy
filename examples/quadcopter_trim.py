@@ -13,7 +13,7 @@ from modypy.blocks.elmech import DCMotor
 from modypy.blocks.sources import constant
 from modypy.blocks.linear import sum_signal
 from modypy.steady_state import SteadyStateConfiguration, find_steady_state
-from modypy.linearization import system_jacobian
+from modypy.linearization import system_jacobian, LinearizationConfiguration, OutputDescriptor
 from modypy.utils.uiuc_db import load_static_propeller
 
 
@@ -168,10 +168,6 @@ torques_sum = sum_signal(system,
 total_current = sum_signal(system,
                            [engine.dcmotor.current for engine in engines])
 
-# Connect the force and torque sums to the respective outputs
-force_output.connect(forces_sum)
-torque_output.connect(torques_sum)
-
 # Configure the steady-state finder
 steady_state_config = SteadyStateConfiguration(system)
 # Minimize total current
@@ -204,7 +200,14 @@ if sol.success:
     print("\tinputs =%s" % sol.inputs)
 
     # Determine the jacobian of the whole system at the steady state
-    A, B, C, D = system_jacobian(system, 0, sol.state, sol.inputs)
+    jacobi_config = LinearizationConfiguration(system,
+                                               state=sol.state,
+                                               inputs=sol.inputs)
+    # We want to get the total force and torque as outputs
+    force_output = OutputDescriptor(jacobi_config, forces_sum)
+    torque_output = OutputDescriptor(jacobi_config, torques_sum)
+
+    A, B, C, D = system_jacobian(jacobi_config)
     print("A:")
     print(A)
     print("B:")

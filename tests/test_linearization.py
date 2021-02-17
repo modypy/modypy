@@ -3,7 +3,7 @@ import numpy.testing as npt
 import pytest
 
 from fixtures.models import first_order_lag, first_order_lag_no_input, damped_oscillator
-from modypy.linearization import system_jacobian
+from modypy.linearization import system_jacobian, LinearizationConfiguration
 from modypy.model import System, OutputPort
 from modypy.steady_state import SteadyStateConfiguration, find_steady_state
 
@@ -52,12 +52,15 @@ def test_steady_state_linearisation(param, interpolation_order):
     npt.assert_allclose(sol.evaluator.outputs,
                         np.zeros(system.num_outputs))
 
+    # Set up the configuration for linearization
+    jacobian_config = LinearizationConfiguration(system,
+                                                 time=0,
+                                                 state=sol.state,
+                                                 inputs=sol.inputs)
+    jacobian_config.interpolation_order = interpolation_order
+
     # Linearize the system
-    A, B, C, D = system_jacobian(system,
-                                 time=0,
-                                 x_ref=sol.state,
-                                 u_ref=sol.inputs,
-                                 order=interpolation_order)
+    A, B, C, D = system_jacobian(jacobian_config)
 
     # Check the matrices
     npt.assert_almost_equal(A, lti.system_matrix)
@@ -66,11 +69,7 @@ def test_steady_state_linearisation(param, interpolation_order):
     npt.assert_almost_equal(D, lti.feed_through_matrix)
 
     # Get the full jacobian
-    jac = system_jacobian(system,
-                          time=0,
-                          x_ref=sol.state,
-                          u_ref=sol.inputs,
-                          order=interpolation_order,
+    jac = system_jacobian(jacobian_config,
                           single_matrix=True)
     A = jac[:system.num_states, :system.num_states]
     B = jac[:system.num_states, system.num_states:]
@@ -86,6 +85,8 @@ def test_output_only():
     system = System()
     OutputPort(system)
 
+    jacobian_config = LinearizationConfiguration(system)
+
     # Try to linearize the system
     with pytest.raises(ValueError):
-        system_jacobian(system, time=0, x_ref=[], u_ref=[])
+        system_jacobian(jacobian_config)

@@ -4,7 +4,9 @@ Steady-state determination for a water tank.
 import numpy as np
 
 from modypy.model import System, SignalState, InputSignal, OutputPort
-from modypy.linearization import system_jacobian
+from modypy.linearization import system_jacobian,\
+    LinearizationConfiguration,\
+    OutputDescriptor
 from modypy.steady_state import SteadyStateConfiguration, find_steady_state
 
 # Constants
@@ -48,15 +50,15 @@ print("Theoretical steady state inflow: %f" % (
     np.sqrt(2*G*TARGET_HEIGHT)*A2/A1
 ))
 
-# Configure the height as output for the linearization
-height_output = OutputPort(system)
-height_output.connect(height_state)
+# Set up the configuration for finding the system jacobian
+jacobian_config = LinearizationConfiguration(system,
+                                             state=result.state,
+                                             inputs=result.inputs)
+# We want to have the height as output
+output_1 = OutputDescriptor(jacobian_config, height_state)
 
 # Find the system jacobian at the steady state
-jac_A, jac_B, jac_C, jac_D = system_jacobian(system,
-                                             time=0,
-                                             x_ref=result.state,
-                                             u_ref=result.inputs,
+jac_A, jac_B, jac_C, jac_D = system_jacobian(jacobian_config,
                                              single_matrix=False)
 print("Linearization at steady-state point:")
 print("A=%s" % jac_A)
