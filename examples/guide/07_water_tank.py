@@ -3,7 +3,7 @@ Steady-state determination for a water tank.
 """
 import numpy as np
 
-from modypy.model import System, SignalState, InputSignal, OutputPort
+from modypy.model import System, SignalState, InputSignal
 from modypy.linearization import system_jacobian,\
     LinearizationConfiguration,\
     OutputDescriptor

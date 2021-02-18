@@ -7,7 +7,7 @@ import itertools
 
 import numpy as np
 
-from modypy.model import Block, Port, System, InputSignal, OutputPort
+from modypy.model import Block, Port, System, InputSignal
 from modypy.blocks.aerodyn import Propeller, Thruster
 from modypy.blocks.elmech import DCMotor
 from modypy.blocks.sources import constant
@@ -137,10 +137,6 @@ voltages = [
     InputSignal(system, value=0),
     InputSignal(system, value=0),
 ]
-
-# Provide outputs for the forces and torques
-force_output = OutputPort(system, shape=3)
-torque_output = OutputPort(system, shape=3)
 
 # Provide the air density as input
 density = constant(system, value=1.29)

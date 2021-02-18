@@ -19,7 +19,7 @@ class LinearizationConfiguration:
             The system for which the jacobian shall be determined
         time
             The system time for which the jacobian shall be determined
-            out (default: 0)
+            (default: 0)
         state
             The state around which the jacobian shall be determined (default: 0)
         inputs
@@ -59,10 +59,6 @@ class LinearizationConfiguration:
 
         self.outputs = list()
         self.num_outputs = 0
-
-        # Add all the outputs in the system
-        for output in self.system.outputs:
-            OutputDescriptor(self, output)
 
         self.default_step_size = 0.1
         self.interpolation_order = 3

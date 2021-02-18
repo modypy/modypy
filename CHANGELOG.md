@@ -35,6 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The ``inputs`` property on the ``DataProvider`` object passed to derivative,
   signal, event and event handler functions is deprecated.
 - The ``Gain`` and ``Sum`` blocks in ``modypy.linear`` are deprecated.
+### Removed
+- The linearization algorithm does not consider ``OutputPort`` instances
+  anymore.
 ### Fixed
 - Fixed several issues with the packaging (content type of long description,
   versioning, inclusion of documentation, tests and examples in source package).
