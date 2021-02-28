@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.0.0] - 2021-02-28
 ### Added
 - Added this changelog
 - Added clocks as event generators for discrete-time components
@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added minimization objective for steady-state determination
 - Event listeners can now trigger other zero-crossing events
 - The direction of change for zero-crossing-events can now be specified
+- Zero-crossing-events now have a configurable tolerance for the sign-change
 - Introduced ``sum_signal`` and ``gain`` in ``modypy.linear`` to replace
   ``Gain`` and ``Sum``
 ### Changed
