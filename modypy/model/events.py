@@ -142,7 +142,7 @@ class ZeroCrossEventSource(AbstractEventSource):
     monitored and the values of event functions are recorded by the simulator.
     """
 
-    def __init__(self, owner, event_function, direction=0):
+    def __init__(self, owner, event_function, direction=0, tolerance=1E-12):
         """
         Create a new zero-crossing event-source.
 
@@ -150,7 +150,7 @@ class ZeroCrossEventSource(AbstractEventSource):
             owner: The system or block this event belongs to
             event_function: The callable used to calculate the value of the
                 event function
-            direction: The direction of the sign change to consider.
+            direction: The direction of the sign change to consider
                 Possible values:
 
                 ``1``
@@ -161,12 +161,16 @@ class ZeroCrossEventSource(AbstractEventSource):
 
                 ``0`` (default)
                     Consider all changes
+            tolerance: The tolerance around zero
+                Values with an absolute value less than or equal to
+                ``tolerance`` are considered to be zero
         """
 
         AbstractEventSource.__init__(self, owner)
         self.event_function = event_function
         self.direction = direction
         self.event_index = self.owner.system.register_event(self)
+        self.tolerance = tolerance
 
 
 class Clock(AbstractEventSource):

@@ -193,6 +193,8 @@ class Simulator:
         # Collect information about zero-crossing events
         self.event_directions = np.array([event.direction
                                           for event in self.system.events])
+        self.event_tolerances = np.array([event.tolerance
+                                          for event in self.system.events])
 
         # Check if we have continuous-time states
         self.have_continuous_time_states = any(
@@ -379,8 +381,19 @@ class Simulator:
         Returns:
             A list-like of events that occurred
         """
-        sign_changed = np.sign(last_event_values) != np.sign(new_event_values)
-        sign_change_direction = np.sign(new_event_values - last_event_values)
+
+        # Round event values within tolerance towards zero
+        last_event_values_rounded = _round_towards_zero(last_event_values,
+                                                        self.event_tolerances)
+        new_event_values_rounded = _round_towards_zero(new_event_values,
+                                                       self.event_tolerances)
+
+        # Determine sign changes
+        sign_changed = (
+                np.sign(last_event_values_rounded) !=
+                np.sign(new_event_values_rounded))
+        sign_change_direction = np.sign(
+            new_event_values_rounded - last_event_values_rounded)
 
         # Determine for which events the conditions are met
         event_occurred = (sign_changed &
@@ -503,12 +516,13 @@ class Simulator:
 
         for list_index, event in zip(itertools.count(), events_occurred):
             event_times[list_index] = \
-                self.rootfinder_constructor(f=partial(self.objective_function,
-                                                      state_trajectory,
-                                                      event),
-                                            a=start_time,
-                                            b=end_time,
-                                            **self.rootfinder_options)
+                _find_event_time(f=partial(self.objective_function,
+                                           state_trajectory,
+                                           event),
+                                 a=start_time,
+                                 b=end_time,
+                                 tolerance=event.tolerance,
+                                 **self.rootfinder_options)
         minimum_list_index = np.argmin(event_times)
         first_event = events_occurred[minimum_list_index]
         first_event_time = event_times[minimum_list_index]
@@ -572,6 +586,7 @@ class StateUpdater:
     """A ``StateUpdater`` provides access to the states via indexing using the
     ``State`` objects. It also allows the state vector to be updated.
     """
+
     def __init__(self, evaluator):
         self.new_state = evaluator.state.copy()
 
@@ -598,3 +613,65 @@ class TickEntry:
 
     def __lt__(self, other):
         return self.tick_time < other.tick_time
+
+
+def _round_towards_zero(values, tolerances):
+    """
+    Round the given input values towards zero if they are within the respective
+    tolerance from zero.
+
+    Args:
+        values: An nparray containing the values to round
+        tolerances: The tolerances for the individual entries
+
+    Returns:
+        An nparray with the rounded values
+    """
+
+    to_be_rounded = np.abs(values) < tolerances
+    rounded_values = values.copy()
+    rounded_values[to_be_rounded] = 0
+    return rounded_values
+
+
+def _find_event_time(f, a, b, tolerance, xtol=1E-12, maxiter=1000):
+    """
+    Find the time when the sign change occurs.
+
+    Args:
+        f: The event function
+        a: The start of the interval to consider
+        b: The end of the interval to consider
+        tolerance: The tolerance for the event function
+        xtol: The tolerance for the time
+        maxiter: The maximum number of iterations to perform
+
+    Returns:
+        A time at or after the sign change occurs
+    """
+
+    if not (a < b):
+        raise ValueError("The interval to check must be non-empty")
+
+    fa = f(a)
+    fb = f(b)
+
+    fa = 0 if np.abs(fa) < tolerance else fa
+    fb = 0 if np.abs(fb) < tolerance else fb
+
+    if np.sign(fa) == np.sign(fb):
+        raise ValueError("Rounded function value must have different signs at "
+                         "endpoints")
+
+    n = 0
+    diff = b-a
+    while n < maxiter and diff > xtol:
+        diff /= 2
+        m = a + diff
+        fm = f(m)
+        fm = 0 if np.abs(fm) < tolerance else fm
+        if np.sign(fm) == np.sign(fa):
+            # The sign change happens after m
+            a = m
+        n += 1
+    return a

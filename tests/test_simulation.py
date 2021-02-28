@@ -14,7 +14,7 @@ from modypy.blocks.discrete import zero_order_hold
 from modypy.blocks.linear import LTISystem, integrator
 from modypy.blocks.sources import constant
 from modypy.model import Evaluator, System, Clock, State, ZeroCrossEventSource
-from modypy.simulation import Simulator, ExcessiveEventError
+from modypy.simulation import Simulator, ExcessiveEventError, _find_event_time
 
 
 @pytest.fixture(params=[
@@ -293,3 +293,18 @@ def test_integrator():
     npt.assert_almost_equal(
         simulator.result.signals[:, int_output.signal_slice].flatten(),
         simulator.result.time)
+
+
+def test_find_event_empty():
+    """Test the _find_event_time function with an empty interval"""
+
+    with pytest.raises(ValueError):
+        _find_event_time(None, a=-1, b=-2, tolerance=1E-12)
+
+
+def test_find_event_no_change():
+    """Test the _find_event_time function with a function that does not
+    change sign in the given interval"""
+
+    with pytest.raises(ValueError):
+        _find_event_time(np.sin, a=np.pi/8, b=np.pi/4, tolerance=1E-12)
