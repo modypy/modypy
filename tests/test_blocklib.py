@@ -9,7 +9,7 @@ from modypy.blocks.elmech import DCMotor
 from modypy.blocks.linear import sum_signal
 from modypy.blocks.sources import constant
 from modypy.blocks.rigid import RigidBody6DOFFlatEarth, DirectCosineToEuler
-from modypy.model import System, InputSignal, OutputPort
+from modypy.model import System, InputSignal
 from modypy.simulation import Simulator
 from modypy.steady_state import SteadyStateConfiguration, find_steady_state
 
@@ -95,30 +95,23 @@ def test_rigidbody_movement():
 
     rb_6dof.dcm.connect(dcm_to_euler.dcm)
 
-    yaw_output = OutputPort(system)
-    pitch_output = OutputPort(system)
-    roll_output = OutputPort(system)
-
-    pos_output = OutputPort(system, shape=3)
-
-    dcm_to_euler.yaw.connect(yaw_output)
-    dcm_to_euler.pitch.connect(pitch_output)
-    dcm_to_euler.roll.connect(roll_output)
-    rb_6dof.position_earth.connect(pos_output)
-
     sim = Simulator(system, start_time=0)
     message = sim.run_until(time_boundary=30.0)
 
     assert message is None
 
-    npt.assert_almost_equal(sim.result.outputs[-1][yaw_output.output_slice],
-                            math.pi/2)
-    npt.assert_almost_equal(sim.result.outputs[-1][pitch_output.output_slice],
-                            0)
-    npt.assert_almost_equal(sim.result.outputs[-1][roll_output.output_slice],
-                            0)
-    npt.assert_almost_equal(sim.result.outputs[-1][pos_output.output_slice],
-                            [r, r, 0])
+    npt.assert_almost_equal(
+        sim.result.signals[-1][dcm_to_euler.yaw.signal_slice],
+        math.pi/2)
+    npt.assert_almost_equal(
+        sim.result.signals[-1][dcm_to_euler.pitch.signal_slice],
+        0)
+    npt.assert_almost_equal(
+        sim.result.signals[-1][dcm_to_euler.roll.signal_slice],
+        0)
+    npt.assert_almost_equal(
+        sim.result.signals[-1][rb_6dof.position_earth.signal_slice],
+        [r, r, 0])
 
 
 def test_rigidbody_defaults():
@@ -140,27 +133,23 @@ def test_rigidbody_defaults():
 
     rb_6dof.dcm.connect(dcm_to_euler.dcm)
 
-    yaw_output = OutputPort(system)
-    pitch_output = OutputPort(system)
-    roll_output = OutputPort(system)
-
-    pos_output = OutputPort(system, shape=3)
-
-    dcm_to_euler.yaw.connect(yaw_output)
-    dcm_to_euler.pitch.connect(pitch_output)
-    dcm_to_euler.roll.connect(roll_output)
-    rb_6dof.position_earth.connect(pos_output)
-
     sim = Simulator(system, start_time=0)
     message = sim.run_until(time_boundary=30.0)
 
     assert message is None
 
-    npt.assert_almost_equal(sim.result.outputs[-1][yaw_output.output_slice],
-                            math.pi/2)
-    npt.assert_almost_equal(sim.result.outputs[-1][pitch_output.output_slice],
-                            0)
-    npt.assert_almost_equal(sim.result.outputs[-1][roll_output.output_slice],
-                            0)
-    npt.assert_almost_equal(sim.result.outputs[-1][pos_output.output_slice],
-                            [0, 0, 0])
+    npt.assert_almost_equal(
+        sim.result.signals[-1][dcm_to_euler.yaw.signal_slice],
+        math.pi/2)
+    npt.assert_almost_equal(
+        sim.result.signals[-1][dcm_to_euler.pitch.signal_slice],
+        0)
+    npt.assert_almost_equal(
+        sim.result.signals[-1][dcm_to_euler.roll.signal_slice],
+        0)
+    npt.assert_almost_equal(
+        sim.result.signals[-1][dcm_to_euler.roll.signal_slice],
+        0)
+    npt.assert_almost_equal(
+        sim.result.signals[-1][rb_6dof.position_earth.signal_slice],
+        [0, 0, 0])
