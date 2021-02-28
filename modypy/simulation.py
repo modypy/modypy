@@ -354,7 +354,7 @@ class Simulator:
 
             # We will continue immediately after that event
             self.current_time = first_event_time + \
-                                self.rootfinder_options['xtol']
+                self.rootfinder_options['xtol']
             # Get the state at the event time
             self.current_state = state_interpolator(self.current_time)
 
