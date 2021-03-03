@@ -15,7 +15,7 @@ The basic components of a dynamic system in MoDyPy are
 States represent the internal state of the system, and signals represent the
 values calculated based on the state. Ports can be connected to signals, so that
 reusable blocks with input and output ports can be easily built. For more details,
-refer to the :doc:`Programmer's Guide <guide>` and the
+refer to the :doc:`User's Guide <guide>` and the
 :doc:`API Documentation <api/api>`.
 
 Main Features
@@ -56,7 +56,7 @@ Examples
     Simulation of a DC-motor with propeller
 
 Check out the examples in the ``examples`` directory and the
-:doc:`Programmer's Guide <guide>`, which include:
+:doc:`User's Guide <guide>`, which include:
 
 ``dcmotor.py``
     A simple example using a DC-motor driving a propeller and sampling the

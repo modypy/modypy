@@ -4,6 +4,9 @@
 .. image:: https://img.shields.io/pypi/pyversions/modypy
     :alt: PyPI - Python Version
 
+.. image:: https://img.shields.io/github/license/ralfgerlich/modypy
+    :alt: GitHub
+
 .. image:: https://travis-ci.com/ralfgerlich/modypy.svg?branch=master
     :alt: Build Status
     :target: https://travis-ci.com/ralfgerlich/modypy
@@ -34,7 +37,7 @@ The basic components of a dynamic system in MoDyPy are states and signals.
 States represent the internal state of the system, and signals represent the
 values calculated based on the state. Ports can be connected to signals, so that
 reusable blocks with input and output ports can be easily built. For more
-details refer to the `documentation <https://modypy.readthedocs.io/>`_.
+details refer to the `documentation <https://modypy.org/>`_.
 
 Main Features
 -------------
@@ -75,7 +78,7 @@ Examples
 
 Check out the examples in the
 `examples directory <https://github.com/ralfgerlich/modypy/tree/master/examples>`_
-and the `Programmer's Guide <https://modypy.readthedocs.io/>`_. These include:
+and the `User's Guide <https://modypy.org/>`_. These include:
 
 `dcmotor.py <https://github.com/ralfgerlich/modypy/tree/master/examples/dcmotor.py>`_
     A simple example using a DC-motor driving a propeller and sampling the

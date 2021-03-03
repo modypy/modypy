@@ -1,5 +1,5 @@
-Programmer's Guide
-==================
+User's Guide
+============
 
 Before you start diving into the details of programming systems and blocks, have
 a look at the :doc:`mathematical background of dynamical systems <math>`, if you
