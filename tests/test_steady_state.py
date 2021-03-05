@@ -30,8 +30,8 @@ def water_tank_model(inflow_area=0.01,
     def height_derivative(data):
         """Calculate the time derivative of the height"""
 
-        return (inflow_area * data.signals[inflow_velocity]
-                - outflow_area * np.sqrt(2 * g * data.states[height_state])
+        return (inflow_area * inflow_velocity(data)
+                - outflow_area * np.sqrt(2 * g * height_state(data))
                 ) / tank_area
 
     height_state = SignalState(system, derivative_function=height_derivative)
@@ -63,11 +63,11 @@ def propeller_model(thrust_coefficient=0.09,
 
     def speed_1_dt(data):
         """Derivative of the speed of the first propeller"""
-        return data.signals[torque_1] / (2 * np.pi * moment_of_inertia)
+        return torque_1(data) / (2 * np.pi * moment_of_inertia)
 
     def speed_2_dt(data):
         """Derivative of the speed of the second propeller"""
-        return data.signals[torque_2] / (2 * np.pi * moment_of_inertia)
+        return torque_2(data) / (2 * np.pi * moment_of_inertia)
 
     speed_1 = SignalState(system,
                           derivative_function=speed_1_dt)
@@ -113,12 +113,12 @@ def pendulum(length=1):
     def omega_dt(data):
         """Calculate the acceleration of the pendulum"""
 
-        return np.sin(data.states[phi]) * g / length
+        return np.sin(phi(data)) * g / length
 
     def phi_dt(data):
         """Calculate the velocity of the pendulum"""
 
-        return data.states[omega]
+        return omega(data)
 
     omega = State(system,
                   derivative_function=omega_dt)
@@ -128,8 +128,8 @@ def pendulum(length=1):
     # Set up a steady-state configuration
     config = SteadyStateConfiguration(system)
     # Minimize the total energy
-    config.objective = (lambda data: (g*length*(1-np.cos(data.states[phi])) +
-                                      (length*data.states[omega])**2))
+    config.objective = (lambda data: (g*length*(1-np.cos(phi(data))) +
+                                      (length*omega(data))**2))
     # No steady states
     config.steady_states = [False, ] * system.num_states
     # Bounds for the angle

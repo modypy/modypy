@@ -80,7 +80,7 @@ def damped_oscillator_with_events(mass=100.,
                     feed_through_matrix=np.zeros((1, 1)),
                     initial_condition=[initial_value, 0])
     ZeroCrossEventSource(owner=system,
-                         event_function=(lambda d: d.states[lti.state][1]))
+                         event_function=(lambda data: lti.state(data)[1]))
     time_constant = 2 * mass / damping_coefficient
 
     src = InputSignal(system)
@@ -133,19 +133,17 @@ class BouncingBall(Block):
         self.gamma = gamma
 
     def position_derivative(self, data):
-        return data.states[self.velocity]
+        return self.velocity(data)
 
     def velocity_derivative(self, data):
         return np.r_[0, self.gravity]
 
     def posy_output(self, data):
-        return data.states[self.position][1]
+        return self.position(data)[1]
 
     def ground_event(self, data):
-        return data.states[self.position][1]
+        return self.position(data)[1]
 
     def on_ground_event(self, data):
-        data.states[self.position] = [data.states[self.position][0],
-                                      abs(data.states[self.position][1])]
-        data.states[self.velocity][1] = (
-                - self.gamma * data.states[self.velocity][1])
+        data.states[self.position][1] = abs(self.position(data)[1])
+        data.states[self.velocity][1] = -self.gamma * self.velocity(data)[1]

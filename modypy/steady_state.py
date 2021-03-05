@@ -319,7 +319,8 @@ def _general_objective_function(config: SteadyStateConfiguration, x):
                           inputs=inputs)
     state_provider = StateProvider(evaluator)
     port_provider = PortProvider(evaluator)
-    data_provider = DataProvider(time=config.time,
+    data_provider = DataProvider(evaluator=evaluator,
+                                 time=config.time,
                                  states=state_provider,
                                  signals=port_provider)
     return config.objective(data_provider)

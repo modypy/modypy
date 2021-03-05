@@ -26,7 +26,7 @@ input_signal = Signal(system,
 # Define the derivative for the integrator
 def integrator_dt(data):
     """Calculate the derivative function for the integrator"""
-    return data.signals[input_signal]
+    return input_signal(data)
 
 
 # Define the integrator state
@@ -48,10 +48,10 @@ else:
     # Plot the result
     input_line, integrator_line = \
         plt.plot(simulator.result.time,
-                 simulator.result.signals[:, input_signal.signal_slice],
+                 input_signal(simulator.result),
                  "r",
                  simulator.result.time,
-                 simulator.result.state[:, integrator_state.state_slice],
+                 integrator_state(simulator.result),
                  "g")
     plt.legend((input_line, integrator_line), ("Input", "Integrator State"))
     plt.title("Integrator")

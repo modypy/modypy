@@ -15,12 +15,15 @@ def test_evaluator():
     """Test the ``Evaluator`` class"""
 
     system = System()
+
+    # This state tests the PortProvider class
     state_a = State(system,
                     shape=(3, 3),
                     initial_condition=[[1, 2, 3],
                                        [4, 5, 6],
                                        [7, 8, 9]],
                     derivative_function=(lambda data: data.signals[input_a]))
+    # This state tests the inputs method on the DataProvider class
     state_a_dep = State(system,
                         shape=(3, 3),
                         initial_condition=[[1, 2, 3],
@@ -31,6 +34,7 @@ def test_evaluator():
                     shape=3,
                     initial_condition=[10, 11, 12],
                     derivative_function=(lambda data: np.r_[13, 14, 15]))
+    # This state tests the states method on the DataProvider class
     state_b1 = State(system,
                      shape=3,
                      derivative_function=(lambda data: data.states[state_b]))
@@ -158,9 +162,9 @@ def test_algebraic_loop_error():
     port_a = Port(system)
     port_b = Port(system)
     signal_a = Signal(system,
-                      value=(lambda data: data.signals[port_b]))
+                      value=(lambda data: port_b(data)))
     signal_b = Signal(system,
-                      value=(lambda data: data.signals[port_a]))
+                      value=(lambda data: port_a(data)))
 
     port_a.connect(signal_a)
     port_b.connect(signal_b)

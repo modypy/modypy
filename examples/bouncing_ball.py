@@ -50,7 +50,7 @@ class BouncingBall(Block):
 
     def position_derivative(self, data):
         """The time-derivative of the position (i.e. the velocity)"""
-        return data.states[self.velocity]
+        return self.velocity(data)
 
     def velocity_derivative(self, data):
         """The time-derivative of the position (i.e. the acceleration)"""
@@ -58,17 +58,17 @@ class BouncingBall(Block):
 
     def posy_output(self, data):
         """The output for the y-position"""
-        return data.states[self.position][1]
+        return self.position(data)[1]
 
     def ground_event(self, data):
         """The event function for impact-detection"""
-        return data.states[self.position][1]
+        return self.position(data)[1]
 
     def on_ground_event(self, data):
         """The handler for the ground event"""
-        data.states[self.position][1] = abs(data.states[self.position][1])
+        data.states[self.position][1] = abs(self.position(data)[1])
         data.states[self.velocity][1] = (
-                - self.gamma * data.states[self.velocity][1])
+                - self.gamma * self.velocity(data)[1])
 
 
 # Create a system containing the bouncing ball model

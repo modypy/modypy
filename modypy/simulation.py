@@ -129,13 +129,21 @@ class SimulationResult:
                                         self.system.num_outputs))]
 
     def get_port_value(self, port: Port):
+        """Determine the value of the given port in this result object"""
+
         return self.signals[:, port.signal_slice].reshape((-1,)+port.shape)
 
     def get_state_value(self, state: State):
+        """Determine the value of the given state in this result object"""
+
         return self.state[:, state.state_slice].reshape((-1,)+state.shape)
 
     def get_event_value(self, event: ZeroCrossEventSource):
+        """Determine the value of the given zero-crossing event in this result
+        object"""
+
         return self.events[:, event.event_index]
+
 
 class Simulator:
     """Simulator for dynamic systems."""
@@ -452,7 +460,8 @@ class Simulator:
                                          state=self.current_state)
             state_updater = StateUpdater(update_evaluator)
             port_provider = PortProvider(update_evaluator)
-            data_provider = DataProvider(time=self.current_time,
+            data_provider = DataProvider(evaluator=update_evaluator,
+                                         time=self.current_time,
                                          states=state_updater,
                                          signals=port_provider)
 

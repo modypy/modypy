@@ -64,16 +64,13 @@ class LTISystem(Block):
 
     def state_derivative(self, data):
         """Calculates the state derivative for the system"""
-        state = data.states[self.state]
-        inputs = data.signals[self.input]
-        return (self.system_matrix @ state) + (self.input_matrix @ inputs)
+        return ((self.system_matrix @ self.state(data))
+                + (self.input_matrix @ self.input(data)))
 
     def output_function(self, data):
         """Calculates the output for the system"""
-        state = data.states[self.state]
-        inputs = data.signals[self.input]
-        return (self.output_matrix @ state) \
-            + (self.feed_through_matrix @ inputs)
+        return ((self.output_matrix @ self.state(data))
+                + (self.feed_through_matrix @ self.input(data)))
 
 
 class Gain(Block):
@@ -101,7 +98,7 @@ class Gain(Block):
 
         Returns: The input multiplied by the gain
         """
-        return self.k @ data.signals[self.input]
+        return self.k @ self.input(data)
 
 
 def _gain_function(gain_matrix, input_signal, data):
@@ -117,7 +114,7 @@ def _gain_function(gain_matrix, input_signal, data):
         The product of the gain matrix and the value of the signal
     """
 
-    return gain_matrix @ data.signals[input_signal]
+    return gain_matrix @ input_signal(data)
 
 
 def gain(owner, gain_matrix, input_signal):
@@ -183,7 +180,7 @@ class Sum(Block):
         """
         inputs = np.empty((len(self.inputs), self.output_size))
         for port_idx in range(len(self.inputs)):
-            inputs[port_idx] = data.signals[self.inputs[port_idx]]
+            inputs[port_idx] = self.inputs[port_idx](data)
         return self.channel_weights @ inputs
 
 
@@ -204,7 +201,7 @@ def _sum_function(signals, gains, data):
 
     signal_sum = 0
     for signal, gain_value in zip(signals, gains):
-        signal_sum = signal_sum + gain_value * data.signals[signal]
+        signal_sum = signal_sum + gain_value * signal(data)
     return signal_sum
 
 
@@ -246,7 +243,7 @@ def sum_signal(owner, input_signals, gains=None):
 def _integrator_derivative(input_signal, data):
     """Derivative function for an integrator"""
 
-    return data.signals[input_signal]
+    return input_signal(data)
 
 
 def integrator(owner, input_signal, initial_condition=None):

@@ -67,24 +67,24 @@ class Propeller(Block):
     def thrust_output(self, data):
         """Function used to calculate the ``thrust`` output
         """
-        speed_rps = data.signals[self.speed_rps]
-        density = data.signals[self.density]
+        speed_rps = self.speed_rps(data)
+        density = self.density(data)
         return self.thrust_coefficient(speed_rps) \
             * density * self.diameter ** 4 * speed_rps ** 2
 
     def torque_output(self, data):
         """Function used to calculate the ``torque`` output
         """
-        speed_rps = data.signals[self.speed_rps]
-        density = data.signals[self.density]
+        speed_rps = self.speed_rps(data)
+        density = self.density(data)
         return self.power_coefficient(speed_rps) / (2 * math.pi) * \
             density * self.diameter ** 5 * speed_rps ** 2
 
     def power_output(self, data):
         """Function used to calculate the ``power`` output
         """
-        speed_rps = data.signals[self.speed_rps]
-        density = data.signals[self.density]
+        speed_rps = self.speed_rps(data)
+        density = self.density(data)
         return self.power_coefficient(speed_rps) * \
             density * self.diameter ** 5 * speed_rps ** 3
 
@@ -140,15 +140,15 @@ class Thruster(Block):
     def thrust_vector_output(self, data):
         """Function used to calculate the ``thrust_vector`` output
         """
-        thrust = data.signals[self.scalar_thrust]
+        thrust = self.scalar_thrust(data)
         thrust_vector = self.vector * thrust
         return thrust_vector
 
     def torque_vector_output(self, data):
         """Function used to calculate the ``torque_vector`` output
         """
-        thrust = data.signals[self.scalar_thrust]
-        torque = data.signals[self.scalar_torque]
+        thrust = self.scalar_thrust(data)
+        torque = self.scalar_torque(data)
 
         thrust_vector = self.vector * thrust
         torque_vector = self.direction * self.vector * torque + \

@@ -83,7 +83,7 @@ sample_clock = Clock(system, period=0.01)
 def update_sample(data):
     """Update the state of the sampler"""
 
-    data.states[sample_state] = data.signals[engine.thrust]
+    data.states[sample_state] = engine.thrust(data)
 
 
 # Register it as event handler on the clock
@@ -98,11 +98,11 @@ if msg is not None:
 else:
     # Plot the result
     plt.plot(simulator.result.time,
-             simulator.result.signals[:, engine.thrust.signal_slice],
+             engine.thrust(simulator.result),
              "r",
              label="Continuous-Time")
     plt.step(simulator.result.time,
-             simulator.result.signals[:, sample_state.signal_slice],
+             sample_state(simulator.result),
              "g",
              where="post",
              label="Sampled")

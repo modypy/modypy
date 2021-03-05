@@ -200,11 +200,11 @@ def test_excessive_events_second_level():
                   derivative_function=(lambda data: -1),
                   initial_condition=5)
     event = ZeroCrossEventSource(system,
-                                 event_function=(lambda d: d.states[state]))
+                                 event_function=(lambda data: state(data)))
 
     def event_handler(data):
         """Event handler for the zero-crossing event"""
-        data.states[state] = -data.states[state]
+        data.states[state] = -state(data)
 
     event.register_listener(event_handler)
 

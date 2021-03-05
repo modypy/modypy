@@ -151,9 +151,10 @@ class Evaluator:
         self.signal_evaluation_stack.append(signal)
 
         # Perform evaluation
-        data = DataProvider(self.time,
-                            StateProvider(self),
-                            PortProvider(self))
+        data = DataProvider(evaluator=self,
+                            time=self.time,
+                            states=StateProvider(self),
+                            signals=PortProvider(self))
         if callable(signal.value):
             signal_value = signal.value(data)
         else:
@@ -191,9 +192,10 @@ class Evaluator:
             return self._state_derivative[state.state_slice]\
                 .reshape(state.shape)
         if state.derivative_function is not None:
-            data = DataProvider(self.time,
-                                StateProvider(self),
-                                PortProvider(self))
+            data = DataProvider(evaluator=self,
+                                time=self.time,
+                                states=StateProvider(self),
+                                signals=PortProvider(self))
             state_derivative = state.derivative_function(data)
             state_derivative = \
                 np.asarray(state_derivative).reshape(state.shape)
@@ -220,9 +222,10 @@ class Evaluator:
 
         if event in self.valid_event_values:
             return self._event_values[event.event_index]
-        data = DataProvider(self.time,
-                            StateProvider(self),
-                            PortProvider(self))
+        data = DataProvider(evaluator=self,
+                            time=self.time,
+                            states=StateProvider(self),
+                            signals=PortProvider(self))
         event_value = event.event_function(data)
         self._event_values[event.event_index] = event_value
         self.valid_event_values.add(event)
@@ -242,10 +245,16 @@ class DataProvider:
         The contents of the current signals, accessed by indexing using the
         ``Port`` objects.
     """
-    def __init__(self, time, states, signals):
+    def __init__(self, evaluator, time, states, signals):
+        self.evaluator = evaluator
         self.time = time
         self.states = states
         self.signals = signals
+
+        # Forward the relevant functions to the evaluator
+        self.get_port_value = evaluator.get_port_value
+        self.get_state_value = evaluator.get_state_value
+        self.get_event_value = evaluator.get_event_value
 
     @property
     def inputs(self):

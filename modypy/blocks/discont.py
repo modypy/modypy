@@ -9,11 +9,7 @@ from modypy.model import Signal
 def _saturation_function(input_signal, lower_limit, upper_limit, data):
     """Function to return a saturated signal"""
 
-    return np.minimum(
-        np.maximum(
-            data.signals[input_signal],
-            lower_limit),
-        upper_limit)
+    return np.minimum(np.maximum(input_signal(data), lower_limit), upper_limit)
 
 
 def saturation(owner, input_signal, lower_limit, upper_limit):
