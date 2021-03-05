@@ -89,6 +89,9 @@ class Port:
                 # the reference of the other port.
                 other.reference.reference = self.reference
 
+    def __call__(self, provider):
+        return provider.get_port_value(self)
+
 
 class MultipleSignalsError(RuntimeError):
     """This exception is raised if two ports shall be connected to each other

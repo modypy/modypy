@@ -35,6 +35,8 @@ they do not trigger any unwanted events.
 from abc import ABC
 from math import ceil
 
+from modypy.model import PortNotConnectedError
+
 
 class MultipleEventSourcesError(RuntimeError):
     """An exception raised when two ports connected to different clocks
@@ -119,6 +121,11 @@ class EventPort:
         """
         self.listeners.add(listener)
 
+    def __call__(self, provider):
+        if self.source is None:
+            raise PortNotConnectedError()
+        return self.source(provider)
+
 
 class AbstractEventSource(EventPort, ABC):
     """An event source defines the circumstances under which an event occurs.
@@ -171,6 +178,9 @@ class ZeroCrossEventSource(AbstractEventSource):
         self.direction = direction
         self.event_index = self.owner.system.register_event(self)
         self.tolerance = tolerance
+
+    def __call__(self, provider):
+        return provider.get_event_value(self)
 
 
 class Clock(AbstractEventSource):

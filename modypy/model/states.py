@@ -69,6 +69,9 @@ class State:
         return range(self.state_index,
                      self.state_index + self.size)
 
+    def __call__(self, provider):
+        return provider.get_state_value(self)
+
 
 class SignalState(State, Signal):
     """A state that also provides itself as an output signal."""

@@ -80,6 +80,6 @@ simulator = Simulator(system, start_time=0.0)
 simulator.run_until(10.0)
 
 # Plot the x- and y-position of the ball against each other
-position = simulator.result.state[:, block.position.state_slice]
+position = block.position(simulator.result)
 plt.plot(position[:, 0], position[:, 1])
 plt.show()

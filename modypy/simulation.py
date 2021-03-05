@@ -9,6 +9,7 @@ import numpy as np
 import scipy.integrate
 import scipy.optimize
 
+from modypy.model import Port, State, ZeroCrossEventSource
 from modypy.model.system import System
 from modypy.model.evaluation import Evaluator, DataProvider, PortProvider
 
@@ -127,6 +128,14 @@ class SimulationResult:
                               np.empty((RESULT_SIZE_EXTENSION,
                                         self.system.num_outputs))]
 
+    def get_port_value(self, port: Port):
+        return self.signals[:, port.signal_slice]
+
+    def get_state_value(self, state: State):
+        return self.state[:, state.state_slice]
+
+    def get_event_value(self, event: ZeroCrossEventSource):
+        return self.events[:, event.event_index]
 
 class Simulator:
     """Simulator for dynamic systems."""

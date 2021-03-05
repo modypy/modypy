@@ -1,11 +1,13 @@
 """
 Tests for the ``modypy.model.events`` module
 """
+from unittest.mock import Mock
+
 import pytest
 
 import numpy.testing as npt
 
-from modypy.model import System
+from modypy.model import System, PortNotConnectedError
 from modypy.model.events import MultipleEventSourcesError, EventPort, Clock
 
 
@@ -135,3 +137,33 @@ def test_tick_generator_stop_iteration():
 
     with pytest.raises(StopIteration):
         next(tick_generator)
+
+
+def test_event_port_call():
+    """Test the call method on EventPort objects"""
+
+    mock_event_source = Mock()
+    mock_event_source.configure_mock(source=mock_event_source,
+                                     reference=mock_event_source)
+    mock_event_source.signal.return_value = mock_event_source
+
+    mock_data = Mock()
+
+    system = System()
+    port = EventPort(system)
+
+    port.connect(mock_event_source)
+
+    port(mock_data)
+
+    mock_event_source.assert_called_with(mock_data)
+
+
+def test_unconnected_event_port_call():
+    """Test the call method for unconnected ports"""
+
+    system = System()
+    port = EventPort(system)
+
+    with pytest.raises(PortNotConnectedError):
+        port(None)
