@@ -31,14 +31,14 @@ class BouncingBall(Block):
                  initial_velocity=None,
                  initial_position=None):
         Block.__init__(self, parent)
-        self.position = State(self,
-                              shape=2,
-                              derivative_function=self.position_derivative,
-                              initial_condition=initial_position)
         self.velocity = State(self,
                               shape=2,
                               derivative_function=self.velocity_derivative,
                               initial_condition=initial_velocity)
+        self.position = State(self,
+                              shape=2,
+                              derivative_function=self.velocity,
+                              initial_condition=initial_position)
         self.posy = Signal(self, shape=1, value=self.posy_output)
         self.ground = ZeroCrossEventSource(self,
                                            event_function=self.ground_event,
@@ -47,10 +47,6 @@ class BouncingBall(Block):
         self.ground.register_listener(self.on_ground_event)
         self.gravity = gravity
         self.gamma = gamma
-
-    def position_derivative(self, data):
-        """The time-derivative of the position (i.e. the velocity)"""
-        return self.velocity(data)
 
     def velocity_derivative(self, data):
         """The time-derivative of the position (i.e. the acceleration)"""

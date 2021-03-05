@@ -25,11 +25,6 @@ system = System()
 
 
 # Define the derivatives
-def position_dt(data):
-    """Calculate the derivative of the position"""
-    return velocity(data)
-
-
 def velocity_dt(data):
     """Calculate the derivative of the velocity"""
     pos = position(data)
@@ -38,16 +33,14 @@ def velocity_dt(data):
 
 
 # Create the states
-position = State(system,
-                 shape=2,
-                 derivative_function=position_dt,
-                 initial_condition=X_0)
-
 velocity = State(system,
                  shape=2,
                  derivative_function=velocity_dt,
                  initial_condition=V_0)
-
+position = State(system,
+                 shape=2,
+                 derivative_function=velocity,
+                 initial_condition=X_0)
 
 # Run a simulation
 simulator = Simulator(system,

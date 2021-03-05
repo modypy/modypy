@@ -20,25 +20,20 @@ system = System()
 
 
 # Define the derivatives of the states
-def alpha_dt(data):
-    """Calculate the derivative of the angle"""
-    return omega(data)
-
-
 def omega_dt(data):
     """Calculate the derivative of the angular velocity"""
     return -GRAVITY/LENGTH * np.sin(alpha(data))
 
 
-# Create the alpha state
-alpha = State(system,
-              derivative_function=alpha_dt,
-              initial_condition=ALPHA_0)
-
 # Create the omega state
 omega = State(system,
               derivative_function=omega_dt,
               initial_condition=OMEGA_0)
+
+# Create the alpha state
+alpha = State(system,
+              derivative_function=omega,
+              initial_condition=ALPHA_0)
 
 # Run a simulation
 simulator = Simulator(system, start_time=0.0)

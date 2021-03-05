@@ -22,17 +22,10 @@ input_signal = Signal(system,
                       shape=1,
                       value=sine_input)
 
-
-# Define the derivative for the integrator
-def integrator_dt(data):
-    """Calculate the derivative function for the integrator"""
-    return input_signal(data)
-
-
 # Define the integrator state
 integrator_state = State(system,
                          shape=1,
-                         derivative_function=integrator_dt,
+                         derivative_function=input_signal,
                          initial_condition=-1)
 
 # Set up a simulation

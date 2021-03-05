@@ -20,22 +20,17 @@ system = System()
 
 
 # The system states
-def height_dt(data):
-    """Calculate the derivative of the height"""
-    return velocity(data)
-
-
 def velocity_dt(data):
     """Calculate the derivative of the vertical speed"""
     return -G
 
 
-height = State(system,
-               derivative_function=height_dt,
-               initial_condition=INITIAL_HEIGHT)
 velocity = State(system,
                  derivative_function=velocity_dt,
                  initial_condition=INITIAL_VELOCITY)
+height = State(system,
+               derivative_function=velocity,
+               initial_condition=INITIAL_HEIGHT)
 
 
 # Define the zero-crossing-event
@@ -61,7 +56,7 @@ bounce_event.register_listener(bounce_event_handler)
 # Run a simulation
 simulator = Simulator(system,
                       start_time=0.0)
-msg = simulator.run_until(time_boundary=10.0)
+msg = simulator.run_until(time_boundary=8.0)
 
 if msg is not None:
     print("Simulation failed with message '%s'" % msg)
