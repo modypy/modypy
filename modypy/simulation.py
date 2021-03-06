@@ -129,10 +129,10 @@ class SimulationResult:
                                         self.system.num_outputs))]
 
     def get_port_value(self, port: Port):
-        return self.signals[:, port.signal_slice]
+        return self.signals[:, port.signal_slice].reshape((-1,)+port.shape)
 
     def get_state_value(self, state: State):
-        return self.state[:, state.state_slice]
+        return self.state[:, state.state_slice].reshape((-1,)+state.shape)
 
     def get_event_value(self, event: ZeroCrossEventSource):
         return self.events[:, event.event_index]
