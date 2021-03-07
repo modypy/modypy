@@ -21,7 +21,7 @@ def test_saturation():
 
     assert message is None
 
-    sine_data = sine_source(simulator.result)
-    saturated_data = saturated_out(simulator.result)
+    sine_data = simulator.result.signals[:, sine_source.signal_slice]
+    saturated_data = simulator.result.signals[:, saturated_out.signal_slice]
     saturated_exp = np.minimum(np.maximum(sine_data, -0.5), 0.6)
     npt.assert_almost_equal(saturated_data, saturated_exp)
