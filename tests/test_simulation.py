@@ -76,17 +76,17 @@ def test_lti_simulation(lti_system_with_reference):
     # Check that states are properly mapped in the result
     for state in sys.states:
         npt.assert_equal(state(simulator.result),
-                         simulator.result.state[:, state.state_slice])
+                         simulator.result[state])
 
     # Check that signals are properly mapped in the result
     for signal in sys.signals:
         npt.assert_equal(signal(simulator.result),
-                         simulator.result.signals[:, signal.signal_slice])
+                         simulator.result[signal])
 
     # Check that events are properly mapped in the result
     for event in sys.events:
         npt.assert_equal(event(simulator.result),
-                         simulator.result.events[:, event.event_index])
+                         simulator.result[event])
 
     # Determine the system response and state values of the reference system
     ref_time, ref_output, ref_state = scipy.signal.lsim2(
@@ -204,7 +204,7 @@ def test_excessive_events_second_level():
 
     def event_handler(data):
         """Event handler for the zero-crossing event"""
-        data.states[state] = -state(data)
+        data[state] = -data[state]
 
     event.register_listener(event_handler)
 

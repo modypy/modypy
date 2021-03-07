@@ -36,7 +36,7 @@ class ZeroOrderHold(Block):
         Args:
           data: The time, states and signals of the system
         """
-        data.states[self.output] = self.input(data)
+        data[self.output] = data[self.input]
 
 
 def zero_order_hold(system, input_port, event_port, initial_condition=None):

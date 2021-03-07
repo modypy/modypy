@@ -101,16 +101,16 @@ def test_rigidbody_movement():
     assert message is None
 
     npt.assert_almost_equal(
-        sim.result.signals[-1][dcm_to_euler.yaw.signal_slice],
+        sim.result[dcm_to_euler.yaw, -1],
         math.pi/2)
     npt.assert_almost_equal(
-        sim.result.signals[-1][dcm_to_euler.pitch.signal_slice],
+        sim.result[dcm_to_euler.pitch, -1],
         0)
     npt.assert_almost_equal(
-        sim.result.signals[-1][dcm_to_euler.roll.signal_slice],
+        sim.result[dcm_to_euler.roll, -1],
         0)
     npt.assert_almost_equal(
-        sim.result.signals[-1][rb_6dof.position_earth.signal_slice],
+        sim.result[rb_6dof.position_earth, -1],
         [r, r, 0])
 
 
@@ -139,17 +139,17 @@ def test_rigidbody_defaults():
     assert message is None
 
     npt.assert_almost_equal(
-        sim.result.signals[-1][dcm_to_euler.yaw.signal_slice],
+        sim.result[dcm_to_euler.yaw, -1],
         math.pi/2)
     npt.assert_almost_equal(
-        sim.result.signals[-1][dcm_to_euler.pitch.signal_slice],
+        sim.result[dcm_to_euler.pitch, -1],
         0)
     npt.assert_almost_equal(
-        sim.result.signals[-1][dcm_to_euler.roll.signal_slice],
+        sim.result[dcm_to_euler.roll, -1],
         0)
     npt.assert_almost_equal(
-        sim.result.signals[-1][dcm_to_euler.roll.signal_slice],
+        sim.result[dcm_to_euler.roll, -1],
         0)
     npt.assert_almost_equal(
-        sim.result.signals[-1][rb_6dof.position_earth.signal_slice],
+        sim.result[rb_6dof.position_earth, -1],
         [0, 0, 0])
