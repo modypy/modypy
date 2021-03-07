@@ -600,6 +600,15 @@ class Simulator:
         return event_value
 
 
+class DataUpdater(DataProvider):
+    def __init__(self, evaluator, time, state, signals):
+        DataProvider.__init__(self, evaluator, time, state, signals)
+
+    def set_state_value(self, state: State, value):
+        """Update the value of the given state"""
+
+        self.states[state] = value
+
 class StateUpdater:
     """A ``StateUpdater`` provides access to the states via indexing using the
     ``State`` objects. It also allows the state vector to be updated.

@@ -204,7 +204,7 @@ def test_excessive_events_second_level():
 
     def event_handler(data):
         """Event handler for the zero-crossing event"""
-        data.states[state] = -state(data)
+        state(data, -state(data))
 
     event.register_listener(event_handler)
 

@@ -69,7 +69,9 @@ class State:
         return range(self.state_index,
                      self.state_index + self.size)
 
-    def __call__(self, provider):
+    def __call__(self, provider, value=None):
+        if value is not None:
+            provider.set_state_value(self, value)
         return provider.get_state_value(self)
 
 
