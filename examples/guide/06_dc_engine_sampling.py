@@ -83,7 +83,7 @@ sample_clock = Clock(system, period=0.01)
 def update_sample(data):
     """Update the state of the sampler"""
 
-    sample_state(data, engine.thrust(data))
+    data.states[sample_state] = engine.thrust(data)
 
 
 # Register it as event handler on the clock

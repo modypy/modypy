@@ -47,8 +47,8 @@ bounce_event = ZeroCrossEventSource(system,
 # Define the event-handler
 def bounce_event_handler(data):
     """Reverse the direction of motion after a bounce"""
-    height(data, np.abs(height(data)))
-    velocity(data, -DELTA*velocity(data))
+    data.states[height] = np.abs(height(data))
+    data.states[velocity] = -DELTA*velocity(data)
 
 
 bounce_event.register_listener(bounce_event_handler)
