@@ -145,6 +145,14 @@ class SimulationResult:
 
         return self.events[:, event.event_index]
 
+    def __getitem(self, item: Union[tuple, Callable]):
+        if isinstance(item, tuple):
+            # Resolve recursively
+            return self[item[0]][item[1:]]
+        else:
+            # Resolve via callable protocol
+            return item(self)
+
 
 class Simulator:
     """Simulator for dynamic systems."""
