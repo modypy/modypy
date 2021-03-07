@@ -43,8 +43,8 @@ steady_state_config.state_bounds[height_state.state_slice] = TARGET_HEIGHT
 # Find the steady state
 result = find_steady_state(steady_state_config)
 print("Target height: %f" % TARGET_HEIGHT)
-print("Steady state height: %f" % result.state[height_state.state_slice])
-print("Steady state inflow: %f" % result.inputs[inflow_velocity.input_slice])
+print("Steady state height: %f" % result.evaluator[height_state])
+print("Steady state inflow: %f" % result.evaluator[inflow_velocity])
 print("Steady state derivative: %s" % result.evaluator.state_derivative)
 print("Theoretical steady state inflow: %f" % (
     np.sqrt(2*G*TARGET_HEIGHT)*A2/A1
