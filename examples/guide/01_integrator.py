@@ -22,10 +22,15 @@ input_signal = Signal(system,
                       shape=1,
                       value=sine_input)
 
+
 # Define the integrator state
+def integrator_dt(data):
+    return data[input_signal]
+
+
 integrator_state = State(system,
                          shape=1,
-                         derivative_function=input_signal,
+                         derivative_function=integrator_dt,
                          initial_condition=-1)
 
 # Set up a simulation
@@ -41,10 +46,10 @@ else:
     # Plot the result
     input_line, integrator_line = \
         plt.plot(simulator.result.time,
-                 input_signal(simulator.result),
+                 simulator.result[input_signal],
                  "r",
                  simulator.result.time,
-                 integrator_state(simulator.result),
+                 simulator.result[integrator_state],
                  "g")
     plt.legend((input_line, integrator_line), ("Input", "Integrator State"))
     plt.title("Integrator")

@@ -11,6 +11,9 @@ After this exercise you will know
 - how to describe zero-crossing events, and
 - how to update the state as a reaction to such an event.
 
+Deriving the Equations
+----------------------
+
 When not in contact with the ground, our ball at height :math:`h\left(t\right)`
 and with velocity :math:`v_y\left(t\right)` will simply be accelerated by
 gravity:
@@ -34,6 +37,9 @@ We define the time when the ball hits the ground as the time when
 :math:`h\left(t\right)` crosses the zero. This is why we call this a
 *zero-crossing event*.
 
+Defining our System
+-------------------
+
 Let's define our system and our states first:
 
 .. code-block:: python
@@ -41,6 +47,7 @@ Let's define our system and our states first:
     import numpy as np
     import matplotlib.pyplot as plt
 
+    from modypy.blocks.linear import integrator
     from modypy.model import System, State, ZeroCrossEventSource
     from modypy.simulation import Simulator
 
@@ -55,21 +62,19 @@ Let's define our system and our states first:
     # The system
     system = System()
 
+
     # The system states
-    def height_dt(data):
-        return data.states[velocity]
-
-
     def velocity_dt(data):
+        """Calculate the derivative of the vertical speed"""
         return -G
 
 
-    height = State(system,
-                   derivative_function=height_dt,
-                   initial_condition=INITIAL_HEIGHT)
     velocity = State(system,
                      derivative_function=velocity_dt,
                      initial_condition=INITIAL_VELOCITY)
+    height = integrator(system,
+                        input_signal=velocity,
+                        initial_condition=INITIAL_HEIGHT)
 
 So far, there is not much difference to the previous examples. But now we define
 our bounce-event:
@@ -78,7 +83,8 @@ our bounce-event:
 
     # Define the zero-crossing-event
     def bounce_event_function(data):
-        return data.states[height]
+        """Define the value of the event function for detecting bounces"""
+        return data[height]
 
 
     bounce_event = ZeroCrossEventSource(system,
@@ -101,8 +107,9 @@ changes sign. However, we can do more:
 
     # Define the event-handler
     def bounce_event_handler(data):
-        data.states[height] = np.abs(data.states[height])
-        data.states[velocity] = -DELTA*data.states[velocity]
+        """Reverse the direction of motion after a bounce"""
+        data[height] = np.abs(data[height])
+        data[velocity] = -DELTA*data[velocity]
 
 
     bounce_event.register_listener(bounce_event_handler)
@@ -118,6 +125,9 @@ with a non-negative value may also lead to a sign-change of the height state
 variable, and thus lead to another zero-crossing event. As a consequence, and
 endless sequence of events.
 
+Running the Simulation
+----------------------
+
 Now we can run a simulation again:
 
 .. code-block:: python
@@ -125,15 +135,14 @@ Now we can run a simulation again:
     # Run a simulation
     simulator = Simulator(system,
                           start_time=0.0)
-    msg = simulator.run_until(time_boundary=10.0)
-
+    msg = simulator.run_until(time_boundary=8.0)
 
     if msg is not None:
         print("Simulation failed with message '%s'" % msg)
     else:
         # Plot the result
         plt.plot(simulator.result.time,
-                 simulator.result.state[:, height.state_slice])
+                 simulator.result[height])
         plt.title("Bouncing Ball")
         plt.xlabel("Time")
         plt.savefig("04_bouncing_ball_simulation.png")

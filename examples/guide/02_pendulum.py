@@ -4,6 +4,7 @@ A pendulum.
 import numpy as np
 import matplotlib.pyplot as plt
 
+from modypy.blocks.linear import integrator
 from modypy.model import System, State
 from modypy.simulation import Simulator
 
@@ -22,7 +23,7 @@ system = System()
 # Define the derivatives of the states
 def omega_dt(data):
     """Calculate the derivative of the angular velocity"""
-    return -GRAVITY/LENGTH * np.sin(alpha(data))
+    return -GRAVITY/LENGTH * np.sin(data[alpha])
 
 
 # Create the omega state
@@ -31,9 +32,7 @@ omega = State(system,
               initial_condition=OMEGA_0)
 
 # Create the alpha state
-alpha = State(system,
-              derivative_function=omega,
-              initial_condition=ALPHA_0)
+alpha = integrator(system, input_signal=omega, initial_condition=ALPHA_0)
 
 # Run a simulation
 simulator = Simulator(system, start_time=0.0)
@@ -45,10 +44,10 @@ else:
     # Plot the result
     alpha_line, omega_line = \
         plt.plot(simulator.result.time,
-                 simulator.result.state[:, alpha.state_slice],
+                 simulator.result[alpha],
                  "r",
                  simulator.result.time,
-                 simulator.result.state[:, omega.state_slice],
+                 simulator.result[omega],
                  "g")
     plt.legend((alpha_line, omega_line), ("Alpha", "Omega"))
     plt.title("Pendulum")

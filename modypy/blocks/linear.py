@@ -240,22 +240,17 @@ def sum_signal(owner, input_signals, gains=None):
                                 gains))
 
 
-def _integrator_derivative(input_signal, data):
-    """Derivative function for an integrator"""
-
-    return input_signal(data)
-
-
 def integrator(owner, input_signal, initial_condition=None):
     """
     Create a state-signal that provides the integrated value of the input
-    signal.
+    callable.
 
-    The resulting signal will have the same shape as the input signal.
+    The resulting signal will have the same shape as the input callable.
 
     Args:
         owner: The owner of the integrator
-        input_signal: The input signal to integrate
+        input_signal: A callable accepting an object implementing the system
+            object access protocol and providing the value of the derivative
         initial_condition: The initial condition of the integrator
             (default: ``None``)
 
@@ -265,6 +260,5 @@ def integrator(owner, input_signal, initial_condition=None):
 
     return SignalState(owner,
                        shape=input_signal.shape,
-                       derivative_function=partial(_integrator_derivative,
-                                                   input_signal),
+                       derivative_function=input_signal,
                        initial_condition=initial_condition)

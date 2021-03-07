@@ -27,8 +27,8 @@ inflow_velocity = InputSignal(system)
 def height_derivative(data):
     """Calculate the time derivative of the height"""
 
-    return (A1*inflow_velocity(data)
-            - A2*np.sqrt(2*G*height_state(data)))/At
+    return (A1*data[inflow_velocity]
+            - A2*np.sqrt(2*G*data[height_state]))/At
 
 
 height_state = SignalState(system, derivative_function=height_derivative)

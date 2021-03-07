@@ -34,7 +34,8 @@ at a velocity of :math:`v_2\left(t\right)`.
 
     Tank with inflow and outflow
 
-According to Toricelli's Law, we know that
+According to `Toricelli's Law
+<https://en.wikipedia.org/wiki/Torricelli%27s_law>`_, we know that
 
 .. math::
     v_2\left(t\right) = \sqrt{2 g h\left(t\right)}
@@ -53,6 +54,9 @@ It is clear that for any given height :math:`h_0` an inflow of
 
 is required to keep a steady height. However, we will now determine this
 numerically.
+
+Defining the System
+-------------------
 
 First, we will import all the necessary declarations, define some constants and
 create a new system:
@@ -90,14 +94,18 @@ Now we can define our fill height as a state:
 
 .. code-block:: python
 
+    # Model the height state
     def height_derivative(data):
         """Calculate the time derivative of the height"""
 
-        return (A1*data.signals[inflow_velocity]
-                - A2*np.sqrt(2*G*data.states[height_state]))/At
+        return (A1*data[inflow_velocity]
+                - A2*np.sqrt(2*G*data[height_state]))/At
 
 
     height_state = SignalState(system, derivative_function=height_derivative)
+
+Defining the Steady State
+-------------------------
 
 Our steady state is characterized by three properties:
 

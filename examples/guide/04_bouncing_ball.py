@@ -4,6 +4,7 @@ A bouncing ball
 import numpy as np
 import matplotlib.pyplot as plt
 
+from modypy.blocks.linear import integrator
 from modypy.model import System, State, ZeroCrossEventSource
 from modypy.simulation import Simulator
 
@@ -28,15 +29,15 @@ def velocity_dt(data):
 velocity = State(system,
                  derivative_function=velocity_dt,
                  initial_condition=INITIAL_VELOCITY)
-height = State(system,
-               derivative_function=velocity,
-               initial_condition=INITIAL_HEIGHT)
+height = integrator(system,
+                    input_signal=velocity,
+                    initial_condition=INITIAL_HEIGHT)
 
 
 # Define the zero-crossing-event
 def bounce_event_function(data):
     """Define the value of the event function for detecting bounces"""
-    return height(data)
+    return data[height]
 
 
 bounce_event = ZeroCrossEventSource(system,
@@ -63,7 +64,7 @@ if msg is not None:
 else:
     # Plot the result
     plt.plot(simulator.result.time,
-             simulator.result.state[:, height.state_slice])
+             simulator.result[height])
     plt.title("Bouncing Ball")
     plt.xlabel("Time")
     plt.savefig("04_bouncing_ball_simulation.png")

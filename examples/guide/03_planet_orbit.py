@@ -5,6 +5,7 @@ import numpy as np
 import numpy.linalg as linalg
 import matplotlib.pyplot as plt
 
+from modypy.blocks.linear import integrator
 from modypy.model import System, State
 from modypy.simulation import Simulator
 
@@ -37,10 +38,7 @@ velocity = State(system,
                  shape=2,
                  derivative_function=velocity_dt,
                  initial_condition=V_0)
-position = State(system,
-                 shape=2,
-                 derivative_function=velocity,
-                 initial_condition=X_0)
+position = integrator(system, input_signal=velocity, initial_condition=X_0)
 
 # Run a simulation
 simulator = Simulator(system,
@@ -54,7 +52,7 @@ if msg is not None:
     print("Simulation failed with message '%s'" % msg)
 else:
     # Plot the result
-    trajectory = simulator.result.state[:, position.state_slice]
+    trajectory = simulator.result[position]
     plt.plot(trajectory[:, 0], trajectory[:, 1])
     plt.title("Planet Orbit")
     plt.savefig("03_planet_orbit_simulation.png")

@@ -8,6 +8,9 @@ After completing this exercise, you will know
 - how to model systems with multi-dimensional states and
 - how to specify integrator options.
 
+Deriving the Equations
+----------------------
+
 In :numref:`planet_orbit` you can see a schematic drawing of the sun and the
 orbiting planet together with the position and the velovity of the planet.
 
@@ -48,6 +51,9 @@ With the initial conditions :math:`\vec{v}\left(t_0\right)=\vec{v}_0` and
 :math:`\vec{x}\left(t_0\right)=\vec{x}_0` our system is defined. So now let us
 implement it.
 
+Defining our System
+-------------------
+
 Again, we first import the required modules:
 
 .. code-block:: python
@@ -56,6 +62,7 @@ Again, we first import the required modules:
     import numpy.linalg as linalg
     import matplotlib.pyplot as plt
 
+    from modypy.blocks.linear import integrator
     from modypy.model import System, State
     from modypy.simulation import Simulator
 
@@ -87,30 +94,26 @@ Now let us define the system, its states and state derivatives:
 
 
     # Define the derivatives
-    def position_dt(data):
-        return data.states[velocity]
-
-
     def velocity_dt(data):
-        pos = data.states[position]
+        """Calculate the derivative of the velocity"""
+        pos = position(data)
         distance = linalg.norm(pos)
         return -G * SUN_MASS/(distance**3) * pos
 
 
     # Create the states
-    position = State(system,
-                     shape=2,
-                     derivative_function=position_dt,
-                     initial_condition=X_0)
-
     velocity = State(system,
                      shape=2,
                      derivative_function=velocity_dt,
                      initial_condition=V_0)
+    position = integrator(system, input_signal=velocity, initial_condition=X_0)
 
 The main thing that changed from the previous examples is that now our states
 are two-dimensional. In that case, ``modypy`` will provide their values as
 actual ``numpy`` arrays or vectors in this case.
+
+Running the Simulation
+----------------------
 
 Finally, let us set up a simulation, run it and plot the results:
 
@@ -120,7 +123,7 @@ Finally, let us set up a simulation, run it and plot the results:
     simulator = Simulator(system,
                           start_time=0.0,
                           integrator_options={
-                              'rtol': 1E-6
+                              "rtol": 1E-6
                           })
     msg = simulator.run_until(time_boundary=PLANET_ORBIT_TIME)
 
@@ -128,7 +131,7 @@ Finally, let us set up a simulation, run it and plot the results:
         print("Simulation failed with message '%s'" % msg)
     else:
         # Plot the result
-        trajectory = simulator.result.state[:, position.state_slice]
+        trajectory = simulator.result[position]
         plt.plot(trajectory[:, 0], trajectory[:, 1])
         plt.title("Planet Orbit")
         plt.savefig("03_planet_orbit_simulation.png")

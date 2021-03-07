@@ -20,6 +20,9 @@ For this, we will slightly modify the DC-engine example from the previous
 exercise. The DC-motor block and the propeller block are also provided as
 standard blocks, which we will use in this example.
 
+Defining our System
+-------------------
+
 We again start by importing our required elements:
 
 .. code-block:: python
@@ -86,11 +89,16 @@ sampled signal, and we register that function as an event handler on the clock:
 
     # Define the function for updating the state
     def update_sample(data):
-        data.states[sample_state] = data.signals[engine.thrust]
+        """Update the state of the sampler"""
+
+        data[sample_state] = data[engine.thrust]
 
 
     # Register it as event handler on the clock
     sample_clock.register_listener(update_sample)
+
+Running the Simulation
+----------------------
 
 Our system is now fully defined. Now we want to run a simulation of it and plot
 the results:
@@ -106,12 +114,12 @@ the results:
     else:
         # Plot the result
         plt.plot(simulator.result.time,
-                 simulator.result.signals[:, engine.thrust.signal_slice],
-                 'r',
+                 simulator.results[engine.thrust],
+                 "r",
                  label="Continuous-Time")
         plt.step(simulator.result.time,
-                 simulator.result.signals[:, sample_state.signal_slice],
-                 'g',
+                 simulator.result[sample_state],
+                 "g",
                  where="post",
                  label="Sampled")
         plt.title("Engine with DC-Motor and Static Propeller")
@@ -129,6 +137,9 @@ The result is shown in :numref:`dc_engine_sampling`.
     :alt: DC-Engine simulation with discrete-time sampling
 
     DC-Engine simulation with discrete-time sampling
+
+Working with Clocks
+-------------------
 
 There are many possibilities for defining clocks. Multiple clocks may have
 different periods, or they may have the same period but be offset against each

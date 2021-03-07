@@ -35,6 +35,9 @@ Now let us code our model. We start by importing the relevant declarations:
     from modypy.model import System, State, Signal
     from modypy.simulation import Simulator
 
+Defining the System
+-------------------
+
 All models in ``modypy`` are contained in a
 :class:`System <modypy.model.system.System>`, so we need to create an instance:
 
@@ -60,8 +63,7 @@ specifying that as the *owner* of the signal. Our signal is a scalar, which is
 why we specify a ``shape`` of ``1``. The value is determined by the
 ``sine_input`` function.
 
-The ``sine_input`` function is passed a
-:class:`structure <modypy.model.evaluation.DataProvider>` with a property ``time``
+The ``sine_input`` function is passed a data object with a property ``time``
 that is set to the current time. We use that to make our input signal change
 with time.
 
@@ -72,7 +74,7 @@ returns the value of our input signal:
 .. code-block:: python
 
     def integrator_dt(data):
-        return data.signals[input_signal]
+        return data[input_signal]
 
     integrator_state = State(system,
                              shape=1,
@@ -80,10 +82,9 @@ returns the value of our input signal:
                              initial_condition=-1)
 
 Here, we see another feature of the
-:class:`structure <modypy.model.evaluation.DataProvider>` passed to evaluation
-functions in ``modypy``: The ``signals`` property holds a dictionary that can
-be accessed using the signal objects and will provide the current value of that
-signal.
+data object passed to evaluation functions in ``modypy``: It is a mapping that
+can be indexed by states, ports and signals. The value of the expression
+``data[input_signal]`` is the current value of the input signal.
 
 The state itself also is a scalar, so it has the same shape as our signal. Note
 that signals and states by default are scalar, so you could as well remove the
@@ -95,6 +96,9 @@ get a nice cosine-wave.
 
 The ``derivative_function`` is the function that gives our time derivative of
 our state. In our case, this is simply the current value of our input signal.
+
+Running a Simulation
+--------------------
 
 Now, our system is already complete. We have our signal source and our integrator
 state. Let's have a look at the motion of our system. For that, we create a
@@ -117,6 +121,9 @@ be run. In our case, we want the simulation to run for ten time-units. You can
 think of this as minutes, but if your system is expressed in the proper units,
 these can also be hours, days, years, or whatever you need to use.
 
+Plotting the Result
+-------------------
+
 The result value of the ``run_until`` method is ``None`` when the simulation was
 successful and any other value if it failed. In that case, the result value gives
 some indication as to the reason for the failure.
@@ -132,12 +139,13 @@ the input and the integrator state:
         # Plot the result
         input_line, integrator_line = \
             plt.plot(simulator.result.time,
-                     simulator.result.signals[:, input_signal.signal_slice],
-                     'r',
+                     simulator.result[input_signal],
+                     "r",
                      simulator.result.time,
-                     simulator.result.state[:, integrator_state.state_slice],
-                     'g')
-        plt.legend((input_line, integrator_line), ('Input', 'Integrator State'))
+                     simulator.result[integrator_state],
+                     "g")
+        plt.legend((input_line, integrator_line), ("Input", "Integrator State"))
+        plt.title("Integrator")
         plt.xlabel("Time")
         plt.savefig("01_integrator_simulation.png")
         plt.show()
@@ -155,26 +163,57 @@ In red, we see the input signal, while the value of our integrator state is
 plotted in green. Looks quite correct.
 
 But what happened here? We accessed the ``result`` property of our simulator.
-This is an instance of :class:`SimulatorResult <modypy.simulation.SimulatorResult>`
-and provides access to the values of our signals and states in the ``signals``
-and ``state`` property.
+This is an instance of :class:`SimulatorResult
+<modypy.simulation.SimulatorResult>`, which - among other aspects - is a mapping
+that can be indexed using state, port and signal objects, just as the data
+object passed to the derivative function.
+The result is the value of the respective state, port or signal over time.
 
-These are represented as two-dimensional vectors, with the first dimension
-representing the sample index, and the second dimension representing the state
-or signal index. The sampling timestamp for each of the samples can be found in
-the ``time`` property, which is a one-dimensional array with the index being the
+The sampling timestamp for each of the samples can be found in the ``time``
+property, which is a one-dimensional array with the index being the
 sample-index.
-
-Upon creation, each signal and state is assigned a range of consecutive state or
-signal indices. The number of these indices for each state or signal depend on
-the shape of the signal or state. A scalar signal/state will be assigned a single
-index, but a state that is a 3x3 matrix will be assigned 9 indices.
-
-The slice of indices assigned to a signal can be retrieved by using the
-``signal_slice`` method. Similarly, we can get the slice of state indices for a
-state by using ``state_slice``.
 
 In the example above, we plot both the input signal and the integrator state
 against time. If we wanted, we could do other things with these results, such
 as checking the performance of a controller we built against control performance
 constraints and many other things.
+
+Simplifying the Derivative Function
+-----------------------------------
+
+Our derivative function is pretty simple:
+It just returns the value of our input signal.
+For such simple cases, we can make use of the fact that states, ports and
+signals are callable.
+They expect a data object that satisfies the so-called object access protocol by
+implementing methods ``get_port_value``, ``get_state_value`` and another method
+``get_event_value``.
+The latter is related to events, which we will talk about in the
+:doc:`Bouncing Ball <04_bouncing_ball>` example.
+
+The object that is passed to the function during simulation is such an object,
+so that we can simply use the input signal as derivative function:
+
+.. code-block:: python
+
+    integrator_state = State(system,
+                             shape=1,
+                             derivative_function=input_signal,
+                             initial_condition=-1)
+
+The result of running the script again should be the same.
+
+As integrators are something that we need often, there is a pre-defined building
+block for that: :func:`modypy.blocks.linear.integrator`.
+In that case, the definition of our integrator is very simple:
+
+.. code-block:: python
+
+    integrator_state = modypy.blocks.linear.integrator(system,
+                                                       input_signal=input_signal,
+                                                       initial_condition=-1)
+
+The :func:`integrator function <modypy.blocks.linear.integrator>` returns an
+object that is a state and a signal at the same time, and that represents
+the integral of the given input signal over time, with the initial value
+specified by the ``initial_condition`` parameter.

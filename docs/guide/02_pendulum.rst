@@ -7,6 +7,9 @@ the pendulum as states and let the pendulum move from some initial position.
 At the end of this exercise, you will know how to model such a pendulum and by
 that will learn how to work with multiple states.
 
+Deriving the Equations
+----------------------
+
 In :numref:`pendulum` you can see a schematic drawing of a pendulum just like
 the one we are going to model. We will not consider drag.
 
@@ -40,6 +43,9 @@ In addition, we have our initial conditions for both of the states:
     \alpha\left(t_0\right) & = \alpha_0 \\
     \omega\left(t_0\right) &= \omega_0
 
+Defining our System
+-------------------
+
 We will now implement the system described by these equations. Again we start
 by importing all necessary definitions. In addition, we will define some
 constants for our system:
@@ -49,6 +55,7 @@ constants for our system:
     import numpy as np
     import matplotlib.pyplot as plt
 
+    from modypy.blocks.linear import integrator
     from modypy.model import System, State
     from modypy.simulation import Simulator
 
@@ -67,30 +74,27 @@ Now let us define our system and our two states:
     # Create the system
     system = System()
 
+
     # Define the derivatives of the states
-    def alpha_dt(data):
-        return data.states[omega]
-
-
     def omega_dt(data):
-        return -GRAVITY/LENGTH * np.sin(data.states[alpha])
-        pass
+        """Calculate the derivative of the angular velocity"""
+        return -GRAVITY/LENGTH * np.sin(data[alpha])
 
-
-    # Create the alpha state
-    alpha = State(system,
-                  derivative_function=alpha_dt,
-                  initial_condition=ALPHA_0)
 
     # Create the omega state
     omega = State(system,
                   derivative_function=omega_dt,
                   initial_condition=OMEGA_0)
 
+    # Create the alpha state
+    alpha = integrator(system, input_signal=omega, initial_condition=ALPHA_0)
+
 In the previous example, our state derivative function for the integrator only
-depended on the input signal. Here, each of the derivative functions depend on
-the value of the respective other state and use the ``data.states`` dictionary
-to retrieve that value.
+depended on the input signal. Here, each of the derivative functions depends on
+the value of the respective other state.
+
+Running the Simulation
+----------------------
 
 Again, we set up a simulator and run the system for 10 seconds:
 
@@ -106,13 +110,15 @@ Again, we set up a simulator and run the system for 10 seconds:
         # Plot the result
         alpha_line, omega_line = \
             plt.plot(simulator.result.time,
-                     simulator.result.state[:, alpha.state_slice],
-                     'r',
+                     simulator.result[alpha],
+                     "r",
                      simulator.result.time,
-                     simulator.result.state[:, omega.state_slice],
-                     'g')
-        plt.legend((alpha_line, omega_line), ('Alpha', 'Omega'))
-        plt.savefig("02_pendulum.png")
+                     simulator.result[omega],
+                     "g")
+        plt.legend((alpha_line, omega_line), ("Alpha", "Omega"))
+        plt.title("Pendulum")
+        plt.xlabel("Time")
+        plt.savefig("02_pendulum_simulation.png")
         plt.show()
 
 The result of that simulation can be seen in :numref:`pendulum_simulation`.
@@ -123,6 +129,9 @@ The result of that simulation can be seen in :numref:`pendulum_simulation`.
     :alt: Results of pendulum simulation
 
     Results of pendulum simulation: Angle and angular velocity
+
+Going Further
+-------------
 
 If you want, you can now play around with the parameters gravity and length or
 the initial states. For example, you can give the pendulum some initial impulse
