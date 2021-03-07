@@ -1,4 +1,6 @@
 """Tests for the `modypy.model.states`` package"""
+from unittest.mock import Mock
+
 import numpy as np
 import numpy.testing as npt
 
@@ -47,3 +49,22 @@ def test_signal_state():
     evaluator = Evaluator(time=0, system=system)
     npt.assert_almost_equal(evaluator.get_port_value(state_a),
                             np.zeros(1))
+
+
+def test_state_access():
+    """Test whether calling a ``State`` object calls the ``get_state_value`` and
+    ``set_state_value`` methods of the provider object"""
+
+    system = System()
+    state = State(system)
+
+    provider = Mock()
+
+    # Check read access
+    state(provider)
+    provider.get_state_value.assert_called_with(state)
+
+    # Check write access
+    provider.reset_mock()
+    state(provider, 10)
+    provider.set_state_value.assert_called_with(state, 10)

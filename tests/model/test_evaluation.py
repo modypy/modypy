@@ -9,6 +9,7 @@ import pytest
 from modypy.blocks.sources import constant
 from modypy.model import System, State, Port, Signal, InputSignal, OutputPort, ZeroCrossEventSource, \
     PortNotConnectedError, Evaluator, AlgebraicLoopError
+from modypy.model.evaluation import DataProvider
 
 
 def test_evaluator():
@@ -16,38 +17,38 @@ def test_evaluator():
 
     system = System()
 
-    # This state tests the PortProvider class
+    input_a = InputSignal(system, shape=(3, 3), value=np.eye(3))
+    input_c = InputSignal(system, value=1)
+    input_d = InputSignal(system, shape=2, value=[2, 3])
     state_a = State(system,
                     shape=(3, 3),
                     initial_condition=[[1, 2, 3],
                                        [4, 5, 6],
                                        [7, 8, 9]],
-                    derivative_function=(lambda data: data.signals[input_a]))
-    # This state tests the inputs method on the DataProvider class
+                    derivative_function=input_a)
     state_a_dep = State(system,
                         shape=(3, 3),
                         initial_condition=[[1, 2, 3],
                                            [4, 5, 6],
                                            [7, 8, 9]],
-                        derivative_function=(lambda data: data.inputs[input_a]))
+                        derivative_function=input_a)
     state_b = State(system,
                     shape=3,
                     initial_condition=[10, 11, 12],
                     derivative_function=(lambda data: np.r_[13, 14, 15]))
-    # This state tests the states method on the DataProvider class
     state_b1 = State(system,
                      shape=3,
-                     derivative_function=(lambda data: data.states[state_b]))
+                     derivative_function=state_b)
     state_b2 = State(system,
                      shape=3,
                      derivative_function=None)
-    input_a = InputSignal(system, shape=(3, 3), value=np.eye(3))
-    input_c = InputSignal(system, value=1)
-    input_d = InputSignal(system, shape=2, value=[2, 3])
     signal_c = constant(system, value=16)
     signal_d = Signal(system, shape=2, value=(lambda data: [17, 19]))
+    signal_e = Signal(system, value=(lambda data: data[signal_d, 0]))
+    signal_f = Signal(system, value=(lambda data: data[event_b]))
     output_a = OutputPort(system, shape=(3, 3))
     output_c = OutputPort(system)
+    empty_port = Port(system, shape=0)
     event_a = ZeroCrossEventSource(system, event_function=(lambda data: 23))
     event_b = ZeroCrossEventSource(system, event_function=(lambda data: 25))
 
@@ -97,6 +98,10 @@ def test_evaluator():
                             signal_c.value.flatten())
     npt.assert_almost_equal(evaluator.signals[signal_d.signal_slice],
                             signal_d.value(None))
+    npt.assert_almost_equal(evaluator.signals[signal_e.signal_slice],
+                            evaluator.signals[signal_d.signal_slice][0])
+    npt.assert_almost_equal(evaluator.signals[signal_f.signal_slice],
+                            evaluator.event_values[event_b.event_index])
     npt.assert_almost_equal(evaluator.signals[output_a.signal_slice],
                             input_a.value.flatten())
     npt.assert_almost_equal(evaluator.signals[output_c.signal_slice],
@@ -114,6 +119,25 @@ def test_evaluator():
     npt.assert_almost_equal(evaluator.event_values[event_b.event_index],
                             event_b.event_function(None))
 
+    # Test empty port handling
+    assert evaluator.get_port_value(empty_port).size == 0
+
+    # Check the get_port_value function
+    npt.assert_almost_equal(evaluator.get_port_value(input_a),
+                            input_a.value)
+    npt.assert_almost_equal(evaluator.get_port_value(input_c),
+                            input_c.value)
+    npt.assert_almost_equal(evaluator.get_port_value(input_d),
+                            input_d.value)
+    npt.assert_almost_equal(evaluator.get_port_value(signal_c),
+                            signal_c.value.flatten())
+    npt.assert_almost_equal(evaluator.get_port_value(signal_d),
+                            signal_d.value(None))
+    npt.assert_almost_equal(evaluator.get_port_value(output_a),
+                            input_a.value)
+    npt.assert_almost_equal(evaluator.get_port_value(output_c),
+                            input_c.value)
+
     # Check the get_state_value function
     npt.assert_almost_equal(evaluator.get_state_value(state_a),
                             state_a.initial_condition)
@@ -121,6 +145,12 @@ def test_evaluator():
                             state_a_dep.initial_condition)
     npt.assert_almost_equal(evaluator.get_state_value(state_b),
                             state_b.initial_condition)
+
+    # Check the get_event_value property
+    npt.assert_almost_equal(evaluator.get_event_value(event_a),
+                            event_a.event_function(None))
+    npt.assert_almost_equal(evaluator.get_event_value(event_b),
+                            event_b.event_function(None))
 
 
 def test_evaluator_with_initial_state():
@@ -161,17 +191,15 @@ def test_algebraic_loop_error():
     system = System()
     port_a = Port(system)
     port_b = Port(system)
-    signal_a = Signal(system,
-                      value=(lambda data: port_b(data)))
-    signal_b = Signal(system,
-                      value=(lambda data: port_a(data)))
+    signal_a = Signal(system, value=port_b)
+    signal_b = Signal(system, value=port_a)
 
     port_a.connect(signal_a)
     port_b.connect(signal_b)
 
     evaluator = Evaluator(time=0, system=system)
     with pytest.raises(AlgebraicLoopError):
-        evaluator.signals
+        evaluator.get_port_value(signal_a)
 
 
 def test_port_not_connected_error():
@@ -183,3 +211,16 @@ def test_port_not_connected_error():
     evaluator = Evaluator(time=0, system=system)
     with pytest.raises(PortNotConnectedError):
         evaluator.get_port_value(port)
+
+
+def test_old_access_methods():
+    """Test the ``states``, ``signals`` and ``inputs`` properties
+    on the ``DataProvider`` class"""
+
+    system = System()
+    evaluator = Evaluator(time=0, system=system)
+    provider = DataProvider(evaluator=evaluator, time=0)
+
+    assert provider.states == provider
+    assert provider.signals == provider
+    assert provider.inputs == provider

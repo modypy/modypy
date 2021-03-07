@@ -94,7 +94,11 @@ class Port:
                 other.reference.reference = self.reference
 
     def __call__(self, provider):
-        return provider.get_port_value(self)
+        if self.size == 0:
+            return np.empty(self.shape)
+        if self.signal is None:
+            raise PortNotConnectedError()
+        return provider.get_port_value(self.signal)
 
 
 class MultipleSignalsError(RuntimeError):

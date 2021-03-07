@@ -182,7 +182,7 @@ def test_zero_crossing_event_detection():
     idx = bisect.bisect_left(simulator.result.time, t_impact)
     assert simulator.result.time[idx - 1] < t_impact
     assert simulator.result.time[idx] >= t_impact
-    vy = bouncing_ball.velocity(simulator.result)[:, 1]
+    vy = simulator.result[bouncing_ball.velocity, :, 1]
 
     assert np.sign(vy[idx - 1]) != np.sign(vy[idx + 1])
 

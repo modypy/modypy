@@ -1,4 +1,6 @@
 """Tests for ``modypy.model.ports``"""
+from unittest.mock import Mock
+
 import pytest
 
 from modypy.model import System
@@ -8,7 +10,7 @@ from modypy.model.ports import \
     Signal, \
     InputSignal, \
     ShapeMismatchError, \
-    MultipleSignalsError
+    MultipleSignalsError, PortNotConnectedError
 
 
 def test_port():
@@ -130,3 +132,27 @@ def test_input_signal():
     assert (input_signal.input_range ==
             range(input_signal.input_index,
                   input_signal.input_index+input_signal.size))
+
+
+def test_port_access():
+    """Test whether calling a ``Port`` object calls the ``get_port_value``
+    method of the provider object for connected ports and raises an exception
+    for unconnected ports"""
+
+    system = System()
+
+    port = Port(system)
+    signal = Signal(system)
+    unconnected_port = Port(system)
+
+    port.connect(signal)
+
+    provider = Mock()
+
+    # Check handling of connected ports
+    port(provider)
+    provider.get_port_value.assert_called_with(signal)
+
+    # Check handling of unconnected ports
+    with pytest.raises(PortNotConnectedError):
+        unconnected_port(provider)
