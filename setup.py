@@ -5,7 +5,7 @@ with open("README.rst", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="modypy",
-    version_format='{tag}.dev{commitcount}+{gitsha}',
+    version_format='v2.1.0',
     author="Ralf Gerlich",
     author_email="ralf@ralfgerlich.biz",
     description="A framework for hierarchical modelling and simulation of dynamic systems",
@@ -37,7 +37,6 @@ setuptools.setup(
     ],
     setup_requires=[
         "pytest-runner",
-        "setuptools-git-version"
     ],
     tests_require=[
         "pytest",

@@ -21,20 +21,7 @@ project = 'MoDyPy'
 copyright = '2021, Ralf Gerlich'
 author = 'Ralf Gerlich'
 
-
-# The full version, including alpha/beta/rc tags
-def get_git_version(fmt="{tag}.{commitcount}+{gitsha}"):
-    """Find version from git"""
-    tag = os.popen('git describe --tags --long --dirty').read().strip()
-    parts = tag.split('-')
-    assert len(parts) in (3, 4)
-    dirty = len(parts)==4
-    tag, count, sha = parts[:3]
-    if count == '0' and not dirty:
-        return tag
-    return fmt.format(tag=tag, commitcount=count, gitsha=sha.lstrip('g'))
-
-release = get_git_version()
+release = "v2.0.1"
 
 
 # -- General configuration ---------------------------------------------------
