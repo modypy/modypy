@@ -24,6 +24,10 @@ import numpy as np
 ShapeType = Union[int, Sequence[int], Tuple[int]]
 
 
+class PortNotConnectedError(RuntimeError):
+    """Exception when a port is evaluated that is not connected to a signal"""
+
+
 class Port:
     """A port is a structural element of a system that can be connected to a
     signal."""

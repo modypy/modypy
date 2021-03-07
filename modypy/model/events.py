@@ -35,7 +35,7 @@ they do not trigger any unwanted events.
 from abc import ABC
 from math import ceil
 
-from modypy.model import PortNotConnectedError
+from modypy.model.ports import PortNotConnectedError
 
 
 class MultipleEventSourcesError(RuntimeError):

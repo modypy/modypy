@@ -12,7 +12,7 @@ import numpy as np
 import scipy.optimize as opt
 
 from modypy.model import Evaluator, Port, System
-from modypy.model.evaluation import StateProvider, PortProvider, DataProvider
+from modypy.model.evaluation import DataProvider
 
 
 class SteadyStateConfiguration:
@@ -317,10 +317,6 @@ def _general_objective_function(config: SteadyStateConfiguration, x):
                           system=config.system,
                           state=state,
                           inputs=inputs)
-    state_provider = StateProvider(evaluator)
-    port_provider = PortProvider(evaluator)
     data_provider = DataProvider(evaluator=evaluator,
-                                 time=config.time,
-                                 states=state_provider,
-                                 signals=port_provider)
+                                 time=config.time)
     return config.objective(data_provider)

@@ -7,8 +7,8 @@ import numpy.testing as npt
 import pytest
 
 from modypy.blocks.sources import constant
-from modypy.model import System, State, Port, Signal, InputSignal, OutputPort, ZeroCrossEventSource
-from modypy.model.evaluation import Evaluator, AlgebraicLoopError, PortNotConnectedError
+from modypy.model import System, State, Port, Signal, InputSignal, OutputPort, ZeroCrossEventSource, \
+    PortNotConnectedError, Evaluator, AlgebraicLoopError
 
 
 def test_evaluator():

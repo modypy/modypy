@@ -4,6 +4,7 @@ Provide classes for simulation.
 import itertools
 import heapq
 from functools import partial
+from typing import Union, Callable
 
 import numpy as np
 import scipy.integrate
@@ -11,7 +12,7 @@ import scipy.optimize
 
 from modypy.model import Port, State, ZeroCrossEventSource
 from modypy.model.system import System
-from modypy.model.evaluation import Evaluator, DataProvider, PortProvider
+from modypy.model.evaluation import Evaluator, DataProvider
 
 INITIAL_RESULT_SIZE = 16
 RESULT_SIZE_EXTENSION = 16
@@ -458,12 +459,8 @@ class Simulator:
             update_evaluator = Evaluator(system=self.system,
                                          time=self.current_time,
                                          state=self.current_state)
-            state_updater = StateUpdater(update_evaluator)
-            port_provider = PortProvider(update_evaluator)
-            data_provider = DataProvider(evaluator=update_evaluator,
-                                         time=self.current_time,
-                                         states=state_updater,
-                                         signals=port_provider)
+            data_provider = DataUpdater(evaluator=update_evaluator,
+                                        time=self.current_time)
 
             # Determine the values of all event functions before running the
             # event listeners.
@@ -485,7 +482,7 @@ class Simulator:
                 listener(data_provider)
 
             # Update the state
-            self.current_state = state_updater.new_state
+            self.current_state = data_provider.new_state
 
             # Determine the value of event functions after running the event
             # listeners
@@ -601,31 +598,31 @@ class Simulator:
 
 
 class DataUpdater(DataProvider):
-    def __init__(self, evaluator, time, state, signals):
-        DataProvider.__init__(self, evaluator, time, state, signals)
+    def __init__(self, evaluator, time):
+        DataProvider.__init__(self, evaluator, time)
+        self.new_state = evaluator.state.copy()
+
+    def get_state_value(self, state: State):
+        """Retrieve the value of the given state"""
+
+        start_index = state.state_index
+        end_index = start_index + state.size
+        return self.new_state[start_index:end_index].reshape(state.shape)
 
     def set_state_value(self, state: State, value):
         """Update the value of the given state"""
 
-        self.states[state] = value
-
-class StateUpdater:
-    """A ``StateUpdater`` provides access to the states via indexing using the
-    ``State`` objects. It also allows the state vector to be updated.
-    """
-
-    def __init__(self, evaluator):
-        self.new_state = evaluator.state.copy()
-
-    def __setitem__(self, state, value):
         start_index = state.state_index
         end_index = start_index + state.size
         self.new_state[start_index:end_index] = np.asarray(value).flatten()
 
-    def __getitem__(self, state):
-        start_index = state.state_index
-        end_index = start_index + state.size
-        return self.new_state[start_index:end_index].reshape(state.shape)
+    def __setitem__(self, item: Union[tuple, Callable], value):
+        if isinstance(item, tuple):
+            # Resolve recursively
+            self[item[0]][item[1:]] = value
+        else:
+            # Resolve using the callable interface
+            item(self, value)
 
 
 class TickEntry:

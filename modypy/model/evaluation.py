@@ -3,19 +3,18 @@ Provides the ``Evaluator`` class, which can be used to evaluate the individual
 aspects (signals, state derivatives, ...) at any given point in time.
 """
 import warnings
+from typing import Union, Callable
+
 import numpy as np
 
+from .events import EventPort
 from .system import System
-from .ports import Port
+from .ports import Port, PortNotConnectedError
 from .states import State
 
 
 class AlgebraicLoopError(RuntimeError):
     """Exception raised when an algebraic loop is detected on evaluation"""
-
-
-class PortNotConnectedError(RuntimeError):
-    """Exception when a port is evaluated that is not connected to a signal"""
 
 
 class Evaluator:
@@ -152,9 +151,7 @@ class Evaluator:
 
         # Perform evaluation
         data = DataProvider(evaluator=self,
-                            time=self.time,
-                            states=StateProvider(self),
-                            signals=PortProvider(self))
+                            time=self.time)
         if callable(signal.value):
             signal_value = signal.value(data)
         else:
@@ -193,9 +190,7 @@ class Evaluator:
                 .reshape(state.shape)
         if state.derivative_function is not None:
             data = DataProvider(evaluator=self,
-                                time=self.time,
-                                states=StateProvider(self),
-                                signals=PortProvider(self))
+                                time=self.time)
             state_derivative = state.derivative_function(data)
             state_derivative = \
                 np.asarray(state_derivative).reshape(state.shape)
@@ -223,9 +218,7 @@ class Evaluator:
         if event in self.valid_event_values:
             return self._event_values[event.event_index]
         data = DataProvider(evaluator=self,
-                            time=self.time,
-                            states=StateProvider(self),
-                            signals=PortProvider(self))
+                            time=self.time)
         event_value = event.event_function(data)
         self._event_values[event.event_index] = event_value
         self.valid_event_values.add(event)
@@ -245,16 +238,36 @@ class DataProvider:
         The contents of the current signals, accessed by indexing using the
         ``Port`` objects.
     """
-    def __init__(self, evaluator, time, states, signals):
+    def __init__(self, evaluator, time):
         self.evaluator = evaluator
         self.time = time
-        self.states = states
-        self.signals = signals
 
-        # Forward the relevant functions to the evaluator
-        self.get_port_value = evaluator.get_port_value
-        self.get_state_value = evaluator.get_state_value
-        self.get_event_value = evaluator.get_event_value
+    def get_port_value(self, port: Port):
+        return self.evaluator.get_port_value(port)
+
+    def get_state_value(self, state: State):
+        return self.evaluator.get_state_value(state)
+
+    def get_event_value(self, event: EventPort):
+        return self.evaluator.get_event_value(event)
+
+    @property
+    def states(self):
+        """Old way of accessing the states dictionary. Deprecated."""
+        warnings.warn(DeprecationWarning("The ``states`` property of the "
+                                         "``DataProvider`` class is deprecated "
+                                         "and will be removed in the future. "
+                                         "Use direct indexing instead."))
+        return self
+
+    @property
+    def signals(self):
+        """Old way of accessing the signals dictionary. Deprecated."""
+        warnings.warn(DeprecationWarning("The ``signals`` property of the "
+                                         "``DataProvider`` class is deprecated "
+                                         "and will be removed in the future. "
+                                         "Use direct indexing instead."))
+        return self
 
     @property
     def inputs(self):
@@ -262,28 +275,13 @@ class DataProvider:
         warnings.warn(DeprecationWarning("The ``inputs`` property of the "
                                          "``DataProvider`` class is deprecated "
                                          "and will be removed in the future. "
-                                         "Use the ``signals`` property "
-                                         "instead."))
-        return self.signals
+                                         "Use direct indexing instead."))
+        return self
 
-
-class StateProvider:
-    """A ``StateProvider`` provides access to the state via indexing using the
-    ``State`` objects.
-    """
-    def __init__(self, evaluator):
-        self.evaluator = evaluator
-
-    def __getitem__(self, state):
-        return self.evaluator.get_state_value(state)
-
-
-class PortProvider:
-    """A ``PortProvider`` provides access to the signals via indexing using the
-    ``Port`` objects.
-    """
-    def __init__(self, evaluator):
-        self.evaluator = evaluator
-
-    def __getitem__(self, port):
-        return self.evaluator.get_port_value(port)
+    def __getitem__(self, item: Union[tuple, Callable]):
+        if isinstance(item, tuple):
+            # Resolve recursively
+            return self[item[0]][item[1:]]
+        else:
+            # Use the callable-dispatch
+            return item(self)

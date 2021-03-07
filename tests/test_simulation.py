@@ -275,7 +275,7 @@ def test_discrete_only():
 
     def increase_counter(data):
         """Increase the counter whenever a clock event occurs"""
-        data.states[counter] += 1
+        data[counter] = data[counter] + 1
 
     clock.register_listener(increase_counter)
 
