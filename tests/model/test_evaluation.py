@@ -152,6 +152,18 @@ def test_evaluator():
     npt.assert_almost_equal(evaluator.get_event_value(event_b),
                             event_b.event_function(None))
 
+    # Check the dictionary access
+    npt.assert_equal(evaluator[event_a],
+                     event_a.event_function(None))
+    npt.assert_equal(evaluator[state_a],
+                     state_a.initial_condition)
+    npt.assert_equal(evaluator[input_a],
+                     input_a.value)
+    npt.assert_equal(evaluator[output_a, 1],
+                     input_a.value[1])
+    npt.assert_equal(evaluator[signal_c],
+                     signal_c.value)
+
 
 def test_evaluator_with_initial_state():
     """Test the ``Evaluator`` class with an explicitly specified initial

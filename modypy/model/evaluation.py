@@ -224,6 +224,14 @@ class Evaluator:
         self.valid_event_values.add(event)
         return event_value
 
+    def __getitem__(self, item: Union[tuple, Callable]):
+        if isinstance(item, tuple):
+            # Resolve recursively
+            return self[item[0]][item[1:]]
+        else:
+            # Resolve by callable interface
+            return item(self)
+
 
 class DataProvider:
     """A ``DataProvider`` provides access to the data about the current point in
