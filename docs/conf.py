@@ -11,8 +11,8 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
-import re
 import sys
+import modypy
 sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project information -----------------------------------------------------
@@ -21,7 +21,7 @@ project = 'MoDyPy'
 copyright = '2021, Ralf Gerlich'
 author = 'Ralf Gerlich'
 
-release = "v2.0.1"
+release = modypy.__version__
 
 
 # -- General configuration ---------------------------------------------------

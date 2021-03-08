@@ -1,11 +1,15 @@
 import setuptools
 
+# get the version
+with open("modypy/version.py") as fp:
+    exec(fp.read())
+
 with open("README.rst", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="modypy",
-    version_format='v2.1.0',
+    version_format=__version__,
     author="Ralf Gerlich",
     author_email="ralf@ralfgerlich.biz",
     description="A framework for hierarchical modelling and simulation of dynamic systems",
