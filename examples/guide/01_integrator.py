@@ -46,10 +46,10 @@ else:
     # Plot the result
     input_line, integrator_line = \
         plt.plot(simulator.result.time,
-                 simulator.result[input_signal],
+                 simulator.result[input_signal, 0],
                  "r",
                  simulator.result.time,
-                 simulator.result[integrator_state],
+                 simulator.result[integrator_state, 0],
                  "g")
     plt.legend((input_line, integrator_line), ("Input", "Integrator State"))
     plt.title("Integrator")

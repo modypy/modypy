@@ -60,11 +60,11 @@ def test_lti_simulation(lti_system_with_reference):
     # Check correspondence of the result with intermediate values
     for idx in range(simulator.result.time.shape[0]):
         time = simulator.result.time[idx]
-        inputs = simulator.result.inputs[idx]
-        state = simulator.result.state[idx]
-        signals = simulator.result.signals[idx]
-        events = simulator.result.events[idx]
-        outputs = simulator.result.outputs[idx]
+        inputs = simulator.result.inputs[:, idx]
+        state = simulator.result.state[:, idx]
+        signals = simulator.result.signals[:, idx]
+        events = simulator.result.events[:, idx]
+        outputs = simulator.result.outputs[:, idx]
 
         evaluator = Evaluator(time=time, system=sys, state=state, inputs=inputs)
         npt.assert_almost_equal(evaluator.inputs, inputs)
@@ -104,11 +104,11 @@ def test_lti_simulation(lti_system_with_reference):
                         rtol=simulator.integrator_options["rtol"],
                         atol=simulator.integrator_options["atol"])
     npt.assert_allclose(simulator.result.state,
-                        ref_state,
+                        ref_state.T,
                         rtol=simulator.integrator_options["rtol"] * 1E2,
                         atol=simulator.integrator_options["atol"] * 1E2)
     npt.assert_allclose(simulator.result.outputs,
-                        ref_output.reshape(-1, sys.num_outputs),
+                        ref_output.reshape(sys.num_outputs, -1),
                         rtol=simulator.integrator_options["rtol"] * 1E2,
                         atol=simulator.integrator_options["atol"] * 1E2)
 
@@ -182,7 +182,7 @@ def test_zero_crossing_event_detection():
     idx = bisect.bisect_left(simulator.result.time, t_impact)
     assert simulator.result.time[idx - 1] < t_impact
     assert simulator.result.time[idx] >= t_impact
-    vy = simulator.result[bouncing_ball.velocity, :, 1]
+    vy = bouncing_ball.velocity(simulator.result)[1]
 
     assert np.sign(vy[idx - 1]) != np.sign(vy[idx + 1])
 
@@ -260,9 +260,9 @@ def test_clock_handling():
     reference1 = initial_value * np.exp(-time_floor1 / time_constant)
     reference2 = initial_value * np.exp(-time_floor2 / time_constant)
 
-    npt.assert_almost_equal(hold1(simulator.result)[:, 0], reference1)
-    npt.assert_almost_equal(hold2(simulator.result)[:, 0], reference2)
-    npt.assert_almost_equal(hold3(simulator.result)[:, 0], initial_value)
+    npt.assert_almost_equal(hold1(simulator.result)[0], reference1)
+    npt.assert_almost_equal(hold2(simulator.result)[0], reference2)
+    npt.assert_almost_equal(hold3(simulator.result)[0], initial_value)
 
 
 def test_discrete_only():
@@ -285,7 +285,7 @@ def test_discrete_only():
     npt.assert_almost_equal(simulator.result.time,
                             np.arange(start=0.0, stop=11.0))
     npt.assert_almost_equal(counter(simulator.result),
-                            np.arange(start=1.0, stop=12.0).reshape(-1, 1))
+                            np.arange(start=1.0, stop=12.0).reshape(1, -1))
 
 
 def test_integrator():

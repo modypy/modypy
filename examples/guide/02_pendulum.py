@@ -44,10 +44,10 @@ else:
     # Plot the result
     alpha_line, omega_line = \
         plt.plot(simulator.result.time,
-                 simulator.result[alpha],
+                 simulator.result[alpha, 0],
                  "r",
                  simulator.result.time,
-                 simulator.result[omega],
+                 simulator.result[omega, 0],
                  "g")
     plt.legend((alpha_line, omega_line), ("Alpha", "Omega"))
     plt.title("Pendulum")

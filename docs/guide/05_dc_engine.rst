@@ -381,7 +381,7 @@ Now, our system is fully assembled. Let's run a simulation:
     else:
         # Plot the result
         plt.plot(simulator.result.time,
-                 simulator.result[engine.thrust])
+                 simulator.result[engine.thrust, 0])
         plt.title("Engine with DC-Motor and Static Propeller")
         plt.xlabel("Time")
         plt.ylabel("Thrust")

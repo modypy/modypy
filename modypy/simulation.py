@@ -48,11 +48,11 @@ class SimulationResult:
     def __init__(self, system: System):
         self.system = system
         self._t = np.empty(INITIAL_RESULT_SIZE)
-        self._inputs = np.empty((INITIAL_RESULT_SIZE, self.system.num_inputs))
-        self._state = np.empty((INITIAL_RESULT_SIZE, self.system.num_states))
-        self._signals = np.empty((INITIAL_RESULT_SIZE, self.system.num_signals))
-        self._events = np.empty((INITIAL_RESULT_SIZE, self.system.num_events))
-        self._outputs = np.empty((INITIAL_RESULT_SIZE, self.system.num_outputs))
+        self._inputs = np.empty((self.system.num_inputs, INITIAL_RESULT_SIZE))
+        self._state = np.empty((self.system.num_states, INITIAL_RESULT_SIZE))
+        self._signals = np.empty((self.system.num_signals, INITIAL_RESULT_SIZE))
+        self._events = np.empty((self.system.num_events, INITIAL_RESULT_SIZE))
+        self._outputs = np.empty((self.system.num_outputs, INITIAL_RESULT_SIZE))
 
         self.current_idx = 0
 
@@ -64,27 +64,27 @@ class SimulationResult:
     @property
     def inputs(self):
         """The input vector of the simulation result"""
-        return self._inputs[0:self.current_idx]
+        return self._inputs[:, 0:self.current_idx]
 
     @property
     def state(self):
         """The state vector of the simulation result"""
-        return self._state[0:self.current_idx]
+        return self._state[:, 0:self.current_idx]
 
     @property
     def signals(self):
         """The signal vector of the simulation result"""
-        return self._signals[0:self.current_idx]
+        return self._signals[:, 0:self.current_idx]
 
     @property
     def events(self):
         """The event vector of the simulation result"""
-        return self._events[0:self.current_idx]
+        return self._events[:, 0:self.current_idx]
 
     @property
     def outputs(self):
         """The output vector of the simulation result"""
-        return self._outputs[0:self.current_idx]
+        return self._outputs[:, 0:self.current_idx]
 
     def append(self, time, inputs, state, signals, events, outputs):
         """Append an entry to the result vectors.
@@ -101,11 +101,11 @@ class SimulationResult:
         if self.current_idx >= self._t.size:
             self.extend_space()
         self._t[self.current_idx] = time
-        self._inputs[self.current_idx] = inputs
-        self._state[self.current_idx] = state
-        self._signals[self.current_idx] = signals
-        self._events[self.current_idx] = events
-        self._outputs[self.current_idx] = outputs
+        self._inputs[:, self.current_idx] = inputs
+        self._state[:, self.current_idx] = state
+        self._signals[:, self.current_idx] = signals
+        self._events[:, self.current_idx] = events
+        self._outputs[:, self.current_idx] = outputs
 
         self.current_idx += 1
 
@@ -113,37 +113,37 @@ class SimulationResult:
         """Extend the storage space for the vectors"""
         self._t = np.r_[self._t,
                         np.empty(RESULT_SIZE_EXTENSION)]
-        self._inputs = np.r_[self._inputs,
-                             np.empty((RESULT_SIZE_EXTENSION,
-                                       self.system.num_inputs))]
-        self._state = np.r_[self._state,
-                            np.empty((RESULT_SIZE_EXTENSION,
-                                      self.system.num_states))]
-        self._signals = np.r_[self._signals,
-                              np.empty((RESULT_SIZE_EXTENSION,
-                                        self.system.num_signals))]
-        self._events = np.r_[self._events,
-                             np.empty((RESULT_SIZE_EXTENSION,
-                                       self.system.num_events))]
-        self._outputs = np.r_[self._outputs,
-                              np.empty((RESULT_SIZE_EXTENSION,
-                                        self.system.num_outputs))]
+        self._inputs = np.c_[self._inputs,
+                             np.empty((self.system.num_inputs,
+                                       RESULT_SIZE_EXTENSION))]
+        self._state = np.c_[self._state,
+                            np.empty((self.system.num_states,
+                                      RESULT_SIZE_EXTENSION))]
+        self._signals = np.c_[self._signals,
+                              np.empty((self.system.num_signals,
+                                        RESULT_SIZE_EXTENSION))]
+        self._events = np.c_[self._events,
+                             np.empty((self.system.num_events,
+                                       RESULT_SIZE_EXTENSION))]
+        self._outputs = np.c_[self._outputs,
+                              np.empty((self.system.num_outputs,
+                                        RESULT_SIZE_EXTENSION))]
 
     def get_port_value(self, port: Port):
         """Determine the value of the given port in this result object"""
 
-        return self.signals[:, port.signal_slice].reshape((-1,)+port.shape)
+        return self.signals[port.signal_slice].reshape(port.shape + (-1,))
 
     def get_state_value(self, state: State):
         """Determine the value of the given state in this result object"""
 
-        return self.state[:, state.state_slice].reshape((-1,)+state.shape)
+        return self.state[state.state_slice].reshape(state.shape + (-1,))
 
     def get_event_value(self, event: ZeroCrossEventSource):
         """Determine the value of the given zero-crossing event in this result
         object"""
 
-        return self.events[:, event.event_index]
+        return self.events[event.event_index]
 
     def __getitem__(self, item: Union[tuple, Callable]):
         if isinstance(item, tuple):
@@ -380,7 +380,7 @@ class Simulator:
 
             # We will continue immediately after that event
             self.current_time = first_event_time + \
-                self.rootfinder_options['xtol']
+                                self.rootfinder_options['xtol']
             # Get the state at the event time
             self.current_state = state_interpolator(self.current_time)
 
@@ -696,7 +696,7 @@ def _find_event_time(f, a, b, tolerance, xtol=1E-12, maxiter=1000):
                          "endpoints")
 
     n = 0
-    diff = b-a
+    diff = b - a
     while n < maxiter and diff > xtol:
         diff /= 2
         m = a + diff

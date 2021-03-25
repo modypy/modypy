@@ -53,7 +53,7 @@ if msg is not None:
 else:
     # Plot the result
     trajectory = simulator.result[position]
-    plt.plot(trajectory[:, 0], trajectory[:, 1])
+    plt.plot(trajectory[0], trajectory[1])
     plt.title("Planet Orbit")
     plt.savefig("03_planet_orbit_simulation.png")
     plt.show()

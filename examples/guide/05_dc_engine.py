@@ -185,7 +185,7 @@ if msg is not None:
 else:
     # Plot the result
     plt.plot(simulator.result.time,
-             simulator.result[engine.thrust])
+             simulator.result[engine.thrust, 0])
     plt.title("Engine with DC-Motor and Static Propeller")
     plt.xlabel("Time")
     plt.ylabel("Thrust")

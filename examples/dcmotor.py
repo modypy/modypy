@@ -62,10 +62,10 @@ simulator.run_until(time_boundary=0.5)
 # Plot the thrust output over time
 fig, ax = plt.subplots()
 ax.plot(simulator.result.time,
-        simulator.result[propeller.thrust],
+        simulator.result[propeller.thrust, 0],
         label="continuous-time")
 ax.step(simulator.result.time,
-        simulator.result[thrust_sampler],
+        simulator.result[thrust_sampler, 0],
         label="sampled",
         where="post")
 

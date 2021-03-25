@@ -64,7 +64,7 @@ if msg is not None:
 else:
     # Plot the result
     plt.plot(simulator.result.time,
-             simulator.result[height])
+             simulator.result[height, 0])
     plt.title("Bouncing Ball")
     plt.xlabel("Time")
     plt.savefig("04_bouncing_ball_simulation.png")

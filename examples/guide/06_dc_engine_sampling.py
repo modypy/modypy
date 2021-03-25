@@ -203,11 +203,11 @@ if msg is not None:
 else:
     # Plot the result
     plt.plot(simulator.result.time,
-             simulator.results[engine.thrust],
+             simulator.result[engine.thrust, 0],
              "r",
              label="Continuous-Time")
     plt.step(simulator.result.time,
-             simulator.result[sample_state],
+             simulator.result[sample_state, 0],
              "g",
              where="post",
              label="Sampled")

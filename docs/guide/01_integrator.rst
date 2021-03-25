@@ -129,7 +129,7 @@ successful and any other value if it failed. In that case, the result value give
 some indication as to the reason for the failure.
 
 We check it and in case of failure print the reason. Otherwise, we want to plot
-the input and the integrator state:
+the input and the integrator state.
 
 .. code-block:: python
 
@@ -139,10 +139,10 @@ the input and the integrator state:
         # Plot the result
         input_line, integrator_line = \
             plt.plot(simulator.result.time,
-                     simulator.result[input_signal],
+                     simulator.result[input_signal, 0],
                      "r",
                      simulator.result.time,
-                     simulator.result[integrator_state],
+                     simulator.result[integrator_state, 0],
                      "g")
         plt.legend((input_line, integrator_line), ("Input", "Integrator State"))
         plt.title("Integrator")
@@ -168,6 +168,11 @@ This is an instance of :class:`SimulatorResult
 that can be indexed using state, port and signal objects, just as the data
 object passed to the derivative function.
 The result is the value of the respective state, port or signal over time.
+Note that strictly speaking our state and our signal are not scalar, but rather
+vectors of dimension 1, which is why we extract the index 0 from both of them
+for plotting.
+If we didn't do that, ``plot`` would complain about the mismatch in dimensions
+between the time vector and the state and state vector, respectively.
 
 The sampling timestamp for each of the samples can be found in the ``time``
 property, which is a one-dimensional array with the index being the
