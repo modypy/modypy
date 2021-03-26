@@ -28,22 +28,9 @@ class Evaluator:
         if state is None:
             state = system.initial_condition.copy()
         self._state = state
-
-        self._state_derivative = np.zeros(system.num_states)
-        self.valid_state_derivatives = set()
-
-        self._signals = np.zeros(system.num_signals)
-        self.valid_signals = set()
-        self.signal_evaluation_stack = list()
-        self.signal_evaluation_set = set()
-
-        self._event_values = np.zeros(system.num_events)
-        self.valid_event_values = set()
-
-        if inputs is not None:
-            for signal in self.system.inputs:
-                self._signals[signal.signal_slice] = inputs[signal.input_slice]
-                self.valid_signals.add(signal)
+        if inputs is None:
+            inputs = system.initial_input.copy()
+        self._inputs = inputs
 
     @property
     def state(self):
@@ -53,27 +40,25 @@ class Evaluator:
     @property
     def state_derivative(self):
         """The state derivative vector for the complete system"""
+        state_derivative = np.empty(self.system.num_states)
         for state_instance in self.system.states:
-            # Trigger calculation of the derivative
-            self.get_state_derivative(state_instance)
-        return self._state_derivative
+            state_derivative[state_instance.state_slice] = \
+                self.get_state_derivative(state_instance).flatten()
+        return state_derivative
 
     @property
     def inputs(self):
         """The input vector for the complete system"""
-        input_vector = np.empty(self.system.num_inputs)
-        for signal in self.system.inputs:
-            signal_value = self.get_port_value(signal)
-            input_vector[signal.input_slice] = signal_value.flatten()
-        return input_vector
+        return self._inputs
 
     @property
     def signals(self):
         """The signal vector for the complete system."""
+        signal_vector = np.empty(self.system.num_signals)
         for signal_instance in self.system.signals:
-            # Trigger calculation of the signal
-            self.get_port_value(signal_instance)
-        return self._signals
+            signal_vector[signal_instance.signal_slice] = \
+                self.get_port_value(signal_instance).flatten()
+        return signal_vector
 
     @property
     def outputs(self):
@@ -87,10 +72,11 @@ class Evaluator:
     @property
     def event_values(self):
         """The event vector for the complete system"""
+        event_vector = np.empty(self.system.num_events)
         for event_instance in self.system.events:
-            # Trigger calculation of the event value
-            self.get_event_value(event_instance)
-        return self._event_values
+            event_vector[event_instance.event_index] = \
+                self.get_event_value(event_instance)
+        return event_vector
 
     def get_state_value(self, state: State):
         """Determine the value of a given state.
@@ -133,43 +119,22 @@ class Evaluator:
             # its value.
             raise PortNotConnectedError()
 
-        if signal in self.valid_signals:
-            # That signal was already evaluated, so just return the value in
-            # proper shape.
-            return self._signals[signal.signal_slice]\
-                .reshape(signal.shape)
-
-        # The signal has not yet been evaluated, so we try to do that now
-        if signal in self.signal_evaluation_set:
-            # The signal is currently being evaluated, but we got here again,
-            # so there must be an algebraic loop.
-            raise AlgebraicLoopError()
-
-        # Start evaluation of the signal
-        self.signal_evaluation_set.add(signal)
-        self.signal_evaluation_stack.append(signal)
-
-        # Perform evaluation
-        data = DataProvider(evaluator=self,
-                            time=self.time)
-        if callable(signal.value):
-            signal_value = signal.value(data)
-        else:
-            signal_value = signal.value
+        try:
+            signal_value = self._inputs[signal.input_slice]
+        except AttributeError:
+            # Perform evaluation
+            data = DataProvider(evaluator=self,
+                                time=self.time)
+            if callable(signal.value):
+                signal_value = signal.value(data)
+            else:
+                signal_value = signal.value
 
         # Ensure that the signal has the correct shape
         signal_value = np.asarray(signal_value).reshape(signal.shape)
-        # Assign the value to the signal_vector
-        self._signals[signal.signal_slice] = signal_value.flatten()
-        # Mark the signal as valid
-        self.valid_signals.add(signal)
-
-        # End evaluation of the signal
-        self.signal_evaluation_set.remove(signal)
-        self.signal_evaluation_stack.pop()
 
         # Return the value of the signal
-        return signal_value.reshape(signal.shape)
+        return signal_value
 
     def get_state_derivative(self, state):
         """Get the state derivative of the given state.
@@ -185,20 +150,14 @@ class Evaluator:
             evaluating the derivative of the state instance
 
         """
-        if state in self.valid_state_derivatives:
-            return self._state_derivative[state.state_slice]\
-                .reshape(state.shape)
         if state.derivative_function is not None:
             data = DataProvider(evaluator=self,
                                 time=self.time)
             state_derivative = state.derivative_function(data)
             state_derivative = \
                 np.asarray(state_derivative).reshape(state.shape)
-            self._state_derivative[state.state_slice] = \
-                state_derivative.flatten()
         else:
-            state_derivative = self._state_derivative[state.state_slice]
-        self.valid_state_derivatives.add(state)
+            state_derivative = np.zeros(state.shape)
         return state_derivative
 
     def get_event_value(self, event):
@@ -215,13 +174,9 @@ class Evaluator:
             evaluating the value of the event function
         """
 
-        if event in self.valid_event_values:
-            return self._event_values[event.event_index]
         data = DataProvider(evaluator=self,
                             time=self.time)
         event_value = event.event_function(data)
-        self._event_values[event.event_index] = event_value
-        self.valid_event_values.add(event)
         return event_value
 
     def __getitem__(self, item: Union[tuple, Callable]):
@@ -246,6 +201,7 @@ class DataProvider:
         The contents of the current signals, accessed by indexing using the
         ``Port`` objects.
     """
+
     def __init__(self, evaluator, time):
         self.evaluator = evaluator
         self.time = time

@@ -197,7 +197,7 @@ def test_evaluator_with_initial_inputs():
                             initial_inputs)
 
 
-def test_algebraic_loop_error():
+def test_recursion_error():
     """Test the detection of algebraic loops"""
 
     system = System()
@@ -210,7 +210,7 @@ def test_algebraic_loop_error():
     port_b.connect(signal_b)
 
     evaluator = Evaluator(time=0, system=system)
-    with pytest.raises(AlgebraicLoopError):
+    with pytest.raises(RecursionError):
         evaluator.get_port_value(signal_a)
 
 
