@@ -10,7 +10,7 @@ import numpy as np
 import scipy.integrate
 import scipy.optimize
 
-from modypy.model import Port, State, ZeroCrossEventSource
+from modypy.model import Port, State, ZeroCrossEventSource, InputSignal
 from modypy.model.system import System
 from modypy.model.evaluation import Evaluator, DataProvider
 
@@ -129,15 +129,20 @@ class SimulationResult:
                               np.empty((self.system.num_outputs,
                                         RESULT_SIZE_EXTENSION))]
 
-    def get_port_value(self, port: Port):
-        """Determine the value of the given port in this result object"""
-
-        return self.signals[port.signal_slice].reshape(port.shape + (-1,))
-
     def get_state_value(self, state: State):
         """Determine the value of the given state in this result object"""
 
         return self.state[state.state_slice].reshape(state.shape + (-1,))
+
+    def get_input_value(self, signal: InputSignal):
+        """Determine the value of the given input in this result object"""
+
+        return self.inputs[signal.input_slice].reshape(signal.shape + (-1,))
+
+    def get_port_value(self, port: Port):
+        """Determine the value of the given port in this result object"""
+
+        return self.signals[port.signal_slice].reshape(port.shape + (-1,))
 
     def get_event_value(self, event: ZeroCrossEventSource):
         """Determine the value of the given zero-crossing event in this result
@@ -148,7 +153,11 @@ class SimulationResult:
     def __getitem__(self, item: Union[tuple, Callable]):
         if isinstance(item, tuple):
             # Resolve recursively
-            return self[item[0]][item[1:]]
+            value = item[0](self)
+            if len(item) == 2:
+                return value[item[1]]
+            else:
+                return value[item[1:]]
         else:
             # Resolve via callable protocol
             return item(self)

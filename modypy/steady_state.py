@@ -355,7 +355,7 @@ class _SignalsConstraint(opt.NonlinearConstraint):
         for signal, signal_offset in zip(self.constrained_signals,
                                          self.signal_offsets):
             signal_vector[signal_offset:signal_offset + signal.size] = \
-                evaluator.get_port_value(signal)
+                signal(evaluator)
         return signal_vector
 
 
@@ -376,7 +376,7 @@ def _port_objective_function(config: SteadyStateConfiguration, x):
                           system=config.system,
                           state=state,
                           inputs=inputs)
-    return evaluator.get_port_value(config.objective)
+    return config.objective(evaluator)
 
 
 def _general_objective_function(config: SteadyStateConfiguration, x):

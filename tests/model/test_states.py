@@ -47,7 +47,7 @@ def test_signal_state():
 
     # Test the output
     evaluator = Evaluator(time=0, system=system)
-    npt.assert_almost_equal(evaluator.get_port_value(state_a),
+    npt.assert_almost_equal(state_a(evaluator),
                             np.zeros(1))
 
 

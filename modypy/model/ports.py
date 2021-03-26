@@ -93,12 +93,12 @@ class Port:
                 # the reference of the other port.
                 other.reference.reference = self.reference
 
-    def __call__(self, provider):
+    def __call__(self, system_state):
         if self.size == 0:
             return np.empty(self.shape)
         if self.signal is None:
             raise PortNotConnectedError()
-        return provider.get_port_value(self.signal)
+        return self.signal(system_state)
 
 
 class MultipleSignalsError(RuntimeError):
@@ -167,6 +167,12 @@ class Signal(Port):
         return range(self.signal_index,
                      self.signal_index+self.size)
 
+    def __call__(self, system_state):
+        if callable(self.value):
+            return self.value(system_state)
+        else:
+            return self.value
+
 
 class InputSignal(Signal):
     """An ``InputSignal`` is a special kind of signal that is considered an
@@ -192,3 +198,6 @@ class InputSignal(Signal):
 
         return range(self.input_index,
                      self.input_index+self.size)
+
+    def __call__(self, system_state):
+        return system_state.get_input_value(self)

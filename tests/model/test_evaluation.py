@@ -211,7 +211,7 @@ def test_recursion_error():
 
     evaluator = Evaluator(time=0, system=system)
     with pytest.raises(RecursionError):
-        evaluator.get_port_value(signal_a)
+        signal_a(evaluator)
 
 
 def test_port_not_connected_error():
@@ -222,7 +222,7 @@ def test_port_not_connected_error():
 
     evaluator = Evaluator(time=0, system=system)
     with pytest.raises(PortNotConnectedError):
-        evaluator.get_port_value(port)
+        port(evaluator)
 
 
 def test_old_access_methods():

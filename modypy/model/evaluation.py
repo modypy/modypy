@@ -9,7 +9,7 @@ import numpy as np
 
 from .events import EventPort
 from .system import System
-from .ports import Port, PortNotConnectedError
+from .ports import Port, PortNotConnectedError, InputSignal
 from .states import State
 
 
@@ -65,7 +65,7 @@ class Evaluator:
         """The output vector for the complete system"""
         output_vector = np.empty(self.system.num_outputs)
         for port in self.system.outputs:
-            port_value = self.get_port_value(port)
+            port_value = port(self)
             output_vector[port.output_slice] = port_value.flatten()
         return output_vector
 
@@ -88,6 +88,17 @@ class Evaluator:
           The value of the state
         """
         return self._state[state.state_slice].reshape(state.shape)
+
+    def get_input_value(self, signal: InputSignal):
+        """Determine the value of a given input signal.
+
+        Args:
+            signal: The input signal
+
+        Returns:
+            The value of the input signal
+        """
+        return self._inputs[signal.input_slice].reshape(signal.shape)
 
     def get_port_value(self, port: Port):
         """Determine the value of the given port.
@@ -215,6 +226,9 @@ class DataProvider:
     def get_event_value(self, event: EventPort):
         return self.evaluator.get_event_value(event)
 
+    def get_input_value(self, input_signal: InputSignal):
+        return self.evaluator.get_input_value(input_signal)
+
     @property
     def states(self):
         """Old way of accessing the states dictionary. Deprecated."""
@@ -245,7 +259,11 @@ class DataProvider:
     def __getitem__(self, item: Union[tuple, Callable]):
         if isinstance(item, tuple):
             # Resolve recursively
-            return self[item[0]][item[1:]]
+            value = item[0](self)
+            if len(item) == 2:
+                return value[item[1]]
+            else:
+                return value[item[1:]]
         else:
             # Use the callable-dispatch
             return item(self)

@@ -142,7 +142,7 @@ def test_port_access():
     system = System()
 
     port = Port(system)
-    signal = Signal(system)
+    signal = Signal(system, value=Mock())
     unconnected_port = Port(system)
 
     port.connect(signal)
@@ -151,7 +151,7 @@ def test_port_access():
 
     # Check handling of connected ports
     port(provider)
-    provider.get_port_value.assert_called_with(signal)
+    signal.value.assert_called_with(provider)
 
     # Check handling of unconnected ports
     with pytest.raises(PortNotConnectedError):

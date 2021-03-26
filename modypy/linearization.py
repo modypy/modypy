@@ -198,6 +198,6 @@ def _system_function(config: LinearizationConfiguration, x_ref):
     outputs = np.zeros(config.num_outputs)
     for output in config.outputs:
         outputs[output.output_index:output.output_index+output.port.size] = \
-            evaluator.get_port_value(output.port)
+            output.port(evaluator)
 
     return np.concatenate((evaluator.state_derivative, outputs))

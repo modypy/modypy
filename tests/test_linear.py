@@ -87,7 +87,7 @@ def test_lti_empty():
                     feed_through_matrix=np.empty((0, 0)))
 
     evaluator = Evaluator(time=0, system=system)
-    output = evaluator.get_port_value(lti.output)
+    output = lti.output(evaluator)
     assert output.size == 0
 
 
@@ -98,7 +98,7 @@ def test_gain_class():
     gain_block.input.connect(gain_in)
 
     evaluator = Evaluator(time=0, system=system)
-    npt.assert_almost_equal(evaluator.get_port_value(gain_block.output),
+    npt.assert_almost_equal(gain_block.output(evaluator),
                             [11, 25])
 
 
@@ -110,7 +110,7 @@ def test_gain_function():
                        input_signal=gain_in)
 
     evaluator = Evaluator(time=0, system=system)
-    npt.assert_almost_equal(evaluator.get_port_value(gain_signal),
+    npt.assert_almost_equal(gain_signal(evaluator),
                             [11, 25])
 
 
