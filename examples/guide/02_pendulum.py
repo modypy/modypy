@@ -23,7 +23,7 @@ system = System()
 # Define the derivatives of the states
 def omega_dt(data):
     """Calculate the derivative of the angular velocity"""
-    return -GRAVITY/LENGTH * np.sin(data[alpha])
+    return -GRAVITY/LENGTH * np.sin(alpha(data))
 
 
 # Create the omega state
@@ -44,10 +44,10 @@ else:
     # Plot the result
     alpha_line, omega_line = \
         plt.plot(simulator.result.time,
-                 simulator.result[alpha, 0],
+                 alpha(simulator.result)[0],
                  "r",
                  simulator.result.time,
-                 simulator.result[omega, 0],
+                 omega(simulator.result)[0],
                  "g")
     plt.legend((alpha_line, omega_line), ("Alpha", "Omega"))
     plt.title("Pendulum")

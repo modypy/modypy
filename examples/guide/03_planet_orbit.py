@@ -17,9 +17,10 @@ PLANET_ORBIT_TIME = 365.256
 
 # Define the initial state
 PLANET_VELOCITY = 2 * np.pi * PLANET_ORBIT / PLANET_ORBIT_TIME
-X_0 = np.c_[PLANET_ORBIT, 0]
-V_0 = 0.9*PLANET_VELOCITY * np.c_[np.sin(np.deg2rad(20)),
-                                  np.cos(np.deg2rad(20))]
+X_0 = PLANET_ORBIT * np.c_[np.cos(np.deg2rad(20)),
+                           np.sin(np.deg2rad(20))]
+V_0 = 0.5*PLANET_VELOCITY * np.c_[-np.sin(np.deg2rad(20)),
+                                  +np.cos(np.deg2rad(20))]
 
 # Create the system
 system = System()
@@ -52,7 +53,7 @@ if msg is not None:
     print("Simulation failed with message '%s'" % msg)
 else:
     # Plot the result
-    trajectory = simulator.result[position]
+    trajectory = position(simulator.result)
     plt.plot(trajectory[0], trajectory[1])
     plt.title("Planet Orbit")
     plt.savefig("03_planet_orbit_simulation.png")

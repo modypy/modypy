@@ -75,18 +75,20 @@ def test_lti_simulation(lti_system_with_reference):
 
     # Check that states are properly mapped in the result
     for state in sys.states:
-        npt.assert_equal(state(simulator.result),
-                         simulator.result[state])
+        from_result = simulator.result.state[state.state_slice]
+        from_result = from_result.reshape(state.shape+(-1,))
+        npt.assert_equal(state(simulator.result), from_result)
 
     # Check that signals are properly mapped in the result
     for signal in sys.signals:
-        npt.assert_equal(signal(simulator.result),
-                         simulator.result[signal])
+        from_result = simulator.result.signals[signal.signal_slice]
+        from_result = from_result.reshape(signal.shape+(-1,))
+        npt.assert_equal(signal(simulator.result), from_result)
 
     # Check that events are properly mapped in the result
     for event in sys.events:
         npt.assert_equal(event(simulator.result),
-                         simulator.result[event])
+                         simulator.result.events[event.event_index])
 
     # Determine the system response and state values of the reference system
     ref_time, ref_output, ref_state = scipy.signal.lsim2(
@@ -200,11 +202,11 @@ def test_excessive_events_second_level():
                   derivative_function=(lambda data: -1),
                   initial_condition=5)
     event = ZeroCrossEventSource(system,
-                                 event_function=(lambda data: state(data)))
+                                 event_function=state)
 
     def event_handler(data):
         """Event handler for the zero-crossing event"""
-        data[state] = -data[state]
+        state.set_value(data, -state(data))
 
     event.register_listener(event_handler)
 
@@ -275,7 +277,7 @@ def test_discrete_only():
 
     def increase_counter(data):
         """Increase the counter whenever a clock event occurs"""
-        data[counter] = data[counter] + 1
+        counter.set_value(data, counter(data) + 1)
 
     clock.register_listener(increase_counter)
 

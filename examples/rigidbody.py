@@ -59,19 +59,19 @@ assert message is None
 fig_euler, (ax_yaw, ax_pitch, ax_roll) = plt.subplots(nrows=3, sharex="row")
 ax_yaw.plot(sim.result.time,
             np.rad2deg(
-                sim.result[dcm_to_euler.yaw, 0]))
+                dcm_to_euler.yaw(sim.result)))
 ax_pitch.plot(sim.result.time,
               np.rad2deg(
-                  sim.result[dcm_to_euler.pitch, 0]))
+                  dcm_to_euler.pitch(sim.result)))
 ax_roll.plot(sim.result.time,
              np.rad2deg(
-                 sim.result[dcm_to_euler.roll, 0]))
+                 dcm_to_euler.roll(sim.result)))
 ax_yaw.set_title("Yaw")
 ax_pitch.set_title("Pitch")
 ax_roll.set_title("Roll")
 
 # Plot the trajectory in top view
 fig_top_view, ax = plt.subplots()
-position = sim.result[rb_6dof.position_earth]
+position = rb_6dof.position_earth(sim.result)
 ax.plot(position[0], position[1])
 plt.show()

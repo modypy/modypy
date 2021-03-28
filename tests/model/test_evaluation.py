@@ -44,8 +44,8 @@ def test_evaluator():
                      derivative_function=None)
     signal_c = constant(system, value=16)
     signal_d = Signal(system, shape=2, value=(lambda data: [17, 19]))
-    signal_e = Signal(system, value=(lambda data: data[signal_d, 0]))
-    signal_f = Signal(system, value=(lambda data: data[event_b]))
+    signal_e = Signal(system, value=(lambda data: signal_d(data)[0]))
+    signal_f = Signal(system, value=(lambda data: event_b(data)))
     output_a = OutputPort(system, shape=(3, 3))
     output_c = OutputPort(system)
     empty_port = Port(system, shape=0)
@@ -152,16 +152,16 @@ def test_evaluator():
     npt.assert_almost_equal(evaluator.get_event_value(event_b),
                             event_b.event_function(None))
 
-    # Check the dictionary access
-    npt.assert_equal(evaluator[event_a],
-                     event_a.event_function(None))
-    npt.assert_equal(evaluator[state_a],
+    # Check the function access
+    npt.assert_equal(event_a(evaluator),
+                     event_a.event_function(evaluator))
+    npt.assert_equal(state_a(evaluator),
                      state_a.initial_condition)
-    npt.assert_equal(evaluator[input_a],
+    npt.assert_equal(input_a(evaluator),
                      input_a.value)
-    npt.assert_equal(evaluator[output_a, 1],
+    npt.assert_equal(output_a(evaluator)[1],
                      input_a.value[1])
-    npt.assert_equal(evaluator[signal_c],
+    npt.assert_equal(signal_c(evaluator),
                      signal_c.value)
 
 

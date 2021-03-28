@@ -1,5 +1,5 @@
 """
-Simple integrator element with sine wave input.
+Simple integrator element with cosine wave input.
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,27 +11,20 @@ from modypy.simulation import Simulator
 system = System()
 
 
-# Define the function for generating the sine signal
-def sine_input(data):
+# Define the function for generating the cosine signal
+def cosine_input(system_state):
     """Calculate the value of the input signal"""
-    return np.sin(data.time)
+    return np.cos(system_state.time)
 
 
 # Define the input signal
 input_signal = Signal(system,
                       shape=1,
-                      value=sine_input)
-
-
-# Define the integrator state
-def integrator_dt(data):
-    return data[input_signal]
-
+                      value=cosine_input)
 
 integrator_state = State(system,
                          shape=1,
-                         derivative_function=integrator_dt,
-                         initial_condition=-1)
+                         derivative_function=input_signal)
 
 # Set up a simulation
 simulator = Simulator(system,
@@ -46,10 +39,10 @@ else:
     # Plot the result
     input_line, integrator_line = \
         plt.plot(simulator.result.time,
-                 simulator.result[input_signal, 0],
+                 input_signal(simulator.result),
                  "r",
                  simulator.result.time,
-                 simulator.result[integrator_state, 0],
+                 integrator_state(simulator.result)[0],
                  "g")
     plt.legend((input_line, integrator_line), ("Input", "Integrator State"))
     plt.title("Integrator")

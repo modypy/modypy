@@ -69,10 +69,18 @@ class State:
         return range(self.state_index,
                      self.state_index + self.size)
 
-    def __call__(self, provider, value=None):
-        if value is not None:
-            provider.set_state_value(self, value)
-        return provider.get_state_value(self)
+    def __call__(self, system_state):
+        return system_state.get_state_value(self)
+
+    def set_value(self, system_state, value):
+        """
+        Update the value of this state in the given system state.
+
+        Args:
+            system_state: The system state to update
+            value: The value to set this state to
+        """
+        system_state.set_state_value(self, value)
 
 
 class SignalState(State, Signal):

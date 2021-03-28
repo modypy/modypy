@@ -27,8 +27,8 @@ inflow_velocity = InputSignal(system)
 def height_derivative(data):
     """Calculate the time derivative of the height"""
 
-    return (A1*data[inflow_velocity]
-            - A2*np.sqrt(2*G*data[height_state]))/At
+    return (A1*inflow_velocity(data)
+            - A2*np.sqrt(2*G*height_state(data)))/At
 
 
 height_state = SignalState(system, derivative_function=height_derivative)
@@ -43,8 +43,8 @@ steady_state_config.state_bounds[height_state.state_slice] = TARGET_HEIGHT
 # Find the steady state
 result = find_steady_state(steady_state_config)
 print("Target height: %f" % TARGET_HEIGHT)
-print("Steady state height: %f" % result.evaluator[height_state])
-print("Steady state inflow: %f" % result.evaluator[inflow_velocity])
+print("Steady state height: %f" % height_state(result.evaluator))
+print("Steady state inflow: %f" % inflow_velocity(result.evaluator))
 print("Steady state derivative: %s" % result.evaluator.state_derivative)
 print("Theoretical steady state inflow: %f" % (
     np.sqrt(2*G*TARGET_HEIGHT)*A2/A1

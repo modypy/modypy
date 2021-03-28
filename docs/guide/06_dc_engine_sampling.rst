@@ -3,22 +3,24 @@ Discrete-Time: Sampling a DC-Engine
 
 In the previous examples in this guide we only used continuous-time simulation.
 However, MoDyPy is also capable of modelling systems that mix continuous-
-and discrete-time elements. The discrete-time elements are modelled using clocks
-and states that do not have a derivative function, but which are instead updated
-as a reaction to events - either from a clock or from a zero-crossing event
-source.
+and discrete-time elements.
+The discrete-time elements are modelled using clocks and states that do not have
+a derivative function, but which are instead updated as a reaction to events --
+either from a clock or from a zero-crossing event source.
 
-In the preceding example we modelled a DC-engine with a propeller. In this
-example, we will extend that system by sampling the generated thrust at regular
-time intervals. At the end of this exercise you will know
+In the preceding example we modelled a DC-engine with a propeller.
+In this example, we will extend that system by sampling the generated thrust at
+regular time intervals.
+At the end of this exercise you will know
 
 - how to define clocks,
 - how to introduce states for discrete-time systems, and
 - how to update states when a clock tick occurs.
 
 For this, we will slightly modify the DC-engine example from the previous
-exercise. The DC-motor block and the propeller block are also provided as
-standard blocks, which we will use in this example.
+exercise.
+The DC-motor block and the propeller block are also provided as standard blocks,
+which we will use in this example.
 
 Defining our System
 -------------------
@@ -69,13 +71,14 @@ Now, we define a state for keeping the last sampled value of the thrust signal:
     # Set up the state for keeping the sampled value.
     sample_state = SignalState(system)
 
-Note how we did not specify a derivative function for this state. Internally,
-this is modelled as the derivative function being a constant zero, i.e. the
-state does not change over time.
+Note how we did not specify a derivative function for this state.
+Internally, this is modelled as the derivative function being a constant zero,
+i.e., the state does not change over time.
 
 However, we want our state to change, but we want it to change at specific,
-periodic events. For this, we first declare a clock, that will deliver such a
-stream of periodic events:
+periodic events.
+For this, we first declare a clock, that will deliver such a stream of periodic
+events:
 
 .. code-block:: python
 
@@ -90,8 +93,7 @@ sampled signal, and we register that function as an event handler on the clock:
     # Define the function for updating the state
     def update_sample(data):
         """Update the state of the sampler"""
-
-        data[sample_state] = data[engine.thrust]
+        sample_state.set_value(data, engine.thrust(data))
 
 
     # Register it as event handler on the clock
@@ -100,8 +102,8 @@ sampled signal, and we register that function as an event handler on the clock:
 Running the Simulation
 ----------------------
 
-Our system is now fully defined. Now we want to run a simulation of it and plot
-the results:
+Our system is now fully defined.
+Now we want to run a simulation of it and plot the results:
 
 .. code-block:: python
 
@@ -114,11 +116,11 @@ the results:
     else:
         # Plot the result
         plt.plot(simulator.result.time,
-                 simulator.results[engine.thrust, 0],
+                 engine.thrust(simulator.result)[0],
                  "r",
                  label="Continuous-Time")
         plt.step(simulator.result.time,
-                 simulator.result[sample_state, 0],
+                 sample_state(simulator.result)[0],
                  "g",
                  where="post",
                  label="Sampled")
@@ -141,11 +143,13 @@ The result is shown in :numref:`dc_engine_sampling`.
 Working with Clocks
 -------------------
 
-There are many possibilities for defining clocks. Multiple clocks may have
-different periods, or they may have the same period but be offset against each
-other, they may only run until a specific point in time and then stop. Have a
-look at :class:`modypy.model.events.Clock` to find out about all the
+There are many possibilities for defining clocks.
+Multiple clocks may have different periods, or they may have the same period but
+be offset against each other, they may only run until a specific point in time
+and then stop.
+Have a look at :class:`modypy.model.events.Clock` to find out about all the
 possibilities.
 
-Also, the quicker way of introducing a so-called zero-order hold element as we
-did here is using the :func:`modypy.blocks.discrete.zero_order_hold` function.
+Also, the quicker way of introducing a so-called `zero-order hold
+<https://en.wikipedia.org/wiki/Zero-order_hold>`_ element as we did here is
+using the :func:`modypy.blocks.discrete.zero_order_hold` function.

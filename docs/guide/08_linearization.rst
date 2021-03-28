@@ -2,12 +2,13 @@ Linearizing the Water Tank
 ==========================
 
 In the previous exercise we said that steady states can be used to linearize
-systems around given operating points. In this exercise we will do just that
-with our tank example.
+systems around given operating points.
+In this exercise we will do just that with our tank example.
 
-We reuse the code from the previous exercise. However, now we also need the
-function :func:`system_jacobian <modypy.linearization.system_jacobian>`, so
-we will extend our imports:
+We reuse the code from the previous exercise.
+However, now we also need the function
+:func:`system_jacobian <modypy.linearization.system_jacobian>`, so we will
+extend our imports:
 
 .. code-block:: python
 
@@ -63,8 +64,9 @@ Running the example again, we get this output:
 
 The matrices :math:`A`, :math:`B`, :math:`C` and :math:`D` represent a linear
 dynamical system where the state is :math:`\delta h\left(t\right)` and the input
-is :math:`\delta v_1\left(t\right)`. These represent the difference between the
-actual height and inflow velocity and those at the steady-state point:
+is :math:`\delta v_1\left(t\right)`.
+These represent the difference between the actual height and inflow velocity and
+those at the steady-state point:
 
 .. math::
     \delta h\left(t\right) &= h\left(t\right) - h_0 \\

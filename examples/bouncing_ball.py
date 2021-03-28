@@ -62,8 +62,8 @@ class BouncingBall(Block):
 
     def on_ground_event(self, data):
         """The handler for the ground event"""
-        data[self.position][1] = abs(data[self.position, 1])
-        data[self.velocity][1] = - self.gamma * data[self.velocity, 1]
+        self.position(data)[1] = abs(self.position(data)[1])
+        self.velocity(data)[1] = - self.gamma * self.velocity(data)[1]
 
 
 # Create a system containing the bouncing ball model

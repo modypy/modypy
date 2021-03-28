@@ -37,7 +37,7 @@ height = integrator(system,
 # Define the zero-crossing-event
 def bounce_event_function(data):
     """Define the value of the event function for detecting bounces"""
-    return data[height]
+    return height(data)
 
 
 bounce_event = ZeroCrossEventSource(system,
@@ -48,24 +48,25 @@ bounce_event = ZeroCrossEventSource(system,
 # Define the event-handler
 def bounce_event_handler(data):
     """Reverse the direction of motion after a bounce"""
-    data[height] = np.abs(data[height])
-    data[velocity] = -DELTA*data[velocity]
+    velocity.set_value(data, -DELTA*velocity(data))
 
 
+# Register it with the bounce event
 bounce_event.register_listener(bounce_event_handler)
 
 # Run a simulation
 simulator = Simulator(system,
-                      start_time=0.0)
-msg = simulator.run_until(time_boundary=8.0)
+                      start_time=0.0,
+                      max_successive_event_count=10)
+msg = simulator.run_until(time_boundary=8)
 
 if msg is not None:
     print("Simulation failed with message '%s'" % msg)
 else:
     # Plot the result
     plt.plot(simulator.result.time,
-             simulator.result[height, 0])
+             height(simulator.result)[0])
     plt.title("Bouncing Ball")
     plt.xlabel("Time")
-    plt.savefig("04_bouncing_ball_simulation.png")
+    plt.savefig("04_bouncing_ball_simulation_full.png")
     plt.show()

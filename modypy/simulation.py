@@ -139,28 +139,11 @@ class SimulationResult:
 
         return self.inputs[signal.input_slice].reshape(signal.shape + (-1,))
 
-    def get_port_value(self, port: Port):
-        """Determine the value of the given port in this result object"""
-
-        return self.signals[port.signal_slice].reshape(port.shape + (-1,))
-
     def get_event_value(self, event: ZeroCrossEventSource):
         """Determine the value of the given zero-crossing event in this result
         object"""
 
         return self.events[event.event_index]
-
-    def __getitem__(self, item: Union[tuple, Callable]):
-        if isinstance(item, tuple):
-            # Resolve recursively
-            value = item[0](self)
-            if len(item) == 2:
-                return value[item[1]]
-            else:
-                return value[item[1:]]
-        else:
-            # Resolve via callable protocol
-            return item(self)
 
 
 class Simulator:
@@ -632,14 +615,6 @@ class DataUpdater(DataProvider):
         start_index = state.state_index
         end_index = start_index + state.size
         self.new_state[start_index:end_index] = np.asarray(value).flatten()
-
-    def __setitem__(self, item: Union[tuple, Callable], value):
-        if isinstance(item, tuple):
-            # Resolve recursively
-            self[item[0]][item[1:]] = value
-        else:
-            # Resolve using the callable interface
-            item(self, value)
 
 
 class TickEntry:

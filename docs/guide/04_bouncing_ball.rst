@@ -1,8 +1,9 @@
 Zero-Crossing Events: A Bouncing Ball
 =====================================
 
-So far we have only modeled systems without any discontinuities. Now we want to
-model a bouncing ball without explicitly modelling the elasticity of the ball.
+So far we have only modeled systems without any discontinuities.
+Now we want to model a bouncing ball without explicitly modelling the elasticity
+of the ball.
 To do that, we need to detect when the ball hits the ground and modify its
 velocity according to the law of reflection.
 
@@ -22,20 +23,19 @@ gravity:
     \frac{d}{dt} h\left(t\right) &= v_y\left(t\right) \\
     \frac{d}{dt} v_y\left(t\right) &= -g
 
-However, once we hit the ground, the velocity will change its direction. Also,
-its magnitude will be diminished due to friction losses inside the ball, so we
-will have the new state and velocity after the bounce to be:
+However, once we hit the ground, the velocity will change its direction.
+Also, its magnitude will be diminished due to friction losses inside the ball,
+so we will have the new velocity after the bounce as follows:
 
 .. math::
-    h'\left(t\right) &= \left|h\left(t\right)\right| \\
     v'\left(t\right) &= - \delta \times v\left(t\right)
 
 Here, :math:`\delta` is the coefficient of restitution.
 
 We define the time when the ball hits the ground as the time when
-:math:`h\left(t\right)=0`. Put another way, the event occurs as
-:math:`h\left(t\right)` crosses the zero. This is why we call this a
-*zero-crossing event*.
+:math:`h\left(t\right)=0`.
+Put another way, the event occurs as :math:`h\left(t\right)` crosses the zero.
+This is why we call this a *zero-crossing event*.
 
 Defining our System
 -------------------
@@ -76,15 +76,15 @@ Let's define our system and our states first:
                         input_signal=velocity,
                         initial_condition=INITIAL_HEIGHT)
 
-So far, there is not much difference to the previous examples. But now we define
-our bounce-event:
+So far, there is not much difference to the previous examples.
+But now we define our bounce-event:
 
 .. code-block:: python
 
     # Define the zero-crossing-event
     def bounce_event_function(data):
         """Define the value of the event function for detecting bounces"""
-        return data[height]
+        return height(data)
 
 
     bounce_event = ZeroCrossEventSource(system,
@@ -94,10 +94,11 @@ our bounce-event:
 The function ``bounce_event_function`` is defined in such a way so that its
 value changes its sign exactly when our ball hits the ground (we assume that our
 ball is infinitely small -- we do physics after all).
+To achieve that, we simply use the height for the event function value.
 
 The parameter ``direction`` tells the simulator that only changes from positive
-to negative sign should be considered. Sign changes in the opposite directions
-would not be considered.
+to negative sign should be considered.
+Sign changes in the opposite directions would not be considered.
 
 Adding this event source to our system instructs the simulator to observe the
 value of the event function over time and to take special note of when its value
@@ -108,22 +109,14 @@ changes sign. However, we can do more:
     # Define the event-handler
     def bounce_event_handler(data):
         """Reverse the direction of motion after a bounce"""
-        data[height] = np.abs(data[height])
-        data[velocity] = -DELTA*data[velocity]
+        velocity.set_value(data, -DELTA*velocity(data))
 
 
+    # Register it with the bounce event
     bounce_event.register_listener(bounce_event_handler)
 
 The function ``bounce_event_handler`` applies exactly that change to our state
 which we described above by changing the sign and the magnitude of the velocity.
-In addition, it will ensure that the height is non-negative. We do this to
-avoid a continuing stream of zero-crossings due to numerical inaccuracies.
-
-Also, the ``direction`` parameter to the ``ZeroCrossingEventSource`` constructor
-becomes important again here as well, as the re-assignment of the height state
-with a non-negative value may also lead to a sign-change of the height state
-variable, and thus lead to another zero-crossing event. As a consequence, and
-endless sequence of events.
 
 Running the Simulation
 ----------------------
@@ -142,14 +135,14 @@ Now we can run a simulation again:
     else:
         # Plot the result
         plt.plot(simulator.result.time,
-                 simulator.result[height, 0])
+                 height(simulator.result)[0])
         plt.title("Bouncing Ball")
         plt.xlabel("Time")
         plt.savefig("04_bouncing_ball_simulation.png")
         plt.show()
 
-The resulting plot is shown in :numref:`bouncing_ball_simulation`. As you can
-see, our ball bounces happily.
+The resulting plot is shown in :numref:`bouncing_ball_simulation`.
+As you can see, our ball bounces happily.
 
 .. _bouncing_ball_simulation:
 .. figure:: 04_bouncing_ball_simulation.png

@@ -66,5 +66,5 @@ def test_state_access():
 
     # Check write access
     provider.reset_mock()
-    state(provider, 10)
+    state.set_value(provider, 10)
     provider.set_state_value.assert_called_with(state, 10)

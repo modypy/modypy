@@ -2,7 +2,8 @@ Multi-Dimensional States: A Planet Orbit
 ========================================
 
 In this exercise we will model the system of a sun and a planet orbiting around
-it. We will model the two-dimensional position and velocity of the planet.
+it.
+We will model the two-dimensional position and velocity of the planet.
 After completing this exercise, you will know
 
 - how to model systems with multi-dimensional states and
@@ -12,7 +13,7 @@ Deriving the Equations
 ----------------------
 
 In :numref:`planet_orbit` you can see a schematic drawing of the sun and the
-orbiting planet together with the position and the velovity of the planet.
+orbiting planet together with the position and the velocity of the planet.
 
 .. _planet_orbit:
 .. figure:: 03_planet_orbit.svg
@@ -48,8 +49,8 @@ And again, we have the time-derivative of the position equal the velocity:
     \frac{d}{dt} \vec{x}\left(t\right) = \vec{v}\left(t\right)
 
 With the initial conditions :math:`\vec{v}\left(t_0\right)=\vec{v}_0` and
-:math:`\vec{x}\left(t_0\right)=\vec{x}_0` our system is defined. So now let us
-implement it.
+:math:`\vec{x}\left(t_0\right)=\vec{x}_0` our system is defined.
+So now let us implement it.
 
 Defining our System
 -------------------
@@ -80,8 +81,10 @@ Following that we will define the system parameters and the initial states:
 
     # Define the initial state
     PLANET_VELOCITY = 2 * np.pi * PLANET_ORBIT / PLANET_ORBIT_TIME
-    X_0 = np.c_[PLANET_ORBIT, 0]
-    V_0 = 0.9*PLANET_VELOCITY * np.c_[np.sin(np.deg2rad(20)), np.cos(np.deg2rad(20))]
+    X_0 = PLANET_ORBIT * np.c_[np.cos(np.deg2rad(20)),
+                               np.sin(np.deg2rad(20))]
+    V_0 = 0.5*PLANET_VELOCITY * np.c_[-np.sin(np.deg2rad(20)),
+                                      +np.cos(np.deg2rad(20))]
 
 Note that we have scaled up the times to days to make them a bit more manageable.
 
@@ -109,8 +112,9 @@ Now let us define the system, its states and state derivatives:
     position = integrator(system, input_signal=velocity, initial_condition=X_0)
 
 The main thing that changed from the previous examples is that now our states
-are two-dimensional. In that case, ``modypy`` will provide their values as
-actual ``numpy`` arrays or vectors in this case.
+are two-dimensional.
+In that case, ``modypy`` will provide their values as actual ``numpy`` arrays or
+vectors in this case.
 
 Running the Simulation
 ----------------------
@@ -131,23 +135,24 @@ Finally, let us set up a simulation, run it and plot the results:
         print("Simulation failed with message '%s'" % msg)
     else:
         # Plot the result
-        trajectory = simulator.result[position]
+        trajectory = position(simulator.result)
         plt.plot(trajectory[0], trajectory[1])
         plt.title("Planet Orbit")
         plt.savefig("03_planet_orbit_simulation.png")
         plt.show()
 
 This time, we do not plot the values of the states over time, but instead we
-plot the trajectory. The result can be seen in :numref:`planet_orbit_simulation`.
+plot the trajectory.
+The result can be seen in :numref:`planet_orbit_simulation`.
 
 Note the additional parameter ``integrator_options`` to the
-:class:`Simulator <modypy.simulation.Simulator>` constructor. It is a dictionary
-of options which are to be passed to the constructor of the integrator being used.
-The ``rtol`` parameter increases the relative tolerance of the integration result
-to reduce the time til the simulator is done. For the planetary orbit, we do not
-need sub-meter resolution. The value of ``rtol`` given here still allows us to
-calculate the orbit positions and velocities to around 1,000 km or 1,000 km/d
-accuracy.
+:class:`Simulator <modypy.simulation.Simulator>` constructor.
+It is a dictionary of options which are to be passed to the constructor of the
+integrator being used. The ``rtol`` parameter increases the relative tolerance
+of the integration result to reduce the time til the simulator is done.
+For the planetary orbit, we do not need sub-meter resolution.
+The value of ``rtol`` given here still allows us to calculate the orbit
+positions and velocities to around 1,000 km or 1,000 km/d accuracy.
 
 .. _planet_orbit_simulation:
 .. figure:: 03_planet_orbit_simulation.png

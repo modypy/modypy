@@ -190,14 +190,6 @@ class Evaluator:
         event_value = event.event_function(data)
         return event_value
 
-    def __getitem__(self, item: Union[tuple, Callable]):
-        if isinstance(item, tuple):
-            # Resolve recursively
-            return self[item[0]][item[1:]]
-        else:
-            # Resolve by callable interface
-            return item(self)
-
 
 class DataProvider:
     """A ``DataProvider`` provides access to the data about the current point in
@@ -216,9 +208,6 @@ class DataProvider:
     def __init__(self, evaluator, time):
         self.evaluator = evaluator
         self.time = time
-
-    def get_port_value(self, port: Port):
-        return self.evaluator.get_port_value(port)
 
     def get_state_value(self, state: State):
         return self.evaluator.get_state_value(state)
@@ -255,15 +244,3 @@ class DataProvider:
                                          "and will be removed in the future. "
                                          "Use direct indexing instead."))
         return self
-
-    def __getitem__(self, item: Union[tuple, Callable]):
-        if isinstance(item, tuple):
-            # Resolve recursively
-            value = item[0](self)
-            if len(item) == 2:
-                return value[item[1]]
-            else:
-                return value[item[1:]]
-        else:
-            # Use the callable-dispatch
-            return item(self)
