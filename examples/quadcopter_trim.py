@@ -184,7 +184,9 @@ steady_state_config.signal_bounds[torques_sum.signal_slice, :] = 0
 # - The eight state derivatives (which are constrained to zero)
 # - The three components of the torque vector
 # - The vertical component of the thrust vector
-steady_state_config.signal_bounds[forces_sum.signal_index+2, :] = 0
+steady_state_config.add_port_constraint(forces_sum,
+                                        lower_limit=[-np.inf, -np.inf, 0],
+                                        upper_limit=[np.inf, np.inf, 0])
 
 # Find the steady state of the system
 sol = find_steady_state(steady_state_config)

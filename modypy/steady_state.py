@@ -4,6 +4,7 @@ Functions and classes for finding the steady state of a system.
 To determine a steady state, set up a :class:`SteadyStateConfiguration` object
 and pass it to :func:`find_steady_state`.
 """
+import warnings
 from functools import partial
 from itertools import accumulate, chain
 from typing import Union
@@ -11,8 +12,13 @@ from typing import Union
 import numpy as np
 import scipy.optimize as opt
 
-from modypy.model import Evaluator, Port, System
+from modypy.model import Evaluator, Port, System, PortNotConnectedError, Signal
 from modypy.model.evaluation import DataProvider
+
+
+class DuplicateSignalConstraintError(RuntimeError):
+    """Exception raised when multiple constraints are added to the same
+    signal"""
 
 
 class SteadyStateConfiguration:
@@ -46,6 +52,7 @@ class SteadyStateConfiguration:
         signal_bounds
             An array of shape (n,2), where n is the number of signals for the
             system. The format is the same as for `input_bounds`.
+            NOTE: Using this array is deprecated!
         steady_states
             An array of shape (n,), where n is the number of states for the
             system. The entry ``steady_states[k]`` is a boolean indicating
@@ -77,11 +84,42 @@ class SteadyStateConfiguration:
         # of unbounded signal values
         self.signal_bounds = np.full(shape=(self.system.num_signals, 2),
                                      fill_value=(np.nan, np.nan))
+
+        self.signal_constraints = list()
+        self.constrained_signals = set()
         # Flags indicating which states need to be steady
         # (by default, all states are steady states)
         self.steady_states = [True, ] * self.system.num_states
         # Set up the dictionary for solver options
         self.solver_options = dict()
+
+    def add_port_constraint(self,
+                            port: Port,
+                            lower_limit=-np.inf,
+                            upper_limit=np.inf):
+        """Introduce a constraint for the given port.
+
+        Args:
+            port
+                The port to be constrained
+            lower_limit
+                A numerical value or an array representing the lower limit for
+                the port. The default is negative infinity, i.e., no lower
+                limit.
+            upper_limit
+                A numerical value or an array representing the upper limit for
+                the port. The default is positive infinity, i.e., no upper
+                limit.
+        """
+        if port.signal is None:
+            raise PortNotConnectedError()
+        if port.signal in self.constrained_signals:
+            raise DuplicateSignalConstraintError()
+        self.signal_constraints.append(_SignalConstraint(self,
+                                                         port.signal,
+                                                         lower_limit,
+                                                         upper_limit))
+        self.constrained_signals.add(port.signal)
 
 
 def find_steady_state(config: SteadyStateConfiguration):
@@ -113,7 +151,12 @@ def find_steady_state(config: SteadyStateConfiguration):
 
     if (~np.isnan(config.signal_bounds)).any():
         # Set up the signal constraint
-        constraints.append(_SignalConstraint(config))
+        warnings.warn("The signal_bounds field of the steady-state "
+                      "configuration is deprecated and will be"
+                      "removed in a future version",
+                      DeprecationWarning)
+        constraints.append(_SignalsConstraint(config))
+    constraints += config.signal_constraints
 
     if config.objective is not None:
         # We have an actual objective function, so we can use the steady-state
@@ -219,6 +262,44 @@ class _StateDerivativeConstraint(opt.NonlinearConstraint):
 
 
 class _SignalConstraint(opt.NonlinearConstraint):
+    """A ``_PortConstraint`` represents constraints on a single port.
+
+    Args:
+        signal
+            The port to be constrained
+        lower_limit
+            A numerical value or an array representing the lower limit for
+            the port. The default is negative infinity, i.e., no lower limit.
+        upper_limit
+            A numerical value or an array representing the upper limit for
+            the port. The default is positive infinity, i.e., no upper limit.
+    """
+
+    def __init__(self,
+                 config: SteadyStateConfiguration,
+                 signal: Signal,
+                 lower_limit=-np.inf,
+                 upper_limit=np.inf):
+        self.config = config
+        self.signal = signal
+
+        super().__init__(fun=self.evaluate,
+                         lb=np.ravel(lower_limit),
+                         ub=np.ravel(upper_limit))
+
+    def evaluate(self, x):
+        """Calculate the value vector of the port"""
+
+        state = x[:self.config.system.num_states]
+        inputs = x[self.config.system.num_states:]
+        evaluator = Evaluator(time=self.config.time,
+                              system=self.config.system,
+                              state=state,
+                              inputs=inputs)
+        return np.ravel(self.signal(evaluator))
+
+
+class _SignalsConstraint(opt.NonlinearConstraint):
     """Represents the constraints on signals"""
 
     def __init__(self, config: SteadyStateConfiguration):

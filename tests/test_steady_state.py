@@ -8,8 +8,8 @@ import pytest
 from modypy.blocks.aerodyn import Propeller
 from modypy.blocks.linear import sum_signal
 from modypy.blocks.sources import constant
-from modypy.model import System, InputSignal, SignalState, State
-from modypy.steady_state import SteadyStateConfiguration, find_steady_state
+from modypy.model import System, InputSignal, SignalState, State, PortNotConnectedError, Port, Signal
+from modypy.steady_state import SteadyStateConfiguration, find_steady_state, DuplicateSignalConstraintError
 
 
 def water_tank_model(inflow_area=0.01,
@@ -46,7 +46,8 @@ def water_tank_model(inflow_area=0.01,
     return config
 
 
-def propeller_model(thrust_coefficient=0.09,
+def propeller_model(port_constraints=True,
+                    thrust_coefficient=0.09,
                     power_coefficient=0.04,
                     density=1.29,
                     diameter=8 * 25.4E-3,
@@ -98,7 +99,10 @@ def propeller_model(thrust_coefficient=0.09,
     # Minimize the total power
     config.objective = total_power
     # Constrain the total thrust
-    config.signal_bounds[total_thrust.signal_slice] = target_thrust
+    if port_constraints:
+        config.add_port_constraint(total_thrust, target_thrust)
+    else:
+        config.signal_bounds[total_thrust.signal_slice] = target_thrust
 
     return config
 
@@ -128,8 +132,8 @@ def pendulum(length=1):
     # Set up a steady-state configuration
     config = SteadyStateConfiguration(system)
     # Minimize the total energy
-    config.objective = (lambda data: (g*length*(1-np.cos(phi(data))) +
-                                      (length*omega(data))**2))
+    config.objective = (lambda data: (g * length * (1 - np.cos(phi(data))) +
+                                      (length * omega(data)) ** 2))
     # No steady states
     config.steady_states = [False, ] * system.num_states
     # Bounds for the angle
@@ -143,7 +147,8 @@ def pendulum(length=1):
     "config",
     [
         water_tank_model(),
-        propeller_model(),
+        propeller_model(port_constraints=True),
+        propeller_model(port_constraints=False),
         pendulum()
     ]
 )
@@ -168,13 +173,19 @@ def test_steady_state(config):
     assert (config.input_bounds[:, 0] <= sol.inputs).all()
     assert (sol.inputs <= config.input_bounds[:, 1]).all()
 
-    # Check signal bounds
-    lower_bounded_signal = ~np.isnan(config.signal_bounds[:, 0])
-    upper_bounded_signal = ~np.isnan(config.signal_bounds[:, 1])
-    assert (config.signal_bounds[lower_bounded_signal, 0] <=
-            sol.evaluator.signals[lower_bounded_signal]).all()
-    assert (sol.evaluator.signals[upper_bounded_signal] <=
-            config.signal_bounds[upper_bounded_signal, 0]).all()
+    # Check lower bounds
+    print(sol.evaluator.signals)
+    print(config.signal_bounds[:, 1] - sol.evaluator.signals)
+    assert (np.isnan(config.signal_bounds[:, 0]) |
+            (config.signal_bounds[:, 0] <= sol.evaluator.signals)).all()
+    # Check upper bounds
+    assert (np.isnan(config.signal_bounds[:, 1]) |
+            (sol.evaluator.signals <= config.signal_bounds[:, 1])).all()
+
+    for signal_constraint in config.signal_constraints:
+        value = signal_constraint.signal(sol.evaluator)
+        assert signal_constraint.lb <= value
+        assert value <= signal_constraint.ub
 
     # Check for steady states
     steady_state_count = np.count_nonzero(config.steady_states)
@@ -207,3 +218,33 @@ def test_without_goal():
 
     with pytest.raises(ValueError):
         find_steady_state(config)
+
+
+def test_unconnected_port():
+    """Test whether adding a port constraint for an unconnected port
+    leads to an exception"""
+
+    system = System()
+    port = Port(system)
+
+    config = SteadyStateConfiguration(system)
+
+    with pytest.raises(PortNotConnectedError):
+        config.add_port_constraint(port)
+
+
+def test_duplicate_signal_constraint():
+    """Test whether adding multiple constraints for the same signal leads
+    to an exception."""
+
+    system = System()
+    port_a = Port(system)
+    port_b = Port(system)
+    signal = Signal(system)
+    port_a.connect(signal)
+    port_b.connect(signal)
+
+    config = SteadyStateConfiguration(system)
+    config.add_port_constraint(port_a)
+    with pytest.raises(DuplicateSignalConstraintError):
+        config.add_port_constraint(port_b)
