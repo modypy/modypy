@@ -127,12 +127,6 @@ def test_evaluator():
     npt.assert_almost_equal(evaluator.get_state_value(state_b),
                             state_b.initial_condition)
 
-    # Check the get_event_value property
-    npt.assert_almost_equal(evaluator.get_event_value(event_a),
-                            event_a.event_function(None))
-    npt.assert_almost_equal(evaluator.get_event_value(event_b),
-                            event_b.event_function(None))
-
     # Check the function access
     npt.assert_equal(event_a(evaluator),
                      event_a.event_function(evaluator))

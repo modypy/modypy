@@ -175,7 +175,7 @@ def test_zero_crossing_event_access():
 
     event_port(provider)
 
-    provider.get_event_value.assert_called_with(event_source)
+    event_function.assert_called_with(provider)
 
     unconnected_port = EventPort(system)
 

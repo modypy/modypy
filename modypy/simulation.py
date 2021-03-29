@@ -139,12 +139,6 @@ class SimulationResult:
 
         return self.inputs[signal.input_slice].reshape(signal.shape + (-1,))
 
-    def get_event_value(self, event: ZeroCrossEventSource):
-        """Determine the value of the given zero-crossing event in this result
-        object"""
-
-        return self.events[event.event_index]
-
 
 class Simulator:
     """Simulator for dynamic systems."""
@@ -593,7 +587,7 @@ class Simulator:
         intermediate_evaluator = Evaluator(system=self.system,
                                            time=time,
                                            state=intermediate_state)
-        event_value = intermediate_evaluator.get_event_value(event)
+        event_value = event(intermediate_evaluator)
         return event_value
 
 

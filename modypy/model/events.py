@@ -179,8 +179,8 @@ class ZeroCrossEventSource(AbstractEventSource):
         self.event_index = self.owner.system.register_event(self)
         self.tolerance = tolerance
 
-    def __call__(self, provider):
-        return provider.get_event_value(self)
+    def __call__(self, system_state):
+        return self.event_function(system_state)
 
 
 class Clock(AbstractEventSource):

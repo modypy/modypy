@@ -3,7 +3,6 @@ Provides the ``Evaluator`` class, which can be used to evaluate the individual
 aspects (signals, state derivatives, ...) at any given point in time.
 """
 import warnings
-from typing import Union, Callable
 
 import numpy as np
 
@@ -74,8 +73,7 @@ class Evaluator:
         """The event vector for the complete system"""
         event_vector = np.empty(self.system.num_events)
         for event_instance in self.system.events:
-            event_vector[event_instance.event_index] = \
-                self.get_event_value(event_instance)
+            event_vector[event_instance.event_index] = event_instance(self)
         return event_vector
 
     def get_state_value(self, state: State):
@@ -124,25 +122,6 @@ class Evaluator:
             state_derivative = np.zeros(state.shape)
         return state_derivative
 
-    def get_event_value(self, event):
-        """Get the value of the event function of the given event
-
-        Args:
-          event: The event for which to calculate the value
-
-        Returns:
-          The value of the event function
-
-        Raises:
-          AlgebraicLoopError: if an algebraic loop is encountered while
-            evaluating the value of the event function
-        """
-
-        data = DataProvider(evaluator=self,
-                            time=self.time)
-        event_value = event.event_function(data)
-        return event_value
-
 
 class DataProvider:
     """A ``DataProvider`` provides access to the data about the current point in
@@ -164,9 +143,6 @@ class DataProvider:
 
     def get_state_value(self, state: State):
         return self.evaluator.get_state_value(state)
-
-    def get_event_value(self, event: EventPort):
-        return self.evaluator.get_event_value(event)
 
     def get_input_value(self, input_signal: InputSignal):
         return self.evaluator.get_input_value(input_signal)

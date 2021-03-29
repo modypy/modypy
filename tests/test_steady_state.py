@@ -174,8 +174,6 @@ def test_steady_state(config):
     assert (sol.inputs <= config.input_bounds[:, 1]).all()
 
     # Check lower bounds
-    print(sol.evaluator.signals)
-    print(config.signal_bounds[:, 1] - sol.evaluator.signals)
     assert (np.isnan(config.signal_bounds[:, 0]) |
             (config.signal_bounds[:, 0] <= sol.evaluator.signals)).all()
     # Check upper bounds
