@@ -135,9 +135,9 @@ def test_input_signal():
 
 
 def test_port_access():
-    """Test whether calling a ``Port`` object calls the ``get_port_value``
-    method of the provider object for connected ports and raises an exception
-    for unconnected ports"""
+    """Test whether calling a ``Port`` object calls the ``value`` callable
+    of the signal using the provider object for connected ports and raises an
+    exception for unconnected ports"""
 
     system = System()
 

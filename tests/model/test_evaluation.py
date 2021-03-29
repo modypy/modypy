@@ -119,25 +119,6 @@ def test_evaluator():
     npt.assert_almost_equal(evaluator.event_values[event_b.event_index],
                             event_b.event_function(None))
 
-    # Test empty port handling
-    assert evaluator.get_port_value(empty_port).size == 0
-
-    # Check the get_port_value function
-    npt.assert_almost_equal(evaluator.get_port_value(input_a),
-                            input_a.value)
-    npt.assert_almost_equal(evaluator.get_port_value(input_c),
-                            input_c.value)
-    npt.assert_almost_equal(evaluator.get_port_value(input_d),
-                            input_d.value)
-    npt.assert_almost_equal(evaluator.get_port_value(signal_c),
-                            signal_c.value.flatten())
-    npt.assert_almost_equal(evaluator.get_port_value(signal_d),
-                            signal_d.value(None))
-    npt.assert_almost_equal(evaluator.get_port_value(output_a),
-                            input_a.value)
-    npt.assert_almost_equal(evaluator.get_port_value(output_c),
-                            input_c.value)
-
     # Check the get_state_value function
     npt.assert_almost_equal(evaluator.get_state_value(state_a),
                             state_a.initial_condition)

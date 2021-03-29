@@ -57,7 +57,7 @@ class Evaluator:
         signal_vector = np.empty(self.system.num_signals)
         for signal_instance in self.system.signals:
             signal_vector[signal_instance.signal_slice] = \
-                self.get_port_value(signal_instance).flatten()
+                np.ravel(signal_instance(self))
         return signal_vector
 
     @property
@@ -99,53 +99,6 @@ class Evaluator:
             The value of the input signal
         """
         return self._inputs[signal.input_slice].reshape(signal.shape)
-
-    def get_port_value(self, port: Port):
-        """Determine the value of the given port.
-
-        If the value has not yet been calculated, it will be calculated before
-        this method returns. If an algebraic loop is encountered during
-        calculation, an ``AlgebraicLoopError`` will be raised.
-
-        Args:
-          port: The port for which the value shall be determined
-
-        Returns:
-          The value of the port
-
-        Raises:
-          AlgebraicLoopError: if an algebraic loop is encountered while
-            evaluating the value of the signal
-          PortNotConnectedError: if the port is not connected to a signal
-        """
-
-        if port.size == 0:
-            # An empty port has no value
-            return np.empty(port.shape)
-
-        signal = port.signal
-
-        if signal is None:
-            # This port is not connected to any signal, so we cannot determine
-            # its value.
-            raise PortNotConnectedError()
-
-        try:
-            signal_value = self._inputs[signal.input_slice]
-        except AttributeError:
-            # Perform evaluation
-            data = DataProvider(evaluator=self,
-                                time=self.time)
-            if callable(signal.value):
-                signal_value = signal.value(data)
-            else:
-                signal_value = signal.value
-
-        # Ensure that the signal has the correct shape
-        signal_value = np.asarray(signal_value).reshape(signal.shape)
-
-        # Return the value of the signal
-        return signal_value
 
     def get_state_derivative(self, state):
         """Get the state derivative of the given state.
