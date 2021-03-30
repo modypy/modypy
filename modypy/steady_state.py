@@ -48,10 +48,6 @@ class SteadyStateConfiguration:
         state_bounds
             An array of shape (n,2), where n is the number of states for the
             system. The format is the same as for `input_bounds`.
-        signal_bounds
-            An array of shape (n,2), where n is the number of signals for the
-            system. The format is the same as for `input_bounds`.
-            NOTE: Using this array is deprecated!
         steady_states
             An array of shape (n,), where n is the number of states for the
             system. The entry ``steady_states[k]`` is a boolean indicating
@@ -78,11 +74,6 @@ class SteadyStateConfiguration:
         # Set up the initial state bounds
         self.state_bounds = np.full(shape=(self.system.num_states, 2),
                                     fill_value=(-np.inf, np.inf))
-        # Set up the initial signal bounds
-        # We initialize these to NaN so that we can skip the calculation
-        # of unbounded signal values
-        self.signal_bounds = np.full(shape=(self.system.num_signals, 2),
-                                     fill_value=(np.nan, np.nan))
 
         self.signal_constraints = list()
         self.constrained_signals = set()
@@ -148,13 +139,6 @@ def find_steady_state(config: SteadyStateConfiguration):
     # Set up the constraints
     constraints = list()
 
-    if (~np.isnan(config.signal_bounds)).any():
-        # Set up the signal constraint
-        warnings.warn("The signal_bounds field of the steady-state "
-                      "configuration is deprecated and will be"
-                      "removed in a future version",
-                      DeprecationWarning)
-        constraints.append(_SignalsConstraint(config))
     constraints += config.signal_constraints
 
     if config.objective is not None:
@@ -291,66 +275,6 @@ class _SignalConstraint(opt.NonlinearConstraint):
                                    state=state,
                                    inputs=inputs)
         return np.ravel(self.signal(system_state))
-
-
-class _SignalsConstraint(opt.NonlinearConstraint):
-    """Represents the constraints on signals"""
-
-    def __init__(self, config: SteadyStateConfiguration):
-        self.config = config
-
-        # Signal constraints can be defined on individual signal components.
-        # To optimize evaluation, we only evaluate those signals that have at
-        # least one of their components constrained.
-        self.constrained_signals = [
-            signal for signal in self.config.system.signals
-            if (~np.isnan(self.config.signal_bounds[signal.signal_slice])).any()
-        ]
-
-        # We will build a vector of the constrained signals, and for that
-        # we assign offsets for the signals in that vector
-        self.signal_offsets = \
-            [0, ] + list(accumulate(signal.size
-                                    for signal in self.constrained_signals))
-
-        # Now we set up the bounds for each of these
-        indices = list(
-            chain.from_iterable(signal.signal_range
-                                for signal in self.constrained_signals))
-        bounds = self.config.signal_bounds[indices]
-        # Ensure that no nans are in the bounds
-        np.nan_to_num(bounds[:, 0],
-                      posinf=np.inf,
-                      neginf=-np.inf,
-                      nan=-np.inf,
-                      copy=False)
-        np.nan_to_num(bounds[:, 1],
-                      posinf=np.inf,
-                      neginf=-np.inf,
-                      nan=np.inf,
-                      copy=False)
-
-        opt.NonlinearConstraint.__init__(self,
-                                         fun=self.evaluate,
-                                         lb=bounds[:, 0],
-                                         ub=bounds[:, 1])
-
-    def evaluate(self, x):
-        """Calculate the vector of constrained signals"""
-
-        state = x[:self.config.system.num_states]
-        inputs = x[self.config.system.num_states:]
-        system_state = SystemState(time=self.config.time,
-                                   system=self.config.system,
-                                   state=state,
-                                   inputs=inputs)
-        num_signals = self.signal_offsets[-1]
-        signal_vector = np.empty(num_signals)
-        for signal, signal_offset in zip(self.constrained_signals,
-                                         self.signal_offsets):
-            signal_vector[signal_offset:signal_offset + signal.size] = \
-                signal(system_state)
-        return signal_vector
 
 
 def _port_objective_function(config: SteadyStateConfiguration, x):

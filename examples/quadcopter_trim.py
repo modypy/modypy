@@ -173,7 +173,9 @@ steady_state_config.input_bounds[:, 0] = 0
 # Force that currents and speeds are non-negative
 steady_state_config.state_bounds[:, 0] = 0
 # Enforce the total torque to be zero
-steady_state_config.signal_bounds[torques_sum.signal_slice, :] = 0
+steady_state_config.add_port_constraint(torques_sum,
+                                        lower_limit=[0, 0, 0],
+                                        upper_limit=[0, 0, 0])
 # Enforce the total vertical force to be zero
 # Note that we only force the vertical force to zero, as otherwise we'd have
 # too many equality constraints.

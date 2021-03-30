@@ -55,7 +55,9 @@ def test_aerodyn_blocks(thrust_coefficient, power_coefficient):
     # Determine the steady state
     steady_state_config = SteadyStateConfiguration(system)
     # Enforce the sum of forces to be zero
-    steady_state_config.signal_bounds[force_sum.signal_index+2, :] = 0
+    steady_state_config.add_port_constraint(force_sum,
+                                            lower_limit=[-np.inf, -np.inf, 0],
+                                            upper_limit=[np.inf, np.inf, 0])
     # Ensure that the input voltage is non-negative
     sol = find_steady_state(steady_state_config)
     assert sol.success

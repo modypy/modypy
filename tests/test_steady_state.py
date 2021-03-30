@@ -46,8 +46,7 @@ def water_tank_model(inflow_area=0.01,
     return config
 
 
-def propeller_model(port_constraints=True,
-                    thrust_coefficient=0.09,
+def propeller_model(thrust_coefficient=0.09,
                     power_coefficient=0.04,
                     density=1.29,
                     diameter=8 * 25.4E-3,
@@ -99,10 +98,7 @@ def propeller_model(port_constraints=True,
     # Minimize the total power
     config.objective = total_power
     # Constrain the total thrust
-    if port_constraints:
-        config.add_port_constraint(total_thrust, target_thrust)
-    else:
-        config.signal_bounds[total_thrust.signal_slice] = target_thrust
+    config.add_port_constraint(total_thrust, target_thrust)
 
     return config
 
@@ -147,8 +143,7 @@ def pendulum(length=1):
     "config",
     [
         water_tank_model(),
-        propeller_model(port_constraints=True),
-        propeller_model(port_constraints=False),
+        propeller_model(),
         pendulum()
     ]
 )
@@ -172,16 +167,6 @@ def test_steady_state(config):
     # Check input bounds
     assert (config.input_bounds[:, 0] <= sol.inputs).all()
     assert (sol.inputs <= config.input_bounds[:, 1]).all()
-
-    for signal in config.system.signals:
-        idxs = signal.signal_slice
-        value = signal(sol.system_state).flatten()
-        # Check lower bounds
-        assert (np.isnan(config.signal_bounds[idxs, 0]) |
-                (config.signal_bounds[idxs, 0] <= value)).all()
-        # Check upper bounds
-        assert (np.isnan(config.signal_bounds[idxs, 1]) |
-                (value <= config.signal_bounds[idxs, 1])).all()
 
     for signal_constraint in config.signal_constraints:
         value = signal_constraint.signal(sol.system_state)
