@@ -64,10 +64,10 @@ def test_aerodyn_blocks(thrust_coefficient, power_coefficient):
     npt.assert_almost_equal(sol.inputs, [3.5776728])
 
     npt.assert_almost_equal(
-        propeller.power(sol.evaluator),
+        propeller.power(sol.system_state),
         45.2926865)
     npt.assert_almost_equal(
-        np.ravel(thruster.torque_vector(sol.evaluator)),
+        np.ravel(thruster.torque_vector(sol.system_state)),
         [-3.67875,  3.67875, -0.0528764])
 
 

@@ -12,8 +12,7 @@ from typing import Union
 import numpy as np
 import scipy.optimize as opt
 
-from modypy.model import Evaluator, Port, System, PortNotConnectedError, Signal
-from modypy.model.evaluation import DataProvider
+from modypy.model import SystemState, Port, System, PortNotConnectedError, Signal
 
 
 class DuplicateSignalConstraintError(RuntimeError):
@@ -136,8 +135,8 @@ def find_steady_state(config: SteadyStateConfiguration):
             The state part of the solution
         inputs: ndarray
             The input part of the solution
-        evaluator: modypy.model.evaluation.Evaluator
-            An :class:`Evaluator <modypy.model.evaluation.Evaluator>` object,
+        system_state: modypy.model.evaluation.SystemState
+            An :class:`SystemState <modypy.model.evaluation.SystemState>` object,
             configured to evaluate the system at the determined steady-state
     """
 
@@ -197,10 +196,10 @@ def find_steady_state(config: SteadyStateConfiguration):
     result.config = config
     result.state = result.x[:config.system.num_states]
     result.inputs = result.x[config.system.num_states:]
-    result.evaluator = Evaluator(time=config.time,
-                                 system=config.system,
-                                 state=result.state,
-                                 inputs=result.inputs)
+    result.system_state = SystemState(time=config.time,
+                                      system=config.system,
+                                      state=result.state,
+                                      inputs=result.inputs)
 
     return result
 
@@ -242,11 +241,11 @@ class _StateDerivativeConstraint(opt.NonlinearConstraint):
 
         state = x[:self.config.system.num_states]
         inputs = x[self.config.system.num_states:]
-        evaluator = Evaluator(time=self.config.time,
-                              system=self.config.system,
-                              state=state,
-                              inputs=inputs)
-        derivative_vector = self.config.system.state_derivative(evaluator)
+        system_state = SystemState(time=self.config.time,
+                                   system=self.config.system,
+                                   state=state,
+                                   inputs=inputs)
+        derivative_vector = self.config.system.state_derivative(system_state)
         return derivative_vector
 
     def evaluate_squared(self, x):
@@ -287,11 +286,11 @@ class _SignalConstraint(opt.NonlinearConstraint):
 
         state = x[:self.config.system.num_states]
         inputs = x[self.config.system.num_states:]
-        evaluator = Evaluator(time=self.config.time,
-                              system=self.config.system,
-                              state=state,
-                              inputs=inputs)
-        return np.ravel(self.signal(evaluator))
+        system_state = SystemState(time=self.config.time,
+                                   system=self.config.system,
+                                   state=state,
+                                   inputs=inputs)
+        return np.ravel(self.signal(system_state))
 
 
 class _SignalsConstraint(opt.NonlinearConstraint):
@@ -341,16 +340,16 @@ class _SignalsConstraint(opt.NonlinearConstraint):
 
         state = x[:self.config.system.num_states]
         inputs = x[self.config.system.num_states:]
-        evaluator = Evaluator(time=self.config.time,
-                              system=self.config.system,
-                              state=state,
-                              inputs=inputs)
+        system_state = SystemState(time=self.config.time,
+                                   system=self.config.system,
+                                   state=state,
+                                   inputs=inputs)
         num_signals = self.signal_offsets[-1]
         signal_vector = np.empty(num_signals)
         for signal, signal_offset in zip(self.constrained_signals,
                                          self.signal_offsets):
             signal_vector[signal_offset:signal_offset + signal.size] = \
-                signal(evaluator)
+                signal(system_state)
         return signal_vector
 
 
@@ -367,11 +366,11 @@ def _port_objective_function(config: SteadyStateConfiguration, x):
 
     state = x[:config.system.num_states]
     inputs = x[config.system.num_states:]
-    evaluator = Evaluator(time=config.time,
-                          system=config.system,
-                          state=state,
-                          inputs=inputs)
-    return config.objective(evaluator)
+    system_state = SystemState(time=config.time,
+                               system=config.system,
+                               state=state,
+                               inputs=inputs)
+    return config.objective(system_state)
 
 
 def _general_objective_function(config: SteadyStateConfiguration, x):
@@ -389,10 +388,8 @@ def _general_objective_function(config: SteadyStateConfiguration, x):
 
     state = x[:config.system.num_states]
     inputs = x[config.system.num_states:]
-    evaluator = Evaluator(time=config.time,
-                          system=config.system,
-                          state=state,
-                          inputs=inputs)
-    data_provider = DataProvider(evaluator=evaluator,
-                                 time=config.time)
-    return config.objective(data_provider)
+    system_state = SystemState(time=config.time,
+                               system=config.system,
+                               state=state,
+                               inputs=inputs)
+    return config.objective(system_state)

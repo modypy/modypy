@@ -20,7 +20,6 @@ from typing import Union, Sequence, Tuple
 
 import numpy as np
 
-
 ShapeType = Union[int, Sequence[int], Tuple[int]]
 
 
@@ -115,6 +114,7 @@ class OutputPort(Port):
     """An ``OutputPort`` is a special port that is considered to be an output of
     the system. In simulation or steady-state determination, output ports play
     a special role."""
+
     def __init__(self, owner, shape: ShapeType = 1):
         Port.__init__(self, owner, shape)
         self.output_index = self.owner.system.allocate_output_lines(self.size)
@@ -125,14 +125,14 @@ class OutputPort(Port):
         """A slice object that represents the indices of this output in the
         outputs vector."""
         return slice(self.output_index,
-                     self.output_index+self.size)
+                     self.output_index + self.size)
 
     @property
     def output_range(self):
         """A range object that represents the indices of this output in the
         outputs vector."""
         return range(self.output_index,
-                     self.output_index+self.size)
+                     self.output_index + self.size)
 
 
 class Signal(Port):
@@ -158,14 +158,14 @@ class Signal(Port):
         """A slice object that represents the indices of this signal in the
         signals vector."""
         return slice(self.signal_index,
-                     self.signal_index+self.size)
+                     self.signal_index + self.size)
 
     @property
     def signal_range(self):
         """A range object that represents the indices of this signal in the
         signals vector."""
         return range(self.signal_index,
-                     self.signal_index+self.size)
+                     self.signal_index + self.size)
 
     def __call__(self, system_state):
         if callable(self.value):
@@ -178,6 +178,7 @@ class InputSignal(Signal):
     """An ``InputSignal`` is a special kind of signal that is considered an
     input into the system. In simulation and linearization, input signals play a
     special role."""
+
     def __init__(self, owner, shape: ShapeType = 1, value=0):
         Signal.__init__(self, owner, shape, value)
         self.input_index = self.owner.system.allocate_input_lines(self.size)
@@ -189,7 +190,7 @@ class InputSignal(Signal):
         inputs vector."""
 
         return slice(self.input_index,
-                     self.input_index+self.size)
+                     self.input_index + self.size)
 
     @property
     def input_range(self):
@@ -197,7 +198,7 @@ class InputSignal(Signal):
         inputs vector."""
 
         return range(self.input_index,
-                     self.input_index+self.size)
+                     self.input_index + self.size)
 
     def __call__(self, system_state):
         return system_state.get_input_value(self)

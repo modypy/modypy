@@ -2,6 +2,7 @@
 from functools import partial
 
 import numpy as np
+
 from modypy.model import Block, Port, State, Signal, SignalState
 
 

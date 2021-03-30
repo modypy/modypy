@@ -1,18 +1,16 @@
 """
 Provide classes for simulation.
 """
-import itertools
 import heapq
+import itertools
 from functools import partial
-from typing import Union, Callable
 
 import numpy as np
 import scipy.integrate
 import scipy.optimize
 
-from modypy.model import Port, State, ZeroCrossEventSource, InputSignal
+from modypy.model import State, InputSignal, SystemState
 from modypy.model.system import System
-from modypy.model.evaluation import Evaluator, DataProvider
 
 INITIAL_RESULT_SIZE = 16
 RESULT_SIZE_EXTENSION = 16
@@ -199,11 +197,11 @@ class Simulator:
         self.run_clock_ticks()
 
         # Determine the initial sample
-        evaluator = Evaluator(system=self.system,
-                              time=self.current_time,
-                              state=self.current_state)
-        self.current_inputs = evaluator.inputs
-        self.current_event_values = self.system.event_values(evaluator)
+        system_state = SystemState(system=self.system,
+                                   time=self.current_time,
+                                   state=self.current_state)
+        self.current_inputs = system_state.inputs
+        self.current_event_values = self.system.event_values(system_state)
 
         # Store the initial sample
         self.result.append(time=self.current_time,
@@ -269,11 +267,11 @@ class Simulator:
         self.run_clock_ticks()
 
         # Determine all characteristics of the current sample and store it
-        evaluator = Evaluator(system=self.system,
-                              time=self.current_time,
-                              state=self.current_state)
-        self.current_inputs = evaluator.inputs
-        self.current_event_values = self.system.event_values(evaluator)
+        system_state = SystemState(system=self.system,
+                                   time=self.current_time,
+                                   state=self.current_state)
+        self.current_inputs = system_state.inputs
+        self.current_event_values = self.system.event_values(system_state)
 
         self.result.append(time=self.current_time,
                            inputs=self.current_inputs,
@@ -301,10 +299,10 @@ class Simulator:
         last_event_values = self.current_event_values
 
         # Determine the event values for the new state
-        evaluator = Evaluator(system=self.system,
-                              time=new_time,
-                              state=new_state)
-        new_event_values = self.system.event_values(evaluator)
+        system_state = SystemState(system=self.system,
+                                   time=new_time,
+                                   state=new_state)
+        new_event_values = self.system.event_values(system_state)
 
         occurred_events = \
             self.find_occurred_events(last_event_values, new_event_values)
@@ -408,15 +406,13 @@ class Simulator:
         """
 
         while len(event_sources) > 0:
-            update_evaluator = Evaluator(system=self.system,
-                                         time=self.current_time,
-                                         state=self.current_state)
-            data_provider = DataUpdater(evaluator=update_evaluator,
-                                        time=self.current_time)
+            state_updater = _SystemStateUpdater(system=self.system,
+                                                time=self.current_time,
+                                                state=self.current_state)
 
             # Determine the values of all event functions before running the
             # event listeners.
-            last_event_values = self.system.event_values(update_evaluator)
+            last_event_values = self.system.event_values(state_updater)
 
             # Collect all listeners associated with the events
             # Note that we run each listener only once, even if it is associated
@@ -431,16 +427,16 @@ class Simulator:
             # effects are the same independent of the order in which they are
             # run.
             for listener in listeners:
-                listener(data_provider)
+                listener(state_updater)
 
             # Update the state
-            self.current_state = data_provider.new_state
+            self.current_state = state_updater.state
 
             # Determine the value of event functions after running the event
             # listeners
-            post_update_evaluator = Evaluator(system=self.system,
-                                              time=self.current_time,
-                                              state=self.current_state)
+            post_update_evaluator = SystemState(system=self.system,
+                                                time=self.current_time,
+                                                state=self.current_state)
             new_event_values = self.system.event_values(post_update_evaluator)
 
             # Determine which events occurred as a result of the changed state
@@ -523,8 +519,10 @@ class Simulator:
           The time-derivative of the state vector
         """
 
-        evaluator = Evaluator(system=self.system, time=time, state=state)
-        state_derivative = self.system.state_derivative(evaluator)
+        system_state = SystemState(system=self.system,
+                                   time=time,
+                                   state=state)
+        state_derivative = self.system.state_derivative(system_state)
         return state_derivative
 
     def objective_function(self, state_trajectory, event, time):
@@ -542,31 +540,28 @@ class Simulator:
         """
 
         intermediate_state = state_trajectory(time)
-        intermediate_evaluator = Evaluator(system=self.system,
-                                           time=time,
-                                           state=intermediate_state)
-        event_value = event(intermediate_evaluator)
+        intermediate_system_state = SystemState(system=self.system,
+                                                time=time,
+                                                state=intermediate_state)
+        event_value = event(intermediate_system_state)
         return event_value
 
 
-class DataUpdater(DataProvider):
-    def __init__(self, evaluator, time):
-        DataProvider.__init__(self, evaluator, time)
-        self.new_state = evaluator.state.copy()
+class _SystemStateUpdater(SystemState):
+    """A ``_SystemStateUpdater`` is a system state in which the states can be
+    updated"""
 
-    def get_state_value(self, state: State):
-        """Retrieve the value of the given state"""
-
-        start_index = state.state_index
-        end_index = start_index + state.size
-        return self.new_state[start_index:end_index].reshape(state.shape)
+    def __init__(self, time, system: System, state=None, inputs=None):
+        super().__init__(time, system, state, inputs)
+        # Make a copy of the state
+        self.state = self.state.copy()
 
     def set_state_value(self, state: State, value):
         """Update the value of the given state"""
 
         start_index = state.state_index
         end_index = start_index + state.size
-        self.new_state[start_index:end_index] = np.asarray(value).flatten()
+        self.state[start_index:end_index] = np.asarray(value).flatten()
 
 
 class TickEntry:

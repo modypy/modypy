@@ -1,8 +1,8 @@
 """
 Utilities for loading measurement data from the UIUC aeronautical databases.
 """
-import urllib.request as request
 import urllib.parse as parse
+import urllib.request as request
 
 import numpy as np
 from scipy.interpolate import interp1d
@@ -41,4 +41,4 @@ def load_static_propeller(path,
         power_coeff = data[:, 2]
 
         return interp1d(speed, thrust_coeff, **interp_options), \
-            interp1d(speed, power_coeff, **interp_options)
+               interp1d(speed, power_coeff, **interp_options)

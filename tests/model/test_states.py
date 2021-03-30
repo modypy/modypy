@@ -4,8 +4,7 @@ from unittest.mock import Mock
 import numpy as np
 import numpy.testing as npt
 
-from modypy.model import System
-from modypy.model.evaluation import Evaluator
+from modypy.model import System, SystemState
 from modypy.model.states import State, SignalState
 
 
@@ -46,8 +45,8 @@ def test_signal_state():
                           derivative_function=(lambda data: 0))
 
     # Test the output
-    evaluator = Evaluator(time=0, system=system)
-    npt.assert_almost_equal(state_a(evaluator),
+    system_state = SystemState(time=0, system=system)
+    npt.assert_almost_equal(state_a(system_state),
                             np.zeros(1))
 
 

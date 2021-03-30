@@ -4,8 +4,7 @@ import numpy.testing as npt
 
 from modypy.blocks.linear import LTISystem, Gain, gain, sum_signal, Sum
 from modypy.blocks.sources import constant
-from modypy.model import System, InputSignal, Signal
-from modypy.model.evaluation import Evaluator
+from modypy.model import System, InputSignal, Signal, SystemState
 
 
 def test_lti_nonsquare_state_matrix():
@@ -73,8 +72,8 @@ def test_lti_no_states():
     source = constant(system, value=1)
     source.connect(lti.input)
 
-    evaluator = Evaluator(time=0, system=system)
-    state_derivative = lti.state.derivative_function(evaluator)
+    system_state = SystemState(time=0, system=system)
+    state_derivative = lti.state.derivative_function(system_state)
     assert state_derivative.size == 0
 
 
@@ -86,8 +85,8 @@ def test_lti_empty():
                     output_matrix=np.empty((0, 0)),
                     feed_through_matrix=np.empty((0, 0)))
 
-    evaluator = Evaluator(time=0, system=system)
-    output = lti.output(evaluator)
+    system_state = SystemState(time=0, system=system)
+    output = lti.output(system_state)
     assert output.size == 0
 
 
@@ -97,8 +96,7 @@ def test_gain_class():
     gain_in = constant(system, value=[3, 4])
     gain_block.input.connect(gain_in)
 
-    evaluator = Evaluator(time=0, system=system)
-    npt.assert_almost_equal(gain_block.output(evaluator),
+    npt.assert_almost_equal(gain_block.output(None),
                             [11, 25])
 
 
@@ -109,8 +107,7 @@ def test_gain_function():
                        gain_matrix=[[1, 2], [3, 4]],
                        input_signal=gain_in)
 
-    evaluator = Evaluator(time=0, system=system)
-    npt.assert_almost_equal(gain_signal(evaluator),
+    npt.assert_almost_equal(gain_signal(None),
                             [11, 25])
 
 
@@ -131,8 +128,8 @@ def test_sum_block(channel_weights, output_size, inputs, expected_output):
         input_signal = InputSignal(system, shape=output_size, value=inputs[idx])
         sum_block.inputs[idx].connect(input_signal)
 
-    evaluator = Evaluator(time=0, system=system)
-    actual_output = sum_block.output(evaluator)
+    system_state = SystemState(time=0, system=system)
+    actual_output = sum_block.output(system_state)
     npt.assert_almost_equal(actual_output, expected_output)
 
 
@@ -154,8 +151,8 @@ def test_sum_signal(channel_weights, output_size, inputs, expected_output):
                             input_signals,
                             gains=channel_weights)
 
-    evaluator = Evaluator(time=0, system=system)
-    actual_output = sum_result(evaluator)
+    system_state = SystemState(time=0, system=system)
+    actual_output = sum_result(system_state)
     npt.assert_almost_equal(actual_output, expected_output)
 
 

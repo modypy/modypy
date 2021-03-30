@@ -5,13 +5,14 @@ from typing import List, Set
 
 import numpy as np
 
-from modypy.model.states import State
 from modypy.model.events import ZeroCrossEventSource, Clock
 from modypy.model.ports import InputSignal, OutputPort, Signal
+from modypy.model.states import State
 
 
 class System:
     """A system is a composition of states, signals and events."""
+
     def __init__(self):
         self.num_signals = 0
         self.signals: List[Signal] = list()
@@ -176,6 +177,45 @@ class System:
 
 class Block:
     """A block is a re-usable building block for systems."""
+
     def __init__(self, parent):
         self.parent = parent
         self.system = self.parent.system
+
+
+class SystemState:
+    """This class allows to evaluate the individual aspects (signals, state
+    derivatives, ...) of a system at any given time."""
+
+    def __init__(self, time, system: System, state=None, inputs=None):
+        self.time = time
+        self.system = system
+
+        if state is None:
+            state = system.initial_condition.copy()
+        self.state = state
+        if inputs is None:
+            inputs = system.initial_input.copy()
+        self.inputs = inputs
+
+    def get_state_value(self, state: State):
+        """Determine the value of a given state.
+
+        Args:
+          state: The state
+
+        Returns:
+          The value of the state
+        """
+        return self.state[state.state_slice].reshape(state.shape)
+
+    def get_input_value(self, signal: InputSignal):
+        """Determine the value of a given input signal.
+
+        Args:
+            signal: The input signal
+
+        Returns:
+            The value of the input signal
+        """
+        return self.inputs[signal.input_slice].reshape(signal.shape)

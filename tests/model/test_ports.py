@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from modypy.model import System
+from modypy.model import System, Port, SystemState, PortNotConnectedError
 from modypy.model.ports import \
     Port, \
     OutputPort, \
@@ -161,3 +161,14 @@ def test_port_access():
     # Check handling of unconnected ports
     with pytest.raises(PortNotConnectedError):
         unconnected_port(provider)
+
+
+def test_port_not_connected_error():
+    """Test the detection of unconnected ports"""
+
+    system = System()
+    port = Port(system)
+
+    system_state = SystemState(time=0, system=system)
+    with pytest.raises(PortNotConnectedError):
+        port(system_state)

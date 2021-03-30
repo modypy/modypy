@@ -175,7 +175,7 @@ def test_steady_state(config):
 
     for signal in config.system.signals:
         idxs = signal.signal_slice
-        value = signal(sol.evaluator).flatten()
+        value = signal(sol.system_state).flatten()
         # Check lower bounds
         assert (np.isnan(config.signal_bounds[idxs, 0]) |
                 (config.signal_bounds[idxs, 0] <= value)).all()
@@ -184,14 +184,14 @@ def test_steady_state(config):
                 (value <= config.signal_bounds[idxs, 1])).all()
 
     for signal_constraint in config.signal_constraints:
-        value = signal_constraint.signal(sol.evaluator)
+        value = signal_constraint.signal(sol.system_state)
         assert signal_constraint.lb <= value
         assert value <= signal_constraint.ub
 
     # Check for steady states
     steady_state_count = np.count_nonzero(config.steady_states)
     steady_state_derivatives = \
-        config.system.state_derivative(sol.evaluator)[config.steady_states]
+        config.system.state_derivative(sol.system_state)[config.steady_states]
     npt.assert_allclose(steady_state_derivatives.flatten(),
                         np.zeros(steady_state_count),
                         atol=1E-8)

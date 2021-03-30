@@ -5,8 +5,7 @@ around a given state with specified inputs.
 import numpy as np
 from scipy.misc import central_diff_weights
 
-from modypy.model import Port, System
-from modypy.model.evaluation import Evaluator
+from modypy.model import Port, System, SystemState
 
 
 class LinearizationConfiguration:
@@ -39,6 +38,7 @@ class LinearizationConfiguration:
             (default: 3)
 
     """
+
     def __init__(self,
                  system: System,
                  time=0,
@@ -151,9 +151,9 @@ def system_jacobian(config: LinearizationConfiguration,
     if single_matrix:
         return jac
     return jac[:config.system.num_states, :config.system.num_states], \
-        jac[:config.system.num_states, config.system.num_states:], \
-        jac[config.system.num_states:, :config.system.num_states], \
-        jac[config.system.num_states:, config.system.num_states:]
+           jac[:config.system.num_states, config.system.num_states:], \
+           jac[config.system.num_states:, :config.system.num_states], \
+           jac[config.system.num_states:, config.system.num_states:]
 
 
 def _get_central_diff_weights(order):
@@ -190,14 +190,14 @@ def _system_function(config: LinearizationConfiguration, x_ref):
     state = x_ref[:config.system.num_states]
     inputs = x_ref[config.system.num_states:]
 
-    evaluator = Evaluator(time=config.time,
-                          system=config.system,
-                          state=state,
-                          inputs=inputs)
+    system_state = SystemState(time=config.time,
+                               system=config.system,
+                               state=state,
+                               inputs=inputs)
 
     outputs = np.zeros(config.num_outputs)
     for output in config.outputs:
-        outputs[output.output_index:output.output_index+output.port.size] = \
-            output.port(evaluator)
+        outputs[output.output_index:output.output_index + output.port.size] = \
+            np.ravel(output.port(system_state))
 
-    return np.concatenate((config.system.state_derivative(evaluator), outputs))
+    return np.concatenate((config.system.state_derivative(system_state), outputs))

@@ -3,8 +3,10 @@ Tests for ``modypy.model.system``
 """
 import numpy as np
 import numpy.testing as npt
+from numpy import testing as npt
 
-from modypy.model import State, InputSignal, OutputPort, ZeroCrossEventSource
+from modypy.blocks.sources import constant
+from modypy.model import State, InputSignal, OutputPort, ZeroCrossEventSource, System, Signal, Port, SystemState
 from modypy.model.system import System, Block
 
 
@@ -73,3 +75,121 @@ def test_block():
     # Check the system property
     assert block_a.system == system
     assert block_b.system == system
+
+
+def test_system_state():
+    """Test the ``SystemState`` class"""
+
+    system = System()
+
+    input_a = InputSignal(system, shape=(3, 3), value=np.eye(3))
+    input_c = InputSignal(system, value=1)
+    input_d = InputSignal(system, shape=2, value=[2, 3])
+    state_a = State(system,
+                    shape=(3, 3),
+                    initial_condition=[[1, 2, 3],
+                                       [4, 5, 6],
+                                       [7, 8, 9]],
+                    derivative_function=input_a)
+    state_a_dep = State(system,
+                        shape=(3, 3),
+                        initial_condition=[[1, 2, 3],
+                                           [4, 5, 6],
+                                           [7, 8, 9]],
+                        derivative_function=input_a)
+    state_b = State(system,
+                    shape=3,
+                    initial_condition=[10, 11, 12],
+                    derivative_function=(lambda data: np.r_[13, 14, 15]))
+    state_b1 = State(system,
+                     shape=3,
+                     derivative_function=state_b)
+    state_b2 = State(system,
+                     shape=3,
+                     derivative_function=None)
+    signal_c = constant(system, value=16)
+    signal_d = Signal(system, shape=2, value=(lambda data: [17, 19]))
+    signal_e = Signal(system, value=(lambda data: signal_d(data)[0]))
+    signal_f = Signal(system, value=(lambda data: event_b(data)))
+    output_a = OutputPort(system, shape=(3, 3))
+    output_c = OutputPort(system)
+    empty_port = Port(system, shape=0)
+    event_a = ZeroCrossEventSource(system, event_function=(lambda data: 23))
+    event_b = ZeroCrossEventSource(system, event_function=(lambda data: 25))
+
+    system_state = SystemState(time=0, system=system)
+
+    output_a.connect(input_a)
+    output_c.connect(input_c)
+
+    # Check the initial state
+    npt.assert_almost_equal(system_state.state[state_a.state_slice],
+                            state_a.initial_condition.flatten())
+    npt.assert_almost_equal(system_state.state[state_a_dep.state_slice],
+                            state_a_dep.initial_condition.flatten())
+    npt.assert_almost_equal(system_state.state[state_b.state_slice],
+                            state_b.initial_condition.flatten())
+    npt.assert_almost_equal(system_state.state[state_b1.state_slice],
+                            state_b1.initial_condition.flatten())
+    npt.assert_almost_equal(system_state.state[state_b2.state_slice],
+                            np.zeros(state_b2.size))
+
+    # Check the inputs property
+    npt.assert_almost_equal(system_state.inputs[input_a.input_slice],
+                            input_a.value.flatten())
+    npt.assert_almost_equal(system_state.inputs[input_c.input_slice],
+                            input_c.value.flatten())
+    npt.assert_almost_equal(system_state.inputs[input_d.input_slice],
+                            input_d.value.flatten())
+
+    # Check the get_state_value function
+    npt.assert_almost_equal(system_state.get_state_value(state_a),
+                            state_a.initial_condition)
+    npt.assert_almost_equal(system_state.get_state_value(state_a_dep),
+                            state_a_dep.initial_condition)
+    npt.assert_almost_equal(system_state.get_state_value(state_b),
+                            state_b.initial_condition)
+
+    # Check the function access
+    npt.assert_equal(event_a(system_state),
+                     event_a.event_function(system_state))
+    npt.assert_equal(state_a(system_state),
+                     state_a.initial_condition)
+    npt.assert_equal(input_a(system_state),
+                     input_a.value)
+    npt.assert_equal(output_a(system_state)[1],
+                     input_a.value[1])
+    npt.assert_equal(signal_c(system_state),
+                     signal_c.value)
+
+
+def test_evaluator_with_initial_state():
+    """Test the ``SystemState`` class with an explicitly specified initial
+    state"""
+
+    system = System()
+    State(system,
+          shape=(3, 3),
+          derivative_function=None,
+          initial_condition=np.eye(3))
+
+    initial_state = np.arange(system.num_states)
+    system_state = SystemState(time=0, system=system, state=initial_state)
+
+    npt.assert_almost_equal(system_state.state,
+                            initial_state)
+
+
+def test_evaluator_with_initial_inputs():
+    """Test the ``SystemState`` class with explicitly specified initial inputs"""
+
+    system = System()
+    InputSignal(system, shape=(3, 3), value=np.eye(3))
+    InputSignal(system, value=123)
+    InputSignal(system, shape=2, value=[456, 789])
+
+    initial_inputs = np.arange(system.num_inputs)
+    system_state = SystemState(time=0, system=system, inputs=initial_inputs)
+
+    npt.assert_almost_equal(system_state.inputs,
+                            initial_inputs)

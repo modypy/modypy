@@ -45,7 +45,7 @@ def test_lti_linearization(param, interpolation_order):
     assert sol.state.size == system.num_states
     assert sol.inputs.size == system.num_inputs
 
-    npt.assert_allclose(system.state_derivative(sol.evaluator),
+    npt.assert_allclose(system.state_derivative(sol.system_state),
                         np.zeros(system.num_states),
                         rtol=0,
                         atol=1E-5)

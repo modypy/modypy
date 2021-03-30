@@ -13,7 +13,7 @@ from fixtures.models import \
 from modypy.blocks.discrete import zero_order_hold
 from modypy.blocks.linear import LTISystem, integrator
 from modypy.blocks.sources import constant
-from modypy.model import Evaluator, System, Clock, State, ZeroCrossEventSource
+from modypy.model import SystemState, System, Clock, State, ZeroCrossEventSource
 from modypy.simulation import Simulator, ExcessiveEventError, _find_event_time
 
 
@@ -63,9 +63,9 @@ def test_lti_simulation(lti_system_with_reference):
         inputs = simulator.result.inputs[:, idx]
         state = simulator.result.state[:, idx]
 
-        evaluator = Evaluator(time=time, system=sys, state=state, inputs=inputs)
-        npt.assert_almost_equal(evaluator.inputs, inputs)
-        npt.assert_almost_equal(evaluator.state, state)
+        system_state = SystemState(time=time, system=sys, state=state, inputs=inputs)
+        npt.assert_almost_equal(system_state.inputs, inputs)
+        npt.assert_almost_equal(system_state.state, state)
 
     # Check that states are properly mapped in the result
     for state in sys.states:

@@ -32,6 +32,7 @@ class RigidBody6DOFFlatEarth(Block):
         - the velocity in the body reference frame, and
         - the angular rates in the body reference frame.
     """
+
     def __init__(self,
                  owner,
                  mass,
@@ -126,6 +127,7 @@ class DirectCosineToEuler(Block):
     provides the euler angles (psi, theta, phi, in radians) for yaw,
     pitch and roll as output.
     """
+
     # yaw: psi
     # pitch: theta
     # roll: phi
@@ -147,7 +149,7 @@ class DirectCosineToEuler(Block):
         """Calculate the pitch angle for the given direct cosine matrix
         """
         dcm = self.dcm(data)
-        return np.arctan2(-dcm[2, 0], np.sqrt(dcm[0, 0]**2 + dcm[1, 0]**2))
+        return np.arctan2(-dcm[2, 0], np.sqrt(dcm[0, 0] ** 2 + dcm[1, 0] ** 2))
 
     def calculate_roll(self, data):
         """Calculate the roll angle for the given direct cosine matrix
