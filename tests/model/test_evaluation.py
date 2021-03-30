@@ -69,16 +69,6 @@ def test_evaluator():
     npt.assert_almost_equal(evaluator.state[state_b2.state_slice],
                             np.zeros(state_b2.size))
 
-    # Check the derivative property
-    npt.assert_almost_equal(evaluator.state_derivative[state_a.state_slice],
-                            input_a.value.flatten())
-    npt.assert_almost_equal(evaluator.state_derivative[state_a_dep.state_slice],
-                            input_a.value.flatten())
-    npt.assert_almost_equal(evaluator.state_derivative[state_b.state_slice],
-                            state_b.derivative_function(None).flatten())
-    npt.assert_almost_equal(evaluator.state_derivative[state_b1.state_slice],
-                            state_b.initial_condition.flatten())
-
     # Check the inputs property
     npt.assert_almost_equal(evaluator.inputs[input_a.input_slice],
                             input_a.value.flatten())

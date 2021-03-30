@@ -1,27 +1,33 @@
 """
 Provides classes for constructing systems and block hierarchies.
 """
+from typing import List, Set
+
 import numpy as np
+
+from modypy.model.states import State
+from modypy.model.events import ZeroCrossEventSource, Clock
+from modypy.model.ports import InputSignal, OutputPort, Signal
 
 
 class System:
     """A system is a composition of states, signals and events."""
     def __init__(self):
         self.num_signals = 0
-        self.signals = list()
+        self.signals: List[Signal] = list()
 
         self.num_states = 0
-        self.states = list()
+        self.states: List[State] = list()
 
-        self.events = list()
+        self.events: List[ZeroCrossEventSource] = list()
 
         self.num_inputs = 0
-        self.inputs = list()
+        self.inputs: List[InputSignal] = list()
 
         self.num_outputs = 0
-        self.outputs = list()
+        self.outputs: List[OutputPort] = list()
 
-        self.clocks = set()
+        self.clocks: Set[Clock] = set()
 
     @property
     def system(self):
@@ -139,12 +145,33 @@ class System:
 
         Args:
             system_state: The state for which to determine the event values.
+
+        Returns:
+            The vector containing the value of all event functions for the
+            given system state.
         """
         event_vector = np.empty(self.num_events)
         for event_instance in self.events:
             event_vector[event_instance.event_index] = \
                 event_instance(system_state)
         return event_vector
+
+    def state_derivative(self, system_state):
+        """Determine the value of all state derivative functions for the given
+        system state.
+
+        Args:
+            system_state: The state for which to determine the event values.
+
+        Returns:
+            The vector of state derivatives for this system.
+        """
+        state_derivative = np.zeros(self.num_states)
+        for state_instance in self.states:
+            if state_instance.derivative_function is not None:
+                state_derivative[state_instance.state_slice] = \
+                    np.ravel(state_instance.derivative_function(system_state))
+        return state_derivative
 
 
 class Block:

@@ -154,7 +154,7 @@ We will print these together with the theoretical steady state of our system:
     print("Target height: %f" % TARGET_HEIGHT)
     print("Steady state height: %f" % height_state(result.evaluator))
     print("Steady state inflow: %f" % inflow_velocity(result.evaluator))
-    print("Steady state derivative: %s" % result.evaluator.state_derivative)
+    print("Steady state derivative: %s" % system.state_derivative(result.evaluator))
     print("Theoretical steady state inflow: %f" % (
         np.sqrt(2*G*TARGET_HEIGHT)*A2/A1
     ))

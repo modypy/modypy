@@ -246,12 +246,7 @@ class _StateDerivativeConstraint(opt.NonlinearConstraint):
                               system=self.config.system,
                               state=state,
                               inputs=inputs)
-        num_states = self.state_offsets[-1]
-        derivative_vector = np.empty(num_states)
-        for state, state_offset in zip(self.constrained_states,
-                                       self.state_offsets):
-            derivative_vector[state_offset:state_offset + state.size] = \
-                evaluator.get_state_derivative(state)
+        derivative_vector = self.config.system.state_derivative(evaluator)
         return derivative_vector
 
     def evaluate_squared(self, x):

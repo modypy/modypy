@@ -32,15 +32,6 @@ class Evaluator:
         return self._state
 
     @property
-    def state_derivative(self):
-        """The state derivative vector for the complete system"""
-        state_derivative = np.empty(self.system.num_states)
-        for state_instance in self.system.states:
-            state_derivative[state_instance.state_slice] = \
-                self.get_state_derivative(state_instance).flatten()
-        return state_derivative
-
-    @property
     def inputs(self):
         """The input vector for the complete system"""
         return self._inputs
@@ -66,30 +57,6 @@ class Evaluator:
             The value of the input signal
         """
         return self._inputs[signal.input_slice].reshape(signal.shape)
-
-    def get_state_derivative(self, state):
-        """Get the state derivative of the given state.
-
-        Args:
-          state: The state for which the derivative shall be determined
-
-        Returns:
-          The state derivative
-
-        Raises:
-          AlgebraicLoopError: if an algebraic loop is encountered while
-            evaluating the derivative of the state instance
-
-        """
-        if state.derivative_function is not None:
-            data = DataProvider(evaluator=self,
-                                time=self.time)
-            state_derivative = state.derivative_function(data)
-            state_derivative = \
-                np.asarray(state_derivative).reshape(state.shape)
-        else:
-            state_derivative = np.zeros(state.shape)
-        return state_derivative
 
 
 class DataProvider:

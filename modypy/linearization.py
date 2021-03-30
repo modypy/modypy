@@ -5,7 +5,7 @@ around a given state with specified inputs.
 import numpy as np
 from scipy.misc import central_diff_weights
 
-from modypy.model import Port
+from modypy.model import Port, System
 from modypy.model.evaluation import Evaluator
 
 
@@ -40,7 +40,7 @@ class LinearizationConfiguration:
 
     """
     def __init__(self,
-                 system,
+                 system: System,
                  time=0,
                  state=None,
                  inputs=None):
@@ -200,4 +200,4 @@ def _system_function(config: LinearizationConfiguration, x_ref):
         outputs[output.output_index:output.output_index+output.port.size] = \
             output.port(evaluator)
 
-    return np.concatenate((evaluator.state_derivative, outputs))
+    return np.concatenate((config.system.state_derivative(evaluator), outputs))

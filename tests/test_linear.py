@@ -74,7 +74,7 @@ def test_lti_no_states():
     source.connect(lti.input)
 
     evaluator = Evaluator(time=0, system=system)
-    state_derivative = evaluator.get_state_derivative(lti.state)
+    state_derivative = lti.state.derivative_function(evaluator)
     assert state_derivative.size == 0
 
 

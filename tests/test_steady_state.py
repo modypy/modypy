@@ -191,7 +191,7 @@ def test_steady_state(config):
     # Check for steady states
     steady_state_count = np.count_nonzero(config.steady_states)
     steady_state_derivatives = \
-        sol.evaluator.state_derivative[config.steady_states]
+        config.system.state_derivative(sol.evaluator)[config.steady_states]
     npt.assert_allclose(steady_state_derivatives.flatten(),
                         np.zeros(steady_state_count),
                         atol=1E-8)

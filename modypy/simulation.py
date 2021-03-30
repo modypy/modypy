@@ -112,7 +112,7 @@ class Simulator:
     """Simulator for dynamic systems."""
 
     def __init__(self,
-                 system,
+                 system: System,
                  start_time,
                  initial_condition=None,
                  max_successive_event_count=1000,
@@ -524,7 +524,7 @@ class Simulator:
         """
 
         evaluator = Evaluator(system=self.system, time=time, state=state)
-        state_derivative = evaluator.state_derivative
+        state_derivative = self.system.state_derivative(evaluator)
         return state_derivative
 
     def objective_function(self, state_trajectory, event, time):
