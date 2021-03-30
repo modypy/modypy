@@ -41,4 +41,4 @@ def load_static_propeller(path,
         power_coeff = data[:, 2]
 
         return interp1d(speed, thrust_coeff, **interp_options), \
-               interp1d(speed, power_coeff, **interp_options)
+            interp1d(speed, power_coeff, **interp_options)

@@ -153,9 +153,9 @@ def system_jacobian(config: LinearizationConfiguration,
     if single_matrix:
         return jac
     return jac[:config.system.num_states, :config.system.num_states], \
-           jac[:config.system.num_states, config.system.num_states:], \
-           jac[config.system.num_states:, :config.system.num_states], \
-           jac[config.system.num_states:, config.system.num_states:]
+        jac[:config.system.num_states, config.system.num_states:], \
+        jac[config.system.num_states:, :config.system.num_states], \
+        jac[config.system.num_states:, config.system.num_states:]
 
 
 def _get_central_diff_weights(order):

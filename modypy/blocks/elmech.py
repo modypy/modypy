@@ -77,7 +77,7 @@ class DCMotor(Block):
         current = self.current(data)
         tau_ext = self.external_torque(data)
         return (self.motor_constant * current - tau_ext) \
-               / self.moment_of_inertia
+            / self.moment_of_inertia
 
     def current_dot(self, data):
         """Calculates the derivative of the current in A/s

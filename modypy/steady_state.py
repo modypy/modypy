@@ -4,9 +4,8 @@ Functions and classes for finding the steady state of a system.
 To determine a steady state, set up a :class:`SteadyStateConfiguration` object
 and pass it to :func:`find_steady_state`.
 """
-import warnings
 from functools import partial
-from itertools import accumulate, chain
+from itertools import accumulate
 from typing import Union
 
 import numpy as np

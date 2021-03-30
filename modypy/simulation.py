@@ -73,7 +73,6 @@ class SimulationResult:
           time: The time tag for the entry
           inputs: The input vector
           state: The state vector
-          outputs: The outputs vector
         """
 
         if self.current_idx >= self._t.size:
@@ -322,7 +321,7 @@ class Simulator:
 
             # We will continue immediately after that event
             self.current_time = first_event_time + \
-                                self.rootfinder_options['xtol']
+                self.rootfinder_options['xtol']
             # Get the state at the event time
             self.current_state = state_interpolator(self.current_time)
 
