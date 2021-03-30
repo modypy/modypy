@@ -133,6 +133,11 @@ def test_input_signal():
             range(input_signal.input_index,
                   input_signal.input_index+input_signal.size))
 
+    # Ensure that calling the input signal calls the get_input_value method
+    # of the system state.
+    system_state = Mock()
+    input_signal(system_state)
+
 
 def test_port_access():
     """Test whether calling a ``Port`` object calls the ``value`` callable

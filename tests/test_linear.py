@@ -132,7 +132,7 @@ def test_sum_block(channel_weights, output_size, inputs, expected_output):
         sum_block.inputs[idx].connect(input_signal)
 
     evaluator = Evaluator(time=0, system=system)
-    actual_output = evaluator.signals[sum_block.output.signal_slice]
+    actual_output = sum_block.output(evaluator)
     npt.assert_almost_equal(actual_output, expected_output)
 
 
@@ -155,7 +155,7 @@ def test_sum_signal(channel_weights, output_size, inputs, expected_output):
                             gains=channel_weights)
 
     evaluator = Evaluator(time=0, system=system)
-    actual_output = evaluator.signals[sum_result.signal_slice]
+    actual_output = sum_result(evaluator)
     npt.assert_almost_equal(actual_output, expected_output)
 
 

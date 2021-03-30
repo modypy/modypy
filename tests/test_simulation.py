@@ -62,16 +62,10 @@ def test_lti_simulation(lti_system_with_reference):
         time = simulator.result.time[idx]
         inputs = simulator.result.inputs[:, idx]
         state = simulator.result.state[:, idx]
-        signals = simulator.result.signals[:, idx]
-        events = simulator.result.events[:, idx]
-        outputs = simulator.result.outputs[:, idx]
 
         evaluator = Evaluator(time=time, system=sys, state=state, inputs=inputs)
         npt.assert_almost_equal(evaluator.inputs, inputs)
         npt.assert_almost_equal(evaluator.state, state)
-        npt.assert_almost_equal(evaluator.signals, signals)
-        npt.assert_almost_equal(evaluator.event_values, events)
-        npt.assert_almost_equal(evaluator.outputs, outputs)
 
     # Check that states are properly mapped in the result
     for state in sys.states:
@@ -79,16 +73,11 @@ def test_lti_simulation(lti_system_with_reference):
         from_result = from_result.reshape(state.shape+(-1,))
         npt.assert_equal(state(simulator.result), from_result)
 
-    # Check that signals are properly mapped in the result
-    for signal in sys.signals:
-        from_result = simulator.result.signals[signal.signal_slice]
-        from_result = from_result.reshape(signal.shape+(-1,))
-        npt.assert_equal(signal(simulator.result), from_result)
-
-    # Check that events are properly mapped in the result
-    for event in sys.events:
-        npt.assert_equal(event(simulator.result),
-                         simulator.result.events[event.event_index])
+    # Check that inputs are properly mapped in the result
+    for input_signal in sys.inputs:
+        from_result = simulator.result.inputs[input_signal.input_slice]
+        from_result = from_result.reshape(input_signal.shape+(-1,))
+        npt.assert_equal(input_signal(simulator.result), from_result)
 
     # Determine the system response and state values of the reference system
     ref_time, ref_output, ref_state = scipy.signal.lsim2(
@@ -99,7 +88,7 @@ def test_lti_simulation(lti_system_with_reference):
         rtol=simulator.integrator_options["rtol"],
         atol=simulator.integrator_options["atol"])
 
-    # Determine the output values at the simulated times
+    # Determine the state values at the simulated times
     # as per the reference value
     npt.assert_allclose(ref_time,
                         simulator.result.time,
@@ -107,10 +96,6 @@ def test_lti_simulation(lti_system_with_reference):
                         atol=simulator.integrator_options["atol"])
     npt.assert_allclose(simulator.result.state,
                         ref_state.T,
-                        rtol=simulator.integrator_options["rtol"] * 1E2,
-                        atol=simulator.integrator_options["atol"] * 1E2)
-    npt.assert_allclose(simulator.result.outputs,
-                        ref_output.reshape(sys.num_outputs, -1),
                         rtol=simulator.integrator_options["rtol"] * 1E2,
                         atol=simulator.integrator_options["atol"] * 1E2)
 

@@ -6,14 +6,9 @@ import warnings
 
 import numpy as np
 
-from .events import EventPort
 from .system import System
-from .ports import Port, PortNotConnectedError, InputSignal
+from .ports import InputSignal
 from .states import State
-
-
-class AlgebraicLoopError(RuntimeError):
-    """Exception raised when an algebraic loop is detected on evaluation"""
 
 
 class Evaluator:
@@ -49,32 +44,6 @@ class Evaluator:
     def inputs(self):
         """The input vector for the complete system"""
         return self._inputs
-
-    @property
-    def signals(self):
-        """The signal vector for the complete system."""
-        signal_vector = np.empty(self.system.num_signals)
-        for signal_instance in self.system.signals:
-            signal_vector[signal_instance.signal_slice] = \
-                np.ravel(signal_instance(self))
-        return signal_vector
-
-    @property
-    def outputs(self):
-        """The output vector for the complete system"""
-        output_vector = np.empty(self.system.num_outputs)
-        for port in self.system.outputs:
-            port_value = port(self)
-            output_vector[port.output_slice] = port_value.flatten()
-        return output_vector
-
-    @property
-    def event_values(self):
-        """The event vector for the complete system"""
-        event_vector = np.empty(self.system.num_events)
-        for event_instance in self.system.events:
-            event_vector[event_instance.event_index] = event_instance(self)
-        return event_vector
 
     def get_state_value(self, state: State):
         """Determine the value of a given state.

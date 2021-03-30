@@ -133,6 +133,19 @@ class System:
         """The number of events registered with this system"""
         return len(self.events)
 
+    def event_values(self, system_state):
+        """Determine the value of all event functions for the given system
+        state.
+
+        Args:
+            system_state: The state for which to determine the event values.
+        """
+        event_vector = np.empty(self.num_events)
+        for event_instance in self.events:
+            event_vector[event_instance.event_index] = \
+                event_instance(system_state)
+        return event_vector
+
 
 class Block:
     """A block is a re-usable building block for systems."""

@@ -8,7 +8,7 @@ import pytest
 
 from modypy.blocks.sources import constant
 from modypy.model import System, State, Port, Signal, InputSignal, OutputPort, ZeroCrossEventSource, \
-    PortNotConnectedError, Evaluator, AlgebraicLoopError
+    PortNotConnectedError, Evaluator
 from modypy.model.evaluation import DataProvider
 
 
@@ -86,38 +86,6 @@ def test_evaluator():
                             input_c.value.flatten())
     npt.assert_almost_equal(evaluator.inputs[input_d.input_slice],
                             input_d.value.flatten())
-
-    # Check the signals property
-    npt.assert_almost_equal(evaluator.signals[input_a.signal_slice],
-                            input_a.value.flatten())
-    npt.assert_almost_equal(evaluator.signals[input_c.signal_slice],
-                            input_c.value.flatten())
-    npt.assert_almost_equal(evaluator.signals[input_d.signal_slice],
-                            input_d.value.flatten())
-    npt.assert_almost_equal(evaluator.signals[signal_c.signal_slice],
-                            signal_c.value.flatten())
-    npt.assert_almost_equal(evaluator.signals[signal_d.signal_slice],
-                            signal_d.value(None))
-    npt.assert_almost_equal(evaluator.signals[signal_e.signal_slice],
-                            evaluator.signals[signal_d.signal_slice][0])
-    npt.assert_almost_equal(evaluator.signals[signal_f.signal_slice],
-                            evaluator.event_values[event_b.event_index])
-    npt.assert_almost_equal(evaluator.signals[output_a.signal_slice],
-                            input_a.value.flatten())
-    npt.assert_almost_equal(evaluator.signals[output_c.signal_slice],
-                            input_c.value.flatten())
-
-    # Check the outputs property
-    npt.assert_almost_equal(evaluator.outputs[output_a.output_slice],
-                            evaluator.signals[output_a.signal_slice])
-    npt.assert_almost_equal(evaluator.outputs[output_c.output_slice],
-                            evaluator.signals[output_c.signal_slice])
-
-    # Check the event_values property
-    npt.assert_almost_equal(evaluator.event_values[event_a.event_index],
-                            event_a.event_function(None))
-    npt.assert_almost_equal(evaluator.event_values[event_b.event_index],
-                            event_b.event_function(None))
 
     # Check the get_state_value function
     npt.assert_almost_equal(evaluator.get_state_value(state_a),

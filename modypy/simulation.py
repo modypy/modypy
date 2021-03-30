@@ -41,8 +41,8 @@ class SimulationResult:
     """The results provided by a simulation.
 
     A `SimulationResult` object captures the time series provided by a
-    simulation. It has properties `t`, `state` and `output` representing the
-    time, state vector and output vector for each individual sample.
+    simulation. It has properties `t`, `state` and `inputs` representing the
+    time, state vector and inputs vector for each individual sample.
     """
 
     def __init__(self, system: System):
@@ -50,9 +50,6 @@ class SimulationResult:
         self._t = np.empty(INITIAL_RESULT_SIZE)
         self._inputs = np.empty((self.system.num_inputs, INITIAL_RESULT_SIZE))
         self._state = np.empty((self.system.num_states, INITIAL_RESULT_SIZE))
-        self._signals = np.empty((self.system.num_signals, INITIAL_RESULT_SIZE))
-        self._events = np.empty((self.system.num_events, INITIAL_RESULT_SIZE))
-        self._outputs = np.empty((self.system.num_outputs, INITIAL_RESULT_SIZE))
 
         self.current_idx = 0
 
@@ -71,30 +68,13 @@ class SimulationResult:
         """The state vector of the simulation result"""
         return self._state[:, 0:self.current_idx]
 
-    @property
-    def signals(self):
-        """The signal vector of the simulation result"""
-        return self._signals[:, 0:self.current_idx]
-
-    @property
-    def events(self):
-        """The event vector of the simulation result"""
-        return self._events[:, 0:self.current_idx]
-
-    @property
-    def outputs(self):
-        """The output vector of the simulation result"""
-        return self._outputs[:, 0:self.current_idx]
-
-    def append(self, time, inputs, state, signals, events, outputs):
+    def append(self, time, inputs, state):
         """Append an entry to the result vectors.
 
         Args:
           time: The time tag for the entry
           inputs: The input vector
           state: The state vector
-          signals: The signals vector
-          events: The events vector
           outputs: The outputs vector
         """
 
@@ -103,9 +83,6 @@ class SimulationResult:
         self._t[self.current_idx] = time
         self._inputs[:, self.current_idx] = inputs
         self._state[:, self.current_idx] = state
-        self._signals[:, self.current_idx] = signals
-        self._events[:, self.current_idx] = events
-        self._outputs[:, self.current_idx] = outputs
 
         self.current_idx += 1
 
@@ -119,15 +96,6 @@ class SimulationResult:
         self._state = np.c_[self._state,
                             np.empty((self.system.num_states,
                                       RESULT_SIZE_EXTENSION))]
-        self._signals = np.c_[self._signals,
-                              np.empty((self.system.num_signals,
-                                        RESULT_SIZE_EXTENSION))]
-        self._events = np.c_[self._events,
-                             np.empty((self.system.num_events,
-                                       RESULT_SIZE_EXTENSION))]
-        self._outputs = np.c_[self._outputs,
-                              np.empty((self.system.num_outputs,
-                                        RESULT_SIZE_EXTENSION))]
 
     def get_state_value(self, state: State):
         """Determine the value of the given state in this result object"""
@@ -235,17 +203,12 @@ class Simulator:
                               time=self.current_time,
                               state=self.current_state)
         self.current_inputs = evaluator.inputs
-        self.current_signals = evaluator.signals
-        self.current_event_values = evaluator.event_values
-        self.current_outputs = evaluator.outputs
+        self.current_event_values = self.system.event_values(evaluator)
 
         # Store the initial sample
         self.result.append(time=self.current_time,
                            inputs=self.current_inputs,
-                           state=self.current_state,
-                           signals=self.current_signals,
-                           events=self.current_event_values,
-                           outputs=self.current_outputs)
+                           state=self.current_state)
 
     def start_clocks(self):
         """Set up all the clock ticks"""
@@ -310,16 +273,11 @@ class Simulator:
                               time=self.current_time,
                               state=self.current_state)
         self.current_inputs = evaluator.inputs
-        self.current_signals = evaluator.signals
-        self.current_event_values = evaluator.event_values
-        self.current_outputs = evaluator.outputs
+        self.current_event_values = self.system.event_values(evaluator)
 
         self.result.append(time=self.current_time,
                            inputs=self.current_inputs,
-                           state=self.current_state,
-                           signals=self.current_signals,
-                           events=self.current_event_values,
-                           outputs=self.current_outputs)
+                           state=self.current_state)
         return None
 
     def handle_continuous_time_events(self,
@@ -346,7 +304,7 @@ class Simulator:
         evaluator = Evaluator(system=self.system,
                               time=new_time,
                               state=new_state)
-        new_event_values = evaluator.event_values
+        new_event_values = self.system.event_values(evaluator)
 
         occurred_events = \
             self.find_occurred_events(last_event_values, new_event_values)
@@ -458,7 +416,7 @@ class Simulator:
 
             # Determine the values of all event functions before running the
             # event listeners.
-            last_event_values = update_evaluator.event_values
+            last_event_values = self.system.event_values(update_evaluator)
 
             # Collect all listeners associated with the events
             # Note that we run each listener only once, even if it is associated
@@ -483,7 +441,7 @@ class Simulator:
             post_update_evaluator = Evaluator(system=self.system,
                                               time=self.current_time,
                                               state=self.current_state)
-            new_event_values = post_update_evaluator.event_values
+            new_event_values = self.system.event_values(post_update_evaluator)
 
             # Determine which events occurred as a result of the changed state
             event_sources = self.find_occurred_events(last_event_values,

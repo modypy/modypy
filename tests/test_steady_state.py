@@ -173,12 +173,15 @@ def test_steady_state(config):
     assert (config.input_bounds[:, 0] <= sol.inputs).all()
     assert (sol.inputs <= config.input_bounds[:, 1]).all()
 
-    # Check lower bounds
-    assert (np.isnan(config.signal_bounds[:, 0]) |
-            (config.signal_bounds[:, 0] <= sol.evaluator.signals)).all()
-    # Check upper bounds
-    assert (np.isnan(config.signal_bounds[:, 1]) |
-            (sol.evaluator.signals <= config.signal_bounds[:, 1])).all()
+    for signal in config.system.signals:
+        idxs = signal.signal_slice
+        value = signal(sol.evaluator).flatten()
+        # Check lower bounds
+        assert (np.isnan(config.signal_bounds[idxs, 0]) |
+                (config.signal_bounds[idxs, 0] <= value)).all()
+        # Check upper bounds
+        assert (np.isnan(config.signal_bounds[idxs, 1]) |
+                (value <= config.signal_bounds[idxs, 1])).all()
 
     for signal_constraint in config.signal_constraints:
         value = signal_constraint.signal(sol.evaluator)
