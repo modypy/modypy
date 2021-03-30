@@ -148,9 +148,7 @@ def find_steady_state(config: SteadyStateConfiguration):
             constraints.append(_StateDerivativeConstraint(config))
 
         # Translate the objective function
-        if isinstance(config.objective, Port):
-            objective_function = partial(_port_objective_function, config)
-        elif callable(config.objective):
+        if callable(config.objective):
             objective_function = partial(_general_objective_function, config)
         else:
             raise ValueError("The objective function must be either a Port or "
@@ -274,26 +272,6 @@ class _SignalConstraint(opt.NonlinearConstraint):
                                    state=state,
                                    inputs=inputs)
         return np.ravel(self.signal(system_state))
-
-
-def _port_objective_function(config: SteadyStateConfiguration, x):
-    """Implementation of the objective function for ports
-
-    Args:
-        config: The configuration for the steady-state determination
-        x: The vector of the current values of states and input
-
-    Returns:
-        The current value of the objective port
-    """
-
-    state = x[:config.system.num_states]
-    inputs = x[config.system.num_states:]
-    system_state = SystemState(time=config.time,
-                               system=config.system,
-                               state=state,
-                               inputs=inputs)
-    return config.objective(system_state)
 
 
 def _general_objective_function(config: SteadyStateConfiguration, x):
