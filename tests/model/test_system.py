@@ -2,11 +2,10 @@
 Tests for ``modypy.model.system``
 """
 import numpy as np
-import numpy.testing as npt
 from numpy import testing as npt
 
 from modypy.blocks.sources import constant
-from modypy.model import State, InputSignal, OutputPort, ZeroCrossEventSource, System, Signal, Port, SystemState
+from modypy.model import State, InputSignal, ZeroCrossEventSource, SystemState
 from modypy.model.system import System, Block
 
 
@@ -26,14 +25,11 @@ def test_system():
                     derivative_function=None)
     input_c = InputSignal(system, value=1)
     input_d = InputSignal(system, shape=2, value=[2, 3])
-    output_a = OutputPort(system, shape=(3, 3))
-    output_c = OutputPort(system)
     event_a = ZeroCrossEventSource(system, event_function=None)
     event_b = ZeroCrossEventSource(system, event_function=None)
 
     # Check the counts
     assert system.num_inputs == input_c.size+input_d.size
-    assert system.num_outputs == output_a.size+output_c.size
     assert system.num_states == state_a.size+state_b.size
     assert system.num_events == 2
 
@@ -52,10 +48,6 @@ def test_system():
                             np.atleast_1d(input_c.value).flatten())
     npt.assert_almost_equal(initial_input[input_d.input_slice],
                             np.atleast_1d(input_d.value).flatten())
-
-    # Check that output indices are disjoint
-    assert (output_a.output_index+output_a.size <= output_c.output_index or
-            output_c.output_index+output_c.size <= output_a.output_index)
 
     # Check that event indices are disjoint
     assert event_a.event_index != event_b.event_index
@@ -104,19 +96,9 @@ def test_system_state():
                      shape=3,
                      derivative_function=None)
     signal_c = constant(system, value=16)
-    signal_d = Signal(system, shape=2, value=(lambda data: [17, 19]))
-    signal_e = Signal(system, value=(lambda data: signal_d(data)[0]))
-    signal_f = Signal(system, value=(lambda data: event_b(data)))
-    output_a = OutputPort(system, shape=(3, 3))
-    output_c = OutputPort(system)
-    empty_port = Port(system, shape=0)
     event_a = ZeroCrossEventSource(system, event_function=(lambda data: 23))
-    event_b = ZeroCrossEventSource(system, event_function=(lambda data: 25))
 
     system_state = SystemState(time=0, system=system)
-
-    output_a.connect(input_a)
-    output_c.connect(input_c)
 
     # Check the initial state
     npt.assert_almost_equal(system_state.state[state_a.state_slice],
@@ -153,8 +135,6 @@ def test_system_state():
                      state_a.initial_condition)
     npt.assert_equal(input_a(system_state),
                      input_a.value)
-    npt.assert_equal(output_a(system_state)[1],
-                     input_a.value[1])
     npt.assert_equal(signal_c(system_state),
                      signal_c.value)
 

@@ -31,12 +31,12 @@ def interpolation_order(request):
                           damping_coefficient=20),  # overdamped
     ])
 def test_lti_linearization(param, interpolation_order):
-    system, lti, _ = param
+    system, lti, _, outputs = param
 
     # Find the steady state of the system
     steady_state_config = SteadyStateConfiguration(system)
     # Constrain all outputs to zero
-    for output in system.outputs:
+    for output in outputs:
         steady_state_config.add_port_constraint(output,
                                                 lower_limit=0,
                                                 upper_limit=0)

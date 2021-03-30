@@ -3,10 +3,9 @@ from unittest.mock import Mock
 
 import pytest
 
-from modypy.model import System, Port, SystemState, PortNotConnectedError
+from modypy.model import System, SystemState
 from modypy.model.ports import \
     Port, \
-    OutputPort, \
     Signal, \
     InputSignal, \
     ShapeMismatchError, \
@@ -67,23 +66,6 @@ def test_shape_mismatch_error():
     port_b = Port(system)
     with pytest.raises(ShapeMismatchError):
         port_a.connect(port_b)
-
-
-def test_output_port():
-    """Test the ``OutputPort`` class"""
-
-    system = System()
-    output_port = OutputPort(system, shape=(3, 3))
-
-    # Test the output_slice method
-    assert (output_port.output_slice ==
-            slice(output_port.output_index,
-                  output_port.output_index+output_port.size))
-
-    # Test the output_range method
-    assert (output_port.output_range ==
-            range(output_port.output_index,
-                  output_port.output_index+output_port.size))
 
 
 def test_signal():

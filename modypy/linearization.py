@@ -2,6 +2,8 @@
 Provides functions to determine the jacobi matrix for linearizing the system
 around a given state with specified inputs.
 """
+from typing import List
+
 import numpy as np
 from scipy.misc import central_diff_weights
 
@@ -57,7 +59,7 @@ class LinearizationConfiguration:
         else:
             self.inputs = inputs
 
-        self.outputs = list()
+        self.outputs: List[OutputDescriptor] = list()
         self.num_outputs = 0
 
         self.default_step_size = 0.1

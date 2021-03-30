@@ -1,12 +1,10 @@
 """
 Provides classes for constructing systems and block hierarchies.
 """
-from typing import List, Set
+from typing import List
 
 import numpy as np
 
-from modypy.model.events import ZeroCrossEventSource, Clock
-from modypy.model.ports import InputSignal, OutputPort, Signal
 from modypy.model.states import State
 
 
@@ -17,15 +15,12 @@ class System:
         self.num_states = 0
         self.states: List[State] = list()
 
-        self.events: List[ZeroCrossEventSource] = list()
-
         self.num_inputs = 0
-        self.inputs: List[InputSignal] = list()
+        self.inputs = list()
 
-        self.num_outputs = 0
-        self.outputs: List[OutputPort] = list()
+        self.events = list()
 
-        self.clocks: Set[Clock] = set()
+        self.clocks = set()
 
     @property
     def system(self):
@@ -77,20 +72,6 @@ class System:
         """
         start_index = self.num_inputs
         self.num_inputs += count
-        return start_index
-
-    def allocate_output_lines(self, count):
-        """Allocate a sequence of consecutive input lines.
-
-        Args:
-          count: The number of input lines to allocate
-
-        Returns:
-          The index of the first input line allocated
-
-        """
-        start_index = self.num_outputs
-        self.num_outputs += count
         return start_index
 
     def register_event(self, event):
@@ -192,7 +173,7 @@ class SystemState:
         """
         return self.state[state.state_slice].reshape(state.shape)
 
-    def get_input_value(self, signal: InputSignal):
+    def get_input_value(self, signal):
         """Determine the value of a given input signal.
 
         Args:

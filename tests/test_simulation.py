@@ -38,18 +38,18 @@ from modypy.simulation import Simulator, ExcessiveEventError, _find_event_time
 
 ])
 def lti_system_with_reference(request):
-    system, lti_system, ref_time = request.param
+    system, lti_system, ref_time, outputs = request.param
     assert isinstance(lti_system, LTISystem)
 
     ref_system = scipy.signal.StateSpace(lti_system.system_matrix,
                                          lti_system.input_matrix,
                                          lti_system.output_matrix,
                                          lti_system.feed_through_matrix)
-    return system, ref_system, ref_time
+    return system, ref_system, ref_time, outputs
 
 
 def test_lti_simulation(lti_system_with_reference):
-    sys, ref_system, ref_time = lti_system_with_reference
+    sys, ref_system, ref_time, _ = lti_system_with_reference
 
     simulator = Simulator(sys, start_time=0)
     message = simulator.run_until(ref_time)
@@ -118,7 +118,7 @@ class MockupIntegrator:
 
 
 def test_lti_simulation_failure(lti_system_with_reference):
-    sys, ref_function, sim_time = lti_system_with_reference
+    sys, ref_function, sim_time, outputs = lti_system_with_reference
     del ref_function  # unused
 
     simulator = Simulator(sys,

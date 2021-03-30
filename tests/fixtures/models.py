@@ -7,8 +7,7 @@ from modypy.model import \
     ZeroCrossEventSource, \
     InputSignal, \
     Signal, \
-    State, \
-    OutputPort
+    State
 
 
 def first_order_lag(time_constant=1, initial_value=10):
@@ -21,12 +20,10 @@ def first_order_lag(time_constant=1, initial_value=10):
                     initial_condition=[initial_value])
 
     src = InputSignal(system)
-    dest = OutputPort(system)
 
     lti.input.connect(src)
-    dest.connect(lti.output)
 
-    return system, lti, 3 * time_constant
+    return system, lti, 3 * time_constant, [lti.output]
 
 
 def first_order_lag_no_input(time_constant=1, initial_value=10):
@@ -37,10 +34,8 @@ def first_order_lag_no_input(time_constant=1, initial_value=10):
                     output_matrix=1,
                     feed_through_matrix=[],
                     initial_condition=[initial_value])
-    dest = OutputPort(system)
-    dest.connect(lti.output)
 
-    return system, lti, 3 * time_constant
+    return system, lti, 3 * time_constant, [lti.output]
 
 
 def damped_oscillator(mass=100.,
@@ -59,11 +54,9 @@ def damped_oscillator(mass=100.,
     time_constant = 2 * mass / damping_coefficient
 
     src = InputSignal(system)
-    dest = OutputPort(system)
     lti.input.connect(src)
-    dest.connect(lti.output)
 
-    return system, lti, 3 * time_constant
+    return system, lti, 3 * time_constant, [lti.output]
 
 
 def damped_oscillator_with_events(mass=100.,
@@ -84,11 +77,9 @@ def damped_oscillator_with_events(mass=100.,
     time_constant = 2 * mass / damping_coefficient
 
     src = InputSignal(system)
-    dest = OutputPort(system)
     lti.input.connect(src)
-    dest.connect(lti.output)
 
-    return system, lti, 3 * time_constant
+    return system, lti, 3 * time_constant, [lti.output]
 
 
 def lti_gain(gain):
@@ -100,12 +91,10 @@ def lti_gain(gain):
                     feed_through_matrix=gain)
 
     src = InputSignal(system)
-    dest = OutputPort(system)
 
     lti.input.connect(src)
-    dest.connect(lti.output)
 
-    return system, lti, 10.0
+    return system, lti, 10.0, [lti.output]
 
 
 class BouncingBall(Block):
