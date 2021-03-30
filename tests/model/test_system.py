@@ -57,10 +57,6 @@ def test_system():
     assert (output_a.output_index+output_a.size <= output_c.output_index or
             output_c.output_index+output_c.size <= output_a.output_index)
 
-    # Check that signal indices are disjoint
-    assert (input_c.signal_index+input_c.size <= input_d.signal_index or
-            input_d.signal_index+input_d.size <= input_c.signal_index)
-
     # Check that event indices are disjoint
     assert event_a.event_index != event_b.event_index
 
@@ -136,11 +132,11 @@ def test_system_state():
 
     # Check the inputs property
     npt.assert_almost_equal(system_state.inputs[input_a.input_slice],
-                            input_a.value.flatten())
+                            np.ravel(input_a.value))
     npt.assert_almost_equal(system_state.inputs[input_c.input_slice],
-                            input_c.value.flatten())
+                            np.ravel(input_c.value))
     npt.assert_almost_equal(system_state.inputs[input_d.input_slice],
-                            input_d.value.flatten())
+                            np.ravel(input_d.value))
 
     # Check the get_state_value function
     npt.assert_almost_equal(system_state.get_state_value(state_a),

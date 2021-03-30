@@ -49,20 +49,6 @@ class Port:
             return None
         return self.reference.signal
 
-    @property
-    def signal_slice(self):
-        """A slice object that represents the indices of this port in the
-        signals vector."""
-
-        return self.signal.signal_slice
-
-    @property
-    def signal_range(self):
-        """A range object that represents the indices of this port in the
-        signals vector."""
-
-        return self.signal.signal_range
-
     def connect(self, other):
         """Connect this port to another port.
 
@@ -140,32 +126,13 @@ class Signal(Port):
 
     def __init__(self, owner, shape: ShapeType = 1, value=0):
         Port.__init__(self, owner, shape)
-        self.signal_index = self.owner.system.allocate_signal_lines(self.size)
-        self.owner.system.signals.append(self)
-        if callable(value):
-            self.value = value
-        else:
-            self.value = np.atleast_1d(value)
+        self.value = value
 
     @property
     def signal(self):
         """The signal this port is connected. As this is a signal, it returns
         itself."""
         return self
-
-    @property
-    def signal_slice(self):
-        """A slice object that represents the indices of this signal in the
-        signals vector."""
-        return slice(self.signal_index,
-                     self.signal_index + self.size)
-
-    @property
-    def signal_range(self):
-        """A range object that represents the indices of this signal in the
-        signals vector."""
-        return range(self.signal_index,
-                     self.signal_index + self.size)
 
     def __call__(self, system_state):
         if callable(self.value):

@@ -103,16 +103,6 @@ def test_signal():
     assert port_b.signal == signal_a
     assert port_c.signal == signal_a
 
-    # Test the signal_slice method
-    assert signal_a.signal_slice == slice(signal_a.signal_index,
-                                          signal_a.signal_index+signal_a.size)
-    assert port_a.signal_slice == signal_a.signal_slice
-
-    # Test the signal_range method
-    assert signal_a.signal_range == range(signal_a.signal_index,
-                                          signal_a.signal_index+signal_a.size)
-    assert port_a.signal_range == signal_a.signal_range
-
     # Test the connection of ports with the same signal
     port_a.connect(port_b)
 

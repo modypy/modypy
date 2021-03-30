@@ -14,9 +14,6 @@ class System:
     """A system is a composition of states, signals and events."""
 
     def __init__(self):
-        self.num_signals = 0
-        self.signals: List[Signal] = list()
-
         self.num_states = 0
         self.states: List[State] = list()
 
@@ -51,22 +48,8 @@ class System:
         """The initial inputs of this system"""
         initial_inputs = np.zeros(self.num_inputs)
         for signal in self.inputs:
-            initial_inputs[signal.input_slice] = signal.value.flatten()
+            initial_inputs[signal.input_slice] = np.ravel(signal.value)
         return initial_inputs
-
-    def allocate_signal_lines(self, count):
-        """Allocate a sequence of consecutive signal lines.
-
-        Args:
-          count: The number of signal lines to allocate
-
-        Returns:
-          The index of the first signal line allocated
-
-        """
-        start_index = self.num_signals
-        self.num_signals += count
-        return start_index
 
     def allocate_state_lines(self, count):
         """Allocate a sequence of consecutive state lines.
