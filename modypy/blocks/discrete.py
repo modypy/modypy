@@ -24,7 +24,7 @@ class ZeroOrderHold(Block):
 
         self.event_input = EventPort(self)
         self.event_input.register_listener(self.update_state)
-        self.input = Port(self, shape=shape)
+        self.input = Port(shape=shape)
         self.output = SignalState(self,
                                   shape=shape,
                                   initial_condition=initial_condition,

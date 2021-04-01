@@ -17,6 +17,5 @@ def constant(parent, value):
     """
 
     value = np.atleast_1d(value)
-    return Signal(parent,
-                  shape=value.shape,
+    return Signal(shape=value.shape,
                   value=value)

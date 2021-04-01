@@ -30,8 +30,8 @@ class Engine(Block):
         Block.__init__(self, parent)
 
         # Create ports for the motor voltage and the air density
-        self.voltage = Port(self, shape=1)
-        self.density = Port(self, shape=1)
+        self.voltage = Port(shape=1)
+        self.density = Port(shape=1)
 
         # Create the motor
         self.dcmotor = DCMotor(self,
@@ -56,8 +56,8 @@ class Engine(Block):
                                  arm=arm)
 
         # Provide output ports for the thrust and torque vectors
-        self.thrust_vector = Port(self, shape=3)
-        self.torque_vector = Port(self, shape=3)
+        self.thrust_vector = Port(shape=3)
+        self.torque_vector = Port(shape=3)
 
         # Connect the voltage to the motor
         self.dcmotor.voltage.connect(self.voltage)

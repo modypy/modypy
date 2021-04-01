@@ -31,8 +31,7 @@ class Port:
     """A port is a structural element of a system that can be connected to a
     signal."""
 
-    def __init__(self, owner, shape: ShapeType = 1):
-        self.owner = owner
+    def __init__(self, shape: ShapeType = 1):
         self.reference = self
 
         if isinstance(shape, int):
@@ -99,8 +98,8 @@ class ShapeMismatchError(RuntimeError):
 class Signal(Port):
     """A signal provides the value for all ports connected to it."""
 
-    def __init__(self, owner, shape: ShapeType = 1, value=0):
-        Port.__init__(self, owner, shape)
+    def __init__(self, shape: ShapeType = 1, value=0):
+        Port.__init__(self, shape)
         self.value = value
 
     @property
@@ -122,7 +121,8 @@ class InputSignal(Signal):
     special role."""
 
     def __init__(self, owner, shape: ShapeType = 1, value=0):
-        Signal.__init__(self, owner, shape, value)
+        Signal.__init__(self, shape, value)
+        self.owner = owner
         self.input_index = self.owner.system.allocate_input_lines(self.size)
         self.owner.system.inputs.append(self)
 

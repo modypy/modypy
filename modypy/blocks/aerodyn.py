@@ -57,12 +57,12 @@ class Propeller(Block):
         self.power_coefficient = power_coefficient
         self.diameter = diameter
 
-        self.speed_rps = Port(self, shape=1)
-        self.density = Port(self, shape=1)
+        self.speed_rps = Port(shape=1)
+        self.density = Port(shape=1)
 
-        self.thrust = Signal(self, shape=1, value=self.thrust_output)
-        self.torque = Signal(self, shape=1, value=self.torque_output)
-        self.power = Signal(self, shape=1, value=self.power_output)
+        self.thrust = Signal(shape=1, value=self.thrust_output)
+        self.torque = Signal(shape=1, value=self.torque_output)
+        self.power = Signal(shape=1, value=self.power_output)
 
     def thrust_output(self, data):
         """Function used to calculate the ``thrust`` output
@@ -128,14 +128,12 @@ class Thruster(Block):
         self.arm = arm
         self.direction = direction
 
-        self.scalar_thrust = Port(self, shape=1)
-        self.scalar_torque = Port(self, shape=1)
+        self.scalar_thrust = Port(shape=1)
+        self.scalar_torque = Port(shape=1)
 
-        self.thrust_vector = Signal(self,
-                                    shape=3,
+        self.thrust_vector = Signal(shape=3,
                                     value=self.thrust_vector_output)
-        self.torque_vector = Signal(self,
-                                    shape=3,
+        self.torque_vector = Signal(shape=3,
                                     value=self.torque_vector_output)
 
     def thrust_vector_output(self, data):

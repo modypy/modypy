@@ -26,8 +26,7 @@ def saturation(owner, input_signal, lower_limit, upper_limit):
         The output signal with the limited value
     """
 
-    return Signal(owner=owner,
-                  shape=input_signal.shape,
+    return Signal(shape=input_signal.shape,
                   value=partial(_saturation_function,
                                 input_signal,
                                 lower_limit,

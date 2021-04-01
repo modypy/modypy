@@ -113,7 +113,7 @@ def test_empty_system():
     # algorithm is actually checking states and inputs instead of signals or
     # outputs
     system = System()
-    output_signal = Signal(system)
+    output_signal = Signal()
     config = LinearizationConfiguration(system)
     OutputDescriptor(config, output_signal)
 

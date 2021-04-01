@@ -54,13 +54,12 @@ class LTISystem(Block):
         self.output_matrix = output_matrix
         self.feed_through_matrix = feed_through_matrix
 
-        self.input = Port(self, shape=self.input_matrix.shape[1])
+        self.input = Port(shape=self.input_matrix.shape[1])
         self.state = State(self,
                            shape=self.system_matrix.shape[0],
                            derivative_function=self.state_derivative,
                            initial_condition=initial_condition)
-        self.output = Signal(self,
-                             shape=self.output_matrix.shape[0],
+        self.output = Signal(shape=self.output_matrix.shape[0],
                              value=self.output_function)
 
     def state_derivative(self, data):
@@ -86,9 +85,8 @@ class Gain(Block):
         Block.__init__(self, parent)
         self.k = np.atleast_2d(k)
 
-        self.input = Port(self, shape=self.k.shape[0])
-        self.output = Signal(self,
-                             shape=self.k.shape[1],
+        self.input = Port(shape=self.k.shape[0])
+        self.output = Signal(shape=self.k.shape[1],
                              value=self.output_function)
 
     def output_function(self, data):
@@ -135,8 +133,7 @@ def gain(owner, gain_matrix, input_signal):
 
     # Determine the shape of the output signal
     output_shape = (gain_matrix @ np.zeros(input_signal.shape)).shape
-    return Signal(owner=owner,
-                  shape=output_shape,
+    return Signal(shape=output_shape,
                   value=partial(_gain_function,
                                 gain_matrix,
                                 input_signal))
@@ -164,10 +161,9 @@ class Sum(Block):
         self.channel_weights = np.asarray(channel_weights)
         self.output_size = output_size
 
-        self.inputs = [Port(self, shape=self.output_size)
+        self.inputs = [Port(shape=self.output_size)
                        for _ in range(self.channel_weights.shape[0])]
-        self.output = Signal(self,
-                             shape=self.output_size,
+        self.output = Signal(shape=self.output_size,
                              value=self.output_function)
 
     def output_function(self, data):
@@ -234,8 +230,7 @@ def sum_signal(owner, input_signals, gains=None):
         raise ValueError("There must be as many gains as there are "
                          "input signals")
 
-    return Signal(owner=owner,
-                  shape=shape,
+    return Signal(shape=shape,
                   value=partial(_sum_function,
                                 input_signals,
                                 gains))

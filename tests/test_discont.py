@@ -9,8 +9,7 @@ from modypy.simulation import Simulator
 def test_saturation():
     system = System()
     Clock(system, period=0.01)
-    sine_source = Signal(owner=system,
-                         value=lambda data: np.sin(2 * np.pi * data.time))
+    sine_source = Signal(value=lambda data: np.sin(2 * np.pi * data.time))
     saturated_out = saturation(system,
                                sine_source,
                                lower_limit=-0.5,

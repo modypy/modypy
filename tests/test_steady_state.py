@@ -211,7 +211,7 @@ def test_unconnected_port():
     leads to an exception"""
 
     system = System()
-    port = Port(system)
+    port = Port()
 
     config = SteadyStateConfiguration(system)
 
@@ -224,9 +224,9 @@ def test_duplicate_signal_constraint():
     to an exception."""
 
     system = System()
-    port_a = Port(system)
-    port_b = Port(system)
-    signal = Signal(system)
+    port_a = Port()
+    port_b = Port()
+    signal = Signal()
     port_a.connect(signal)
     port_b.connect(signal)
 

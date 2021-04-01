@@ -160,8 +160,8 @@ def test_sum_signal_shape_mismatch():
     """Test the shape mismatch exception of ``sum_signal``."""
 
     system = System()
-    signal_1 = Signal(system)
-    signal_2 = Signal(system, shape=2)
+    signal_1 = Signal()
+    signal_2 = Signal(shape=2)
 
     with pytest.raises(ValueError):
         sum_result = sum_signal(system,
@@ -172,8 +172,8 @@ def test_sum_signal_gain_mismatch():
     """Test the gain mismatch exception of ``sum_signal``."""
 
     system = System()
-    signal_1 = Signal(system)
-    signal_2 = Signal(system)
+    signal_1 = Signal()
+    signal_2 = Signal()
 
     with pytest.raises(ValueError):
         sum_result = sum_signal(system,

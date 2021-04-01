@@ -18,8 +18,7 @@ def cosine_input(system_state):
 
 
 # Define the input signal
-input_signal = Signal(system,
-                      shape=1,
+input_signal = Signal(shape=1,
                       value=cosine_input)
 
 integrator_state = State(system,

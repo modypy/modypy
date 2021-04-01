@@ -96,4 +96,4 @@ class SignalState(State, Signal):
                        derivative_function,
                        shape,
                        initial_condition)
-        Signal.__init__(self, owner, shape, value=self)
+        Signal.__init__(self, shape, value=self)

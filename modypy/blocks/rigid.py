@@ -45,8 +45,8 @@ class RigidBody6DOFFlatEarth(Block):
         self.mass = mass
         self.moment_of_inertia = moment_of_inertia
 
-        self.forces_body = Port(self, shape=3)
-        self.moments_body = Port(self, shape=3)
+        self.forces_body = Port(shape=3)
+        self.moments_body = Port(shape=3)
 
         if initial_transformation is None:
             initial_transformation = np.eye(3)
@@ -72,11 +72,9 @@ class RigidBody6DOFFlatEarth(Block):
                         derivative_function=self.dcm_dot,
                         initial_condition=initial_transformation)
 
-        self.velocity_body = Signal(self,
-                                    shape=3,
+        self.velocity_body = Signal(shape=3,
                                     value=self.velocity_body_output)
-        self.omega_body = Signal(self,
-                                 shape=3,
+        self.omega_body = Signal(shape=3,
                                  value=self.omega_body_output)
 
     def velocity_earth_dot(self, data):
@@ -134,10 +132,10 @@ class DirectCosineToEuler(Block):
     def __init__(self, parent):
         Block.__init__(self, parent)
 
-        self.dcm = Port(self, shape=(3, 3))
-        self.yaw = Signal(self, shape=1, value=self.calculate_yaw)
-        self.pitch = Signal(self, shape=1, value=self.calculate_pitch)
-        self.roll = Signal(self, shape=1, value=self.calculate_roll)
+        self.dcm = Port(shape=(3, 3))
+        self.yaw = Signal(shape=1, value=self.calculate_yaw)
+        self.pitch = Signal(shape=1, value=self.calculate_pitch)
+        self.roll = Signal(shape=1, value=self.calculate_roll)
 
     def calculate_yaw(self, data):
         """Calculate the yaw angle for the given direct cosine matrix

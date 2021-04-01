@@ -16,11 +16,11 @@ def test_port():
     """Test the ``Port`` class"""
 
     system = System()
-    port_a1 = Port(system, shape=3)
-    port_a2 = Port(system, shape=3)
-    port_a3 = Port(system, shape=3)
-    port_b = Port(system, shape=(3, 3))
-    port_c = Port(system)
+    port_a1 = Port(shape=3)
+    port_a2 = Port(shape=3)
+    port_a3 = Port(shape=3)
+    port_b = Port(shape=(3, 3))
+    port_c = Port()
 
     # Check size calculation
     assert port_a1.size == 3
@@ -47,10 +47,10 @@ def test_multiple_signals_error():
     """Test occurrence of ``MultipleSignalsError"""
 
     system = System()
-    port_a = Port(system)
-    port_b = Port(system)
-    signal_a = Signal(system)
-    signal_b = Signal(system, value=(lambda x: 0))
+    port_a = Port()
+    port_b = Port()
+    signal_a = Signal()
+    signal_b = Signal(value=(lambda x: 0))
 
     port_a.connect(signal_a)
     port_b.connect(signal_b)
@@ -62,8 +62,8 @@ def test_shape_mismatch_error():
     """Test occurrence of ``ShapeMismatchError``"""
 
     system = System()
-    port_a = Port(system, shape=(3, 3))
-    port_b = Port(system)
+    port_a = Port(shape=(3, 3))
+    port_b = Port()
     with pytest.raises(ShapeMismatchError):
         port_a.connect(port_b)
 
@@ -72,10 +72,10 @@ def test_signal():
     """Test the ``Signal`` class"""
 
     system = System()
-    signal_a = Signal(system)
-    port_a = Port(system)
-    port_b = Port(system)
-    port_c = Port(system)
+    signal_a = Signal()
+    port_a = Port()
+    port_b = Port()
+    port_c = Port()
 
     # Test connection port -> signal
     port_a.connect(signal_a)
@@ -118,9 +118,9 @@ def test_port_access():
 
     system = System()
 
-    port = Port(system)
-    signal = Signal(system, value=Mock())
-    unconnected_port = Port(system)
+    port = Port()
+    signal = Signal(value=Mock())
+    unconnected_port = Port()
 
     port.connect(signal)
 
@@ -139,7 +139,7 @@ def test_port_not_connected_error():
     """Test the detection of unconnected ports"""
 
     system = System()
-    port = Port(system)
+    port = Port()
 
     system_state = SystemState(time=0, system=system)
     with pytest.raises(PortNotConnectedError):

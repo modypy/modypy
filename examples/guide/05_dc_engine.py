@@ -38,16 +38,14 @@ class DCMotor(Block):
                                    initial_condition=initial_current)
 
         # Create the output for the speed in revolutions per second
-        self.speed_rps = Signal(self,
-                                value=self.speed_rps_value)
+        self.speed_rps = Signal(value=self.speed_rps_value)
 
         # Create the output for the generated torque
-        self.torque = Signal(self,
-                             value=self.torque_value)
+        self.torque = Signal(value=self.torque_value)
 
         # Create (input) ports for voltage and external torque load
-        self.voltage = Port(self)
-        self.external_torque = Port(self)
+        self.voltage = Port()
+        self.external_torque = Port()
 
     def omega_dt(self, data):
         """Calculate the derivative of the angular velocity"""
@@ -90,14 +88,12 @@ class Propeller(Block):
         self.diameter = diameter
 
         # Define the thrust and torque output signals
-        self.thrust = Signal(self,
-                             value=self.thrust_output)
-        self.torque = Signal(self,
-                             value=self.torque_output)
+        self.thrust = Signal(value=self.thrust_output)
+        self.torque = Signal(value=self.torque_output)
 
         # Define the input ports for propeller speed and air density
-        self.speed_rps = Port(self)
-        self.density = Port(self)
+        self.speed_rps = Port()
+        self.density = Port()
 
     def thrust_output(self, data):
         """Calculate the thrust force of the propeller"""
