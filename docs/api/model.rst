@@ -36,13 +36,6 @@ Events (:mod:`modypy.model.events`)
     Events and specifically clocks are the basis of the simulation of
     discrete-time elements in a system.
 
-Evaluation (:mod:`modypy.model.evaluation`)
-    is done by :class:`modypy.model.evaluation.Evaluator` objects, which lazily
-    determine the values of signals, ports, events and state derivatives at one
-    specific point in time. The dependencies between signals are considered and
-    algebraic loops are automatically detected and reported. Calculation results
-    are cached for better performance.
-
 .. toctree::
     :hidden:
     :glob:
