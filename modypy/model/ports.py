@@ -24,29 +24,47 @@ ShapeType = Union[int, Sequence[int], Tuple[int]]
 
 
 class PortNotConnectedError(RuntimeError):
-    """Exception when a port is evaluated that is not connected to a signal"""
+    """This exception is raised when a port is evaluated that is not connected
+    to a signal"""
+
+
+class MultipleSignalsError(RuntimeError):
+    """This exception is raised if two ports shall be connected to each other
+    that are already connected to different signals."""
+
+
+class ShapeMismatchError(RuntimeError):
+    """This exception is raised if two ports with incompatible shapes shall be
+    connected to each other."""
 
 
 class Port:
     """A port is a structural element of a system that can be connected to a
     signal."""
 
-    def __init__(self, shape: ShapeType = 1):
-        self.reference = self
-
+    def __init__(self, shape: ShapeType =(1,)):
         if isinstance(shape, int):
-            self.shape = (shape,)
-        else:
-            self.shape = shape
+            shape = (shape,)
+        self.shape = shape
         self.size = functools.reduce(operator.mul, self.shape, 1)
+        self._reference = self
+
+    @property
+    def reference(self):
+        if self._reference is not self:
+            # Try to further shorten the reference path
+            self._reference = self._reference.reference
+        return self._reference
+
+    @reference.setter
+    def reference(self, value):
+        self._reference = value
 
     @property
     def signal(self):
-        """The signal this port is connected to or None."""
-
-        if self.reference == self:
-            return None
-        return self.reference.signal
+        if self._reference is not self:
+            return self.reference.signal
+        return None
 
     def connect(self, other):
         """Connect this port to another port.
@@ -85,28 +103,27 @@ class Port:
         return self.signal(system_state)
 
 
-class MultipleSignalsError(RuntimeError):
-    """This exception is raised if two ports shall be connected to each other
-    that are already connected to different signals."""
+class AbstractSignal(Port):
+    """An signal is a terminal port with a defined value.
 
-
-class ShapeMismatchError(RuntimeError):
-    """This exception is raised if two ports with incompatible shapes shall be
-    connected to each other."""
-
-
-class Signal(Port):
-    """A signal provides the value for all ports connected to it."""
-
-    def __init__(self, shape: ShapeType = 1, value=0):
-        Port.__init__(self, shape)
-        self.value = value
+    It is connected to itself, i.e., it can only be connected to other,
+    unconnected ports or to ports that are already connected to itself."""
 
     @property
     def signal(self):
-        """The signal this port is connected. As this is a signal, it returns
-        itself."""
+        # A signal is always connected to itself
         return self
+
+
+class Signal(AbstractSignal):
+    """A signal is a port for which the value is defined by a callable or a
+    constant.
+
+    It is already connected to """
+
+    def __init__(self, value=0, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.value = value
 
     def __call__(self, system_state):
         if callable(self.value):
@@ -115,16 +132,19 @@ class Signal(Port):
             return self.value
 
 
-class InputSignal(Signal):
+class InputSignal(AbstractSignal):
     """An ``InputSignal`` is a special kind of signal that is considered an
     input into the system. In simulation and linearization, input signals play a
     special role."""
 
-    def __init__(self, owner, shape: ShapeType = 1, value=0):
-        Signal.__init__(self, shape, value)
+    def __init__(self, owner, shape: ShapeType = (1,), value=None):
+        super().__init__(shape)
         self.owner = owner
         self.input_index = self.owner.system.allocate_input_lines(self.size)
         self.owner.system.inputs.append(self)
+        if value is None:
+            value = np.zeros(shape)
+        self.value = value
 
     @property
     def input_slice(self):

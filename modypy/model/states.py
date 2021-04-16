@@ -19,6 +19,7 @@ import operator
 import numpy as np
 
 from modypy.model import Signal
+from modypy.model.ports import AbstractSignal, ShapeType
 
 
 class State:
@@ -83,17 +84,17 @@ class State:
         system_state.set_state_value(self, value)
 
 
-class SignalState(State, Signal):
+class SignalState(State, AbstractSignal):
     """A state that also provides itself as an output signal."""
 
     def __init__(self,
                  owner,
                  derivative_function=None,
-                 shape=1,
+                 shape: ShapeType = (1,),
                  initial_condition=None):
         State.__init__(self,
-                       owner,
-                       derivative_function,
-                       shape,
-                       initial_condition)
-        Signal.__init__(self, shape, value=self)
+                       owner=owner,
+                       derivative_function=derivative_function,
+                       shape=shape,
+                       initial_condition=initial_condition)
+        AbstractSignal.__init__(self, shape)
