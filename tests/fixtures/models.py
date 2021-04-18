@@ -2,12 +2,12 @@ import numpy as np
 
 from modypy.blocks.linear import LTISystem
 from modypy.model import \
-    Block,\
+    Block, \
     System, \
     ZeroCrossEventSource, \
     InputSignal, \
     Signal, \
-    State
+    State, signal_method
 
 
 def first_order_lag(time_constant=1, initial_value=10):
@@ -113,7 +113,6 @@ class BouncingBall(Block):
                               shape=2,
                               derivative_function=self.velocity_derivative,
                               initial_condition=initial_velocity)
-        self.posy = Signal(shape=1, value=self.posy_output)
         self.ground = ZeroCrossEventSource(self,
                                            event_function=self.ground_event,
                                            direction=-1)
@@ -127,7 +126,8 @@ class BouncingBall(Block):
     def velocity_derivative(self, data):
         return np.r_[0, self.gravity]
 
-    def posy_output(self, data):
+    @signal_method
+    def posy(self, data):
         return self.position(data)[1]
 
     def ground_event(self, data):

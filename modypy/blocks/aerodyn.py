@@ -5,7 +5,7 @@ import math
 
 import numpy as np
 
-from modypy.model import Block, Port, Signal
+from modypy.model import Block, Port, signal_method
 
 
 class Propeller(Block):
@@ -60,11 +60,8 @@ class Propeller(Block):
         self.speed_rps = Port(shape=1)
         self.density = Port(shape=1)
 
-        self.thrust = Signal(shape=1, value=self.thrust_output)
-        self.torque = Signal(shape=1, value=self.torque_output)
-        self.power = Signal(shape=1, value=self.power_output)
-
-    def thrust_output(self, data):
+    @signal_method
+    def thrust(self, data):
         """Function used to calculate the ``thrust`` output
         """
         speed_rps = self.speed_rps(data)
@@ -72,7 +69,8 @@ class Propeller(Block):
         return self.thrust_coefficient(speed_rps) \
             * density * self.diameter ** 4 * speed_rps ** 2
 
-    def torque_output(self, data):
+    @signal_method
+    def torque(self, data):
         """Function used to calculate the ``torque`` output
         """
         speed_rps = self.speed_rps(data)
@@ -80,7 +78,8 @@ class Propeller(Block):
         return self.power_coefficient(speed_rps) / (2 * math.pi) * \
             density * self.diameter ** 5 * speed_rps ** 2
 
-    def power_output(self, data):
+    @signal_method
+    def power(self, data):
         """Function used to calculate the ``power`` output
         """
         speed_rps = self.speed_rps(data)
@@ -131,19 +130,16 @@ class Thruster(Block):
         self.scalar_thrust = Port(shape=1)
         self.scalar_torque = Port(shape=1)
 
-        self.thrust_vector = Signal(shape=3,
-                                    value=self.thrust_vector_output)
-        self.torque_vector = Signal(shape=3,
-                                    value=self.torque_vector_output)
-
-    def thrust_vector_output(self, data):
+    @signal_method(shape=3)
+    def thrust_vector(self, data):
         """Function used to calculate the ``thrust_vector`` output
         """
         thrust = self.scalar_thrust(data)
         thrust_vector = self.vector * thrust
         return thrust_vector
 
-    def torque_vector_output(self, data):
+    @signal_method(shape=3)
+    def torque_vector(self, data):
         """Function used to calculate the ``torque_vector`` output
         """
         thrust = self.scalar_thrust(data)

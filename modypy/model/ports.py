@@ -42,7 +42,7 @@ class Port:
     """A port is a structural element of a system that can be connected to a
     signal."""
 
-    def __init__(self, shape: ShapeType =(1,)):
+    def __init__(self, shape: ShapeType = (1,)):
         if isinstance(shape, int):
             shape = (shape,)
         self.shape = shape
@@ -51,6 +51,7 @@ class Port:
 
     @property
     def reference(self):
+        """The port referenced by this port"""
         if self._reference is not self:
             # Try to further shorten the reference path
             self._reference = self._reference.reference
@@ -62,6 +63,8 @@ class Port:
 
     @property
     def signal(self):
+        """The signal referenced by this port or ``None`` if this port is not
+        connected to any signal."""
         if self._reference is not self:
             return self.reference.signal
         return None
@@ -95,12 +98,12 @@ class Port:
                 # the reference of the other port.
                 other.reference.reference = self.reference
 
-    def __call__(self, system_state):
+    def __call__(self, *args, **kwargs):
         if self.size == 0:
             return np.empty(self.shape)
         if self.signal is None:
             raise PortNotConnectedError()
-        return self.signal(system_state)
+        return self.signal(*args, **kwargs)
 
 
 class AbstractSignal(Port):
@@ -111,25 +114,93 @@ class AbstractSignal(Port):
 
     @property
     def signal(self):
+        """The signal this signal is connected to, i.e., itself."""
         # A signal is always connected to itself
         return self
 
 
 class Signal(AbstractSignal):
     """A signal is a port for which the value is defined by a callable or a
-    constant.
-
-    It is already connected to """
+    constant."""
 
     def __init__(self, value=0, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.value = value
 
-    def __call__(self, system_state):
+    def __call__(self, *args, **kwargs):
         if callable(self.value):
-            return self.value(system_state)
+            return self.value(*args, **kwargs)
         else:
             return self.value
+
+
+def decorator(func):
+    """Helper function to create decorators with optional arguments"""
+    def _wrapper(*args, **kwargs):
+        if len(args) == 1 and len(kwargs) == 0 and callable(args[0]):
+            # We only have the function as parameter, so directly call the
+            # decorator function
+            return func(*args, **kwargs)
+
+        # We have parameters, so we define a functor to use as decorator
+        def _functor(user_func):
+            return func(user_func, *args, **kwargs)
+
+        return _functor
+
+    # Be a well-behaved decorator by copying name, documentation and attributes
+    _wrapper.__name__ = func.__name__
+    _wrapper.__doc__ = func.__doc__
+    _wrapper.__dict__.update(func.__dict__)
+    return _wrapper
+
+
+@decorator
+def signal_function(user_function, *args, **kwargs):
+    """Transform a function into a ``Signal``"""
+    the_signal = Signal(user_function, *args, **kwargs)
+
+    # Be a well-behaved decorator by copying name, documentation and attributes
+    the_signal.__doc__ = user_function.__doc__
+    the_signal.__name__ = user_function.__name__
+    the_signal.__dict__.update(user_function.__dict__)
+    return the_signal
+
+
+@decorator
+def signal_method(user_function, *args, **kwargs):
+    """Transform a method into a ``Signal``
+
+    The return value is a descriptor object that creates a ``Signal`` instance
+    for each instance of the containing class."""
+
+    class _SignalDescriptor:
+        def __init__(self, function):
+            self.name = None
+            self.function = function
+
+        def __set_name__(self, owner, name):
+            self.name = name
+
+        def __get__(self, instance, owner):
+            if instance is None:
+                return self
+            signal_name = '__signal_%s' % self.name
+            the_signal = getattr(instance, signal_name, None)
+            if the_signal is None:
+                the_signal = Signal(self.function.__get__(instance, owner),
+                                    *args, **kwargs)
+                the_signal.__name__ = self.function.__name__
+                the_signal.__doc__ = self.function.__doc__
+                the_signal.__dict__.update(self.function.__dict__)
+                setattr(instance, signal_name, the_signal)
+            return the_signal
+
+    descriptor = _SignalDescriptor(user_function)
+    descriptor.__name__ = user_function.__name__
+    descriptor.__doc__ = user_function.__doc__
+    descriptor.__dict__.update(user_function.__dict__)
+    return descriptor
 
 
 class InputSignal(AbstractSignal):

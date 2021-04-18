@@ -5,7 +5,7 @@ events and event-handler functions.
 import numpy as np
 import matplotlib.pyplot as plt
 
-from modypy.model import System, Block, State, Signal, ZeroCrossEventSource
+from modypy.model import System, Block, State, Signal, ZeroCrossEventSource, signal_method
 from modypy.simulation import Simulator
 
 
@@ -39,7 +39,6 @@ class BouncingBall(Block):
                               shape=2,
                               derivative_function=self.velocity,
                               initial_condition=initial_position)
-        self.posy = Signal(shape=1, value=self.posy_output)
         self.ground = ZeroCrossEventSource(self,
                                            event_function=self.ground_event,
                                            direction=-1,
@@ -52,7 +51,8 @@ class BouncingBall(Block):
         """The time-derivative of the position (i.e. the acceleration)"""
         return np.r_[0, self.gravity]
 
-    def posy_output(self, data):
+    @signal_method
+    def posy(self, data):
         """The output for the y-position"""
         return self.position(data)[1]
 

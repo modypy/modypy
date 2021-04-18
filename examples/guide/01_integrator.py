@@ -4,26 +4,23 @@ Simple integrator element with cosine wave input.
 import numpy as np
 import matplotlib.pyplot as plt
 
-from modypy.model import System, State, Signal
+from modypy.model import System, State, Signal, signal_function
 from modypy.simulation import Simulator
 
 # Create a new system
 system = System()
 
 
-# Define the function for generating the cosine signal
+# Define the cosine signal
+@signal_function
 def cosine_input(system_state):
     """Calculate the value of the input signal"""
     return np.cos(system_state.time)
 
 
-# Define the input signal
-input_signal = Signal(shape=1,
-                      value=cosine_input)
-
 integrator_state = State(system,
                          shape=1,
-                         derivative_function=input_signal)
+                         derivative_function=cosine_input)
 
 # Set up a simulation
 simulator = Simulator(system,
@@ -38,7 +35,7 @@ else:
     # Plot the result
     input_line, integrator_line = \
         plt.plot(simulator.result.time,
-                 input_signal(simulator.result),
+                 cosine_input(simulator.result),
                  "r",
                  simulator.result.time,
                  integrator_state(simulator.result)[0],

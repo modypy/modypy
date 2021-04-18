@@ -18,7 +18,6 @@ import operator
 
 import numpy as np
 
-from modypy.model import Signal
 from modypy.model.ports import AbstractSignal, ShapeType
 
 

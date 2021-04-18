@@ -4,7 +4,7 @@ Blocks for stiff body dynamics
 import numpy as np
 import numpy.linalg as linalg
 
-from modypy.model import Block, Port, Signal, SignalState
+from modypy.model import Block, Port, SignalState, signal_method
 
 
 class RigidBody6DOFFlatEarth(Block):
@@ -72,11 +72,6 @@ class RigidBody6DOFFlatEarth(Block):
                         derivative_function=self.dcm_dot,
                         initial_condition=initial_transformation)
 
-        self.velocity_body = Signal(shape=3,
-                                    value=self.velocity_body_output)
-        self.omega_body = Signal(shape=3,
-                                 value=self.omega_body_output)
-
     def velocity_earth_dot(self, data):
         """Calculates the acceleration in the earth reference frame
         """
@@ -107,12 +102,14 @@ class RigidBody6DOFFlatEarth(Block):
         ])
         return skew_sym_matrix @ self.dcm(data)
 
-    def velocity_body_output(self, data):
+    @signal_method(shape=3)
+    def velocity_body(self, data):
         """Calculate the velocity in the body reference frame
         """
         return self.dcm(data).T @ self.velocity_earth(data)
 
-    def omega_body_output(self, data):
+    @signal_method(shape=3)
+    def omega_body(self, data):
         """Calculate the angular velocity in the body reference frame
         """
         return self.dcm(data).T @ self.omega_earth(data)
@@ -133,23 +130,23 @@ class DirectCosineToEuler(Block):
         Block.__init__(self, parent)
 
         self.dcm = Port(shape=(3, 3))
-        self.yaw = Signal(shape=1, value=self.calculate_yaw)
-        self.pitch = Signal(shape=1, value=self.calculate_pitch)
-        self.roll = Signal(shape=1, value=self.calculate_roll)
 
-    def calculate_yaw(self, data):
+    @signal_method
+    def yaw(self, data):
         """Calculate the yaw angle for the given direct cosine matrix
         """
         dcm = self.dcm(data)
         return np.arctan2(dcm[1, 0], dcm[0, 0])
 
-    def calculate_pitch(self, data):
+    @signal_method
+    def pitch(self, data):
         """Calculate the pitch angle for the given direct cosine matrix
         """
         dcm = self.dcm(data)
         return np.arctan2(-dcm[2, 0], np.sqrt(dcm[0, 0] ** 2 + dcm[1, 0] ** 2))
 
-    def calculate_roll(self, data):
+    @signal_method
+    def roll(self, data):
         """Calculate the roll angle for the given direct cosine matrix
         """
         dcm = self.dcm(data)
