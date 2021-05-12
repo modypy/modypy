@@ -123,7 +123,7 @@ class Signal(AbstractSignal):
     """A signal is a port for which the value is defined by a callable or a
     constant."""
 
-    def __init__(self, *args, value=0, **kwargs):
+    def __init__(self, value=0, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.value = value
 
