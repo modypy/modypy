@@ -166,11 +166,9 @@ def test_sum_signal_shape_mismatch():
 def test_sum_signal_gain_mismatch():
     """Test the gain mismatch exception of ``sum_signal``."""
 
-    system = System()
     signal_1 = Signal()
     signal_2 = Signal()
 
     with pytest.raises(ValueError):
-        sum_result = sum_signal(system,
-                                input_signals=(signal_1, signal_2),
+        sum_result = sum_signal(input_signals=(signal_1, signal_2),
                                 gains=(1, 1, 1))

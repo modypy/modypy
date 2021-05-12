@@ -88,9 +88,9 @@ def propeller_model(thrust_coefficient=0.09,
     propeller_1.speed_rps.connect(speed_1)
     propeller_2.speed_rps.connect(speed_2)
 
-    total_thrust = sum_signal(system, (propeller_1.thrust,
+    total_thrust = sum_signal((propeller_1.thrust,
                                        propeller_2.thrust))
-    total_power = sum_signal(system, (propeller_1.power,
+    total_power = sum_signal((propeller_1.power,
                                       propeller_2.power))
 
     # Set up steady-state configuration
