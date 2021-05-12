@@ -9,7 +9,7 @@ from modypy.model.ports import \
     Signal, \
     InputSignal, \
     ShapeMismatchError, \
-    MultipleSignalsError, PortNotConnectedError
+    MultipleSignalsError, PortNotConnectedError, signal_method
 
 
 def test_port():
@@ -116,8 +116,6 @@ def test_port_access():
     of the signal using the provider object for connected ports and raises an
     exception for unconnected ports"""
 
-    system = System()
-
     port = Port()
     signal = Signal(value=Mock())
     unconnected_port = Port()
@@ -144,3 +142,28 @@ def test_port_not_connected_error():
     system_state = SystemState(time=0, system=system)
     with pytest.raises(PortNotConnectedError):
         port(system_state)
+
+
+def test_signal_method():
+    """Test the implementation of signal method"""
+
+    class TestClass:
+        @signal_method
+        def test_method(self, data):
+            pass
+
+    # Ensure that the value of the method in the class does not change
+    method_1 = TestClass.test_method
+    method_2 = TestClass.test_method
+    assert method_1 is method_2
+
+    # Ensure that the method resolves to a unique signal on an object
+    test_object_1 = TestClass()
+    test_object_2 = TestClass()
+    signal_1 = test_object_1.test_method
+    signal_2 = test_object_1.test_method
+    signal_3 = test_object_2.test_method
+
+    assert isinstance(signal_1, Signal)
+    assert signal_1 is signal_2
+    assert signal_1 is not signal_3
