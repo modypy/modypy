@@ -112,8 +112,16 @@ def test_rigidbody_movement():
         dcm_to_euler.roll(sim.result)[-1],
         0)
     npt.assert_almost_equal(
-        rb_6dof.position_earth(sim.result)[:, -1],
+        rb_6dof.position_earth(sim.result)[..., -1],
         [r, r, 0])
+    npt.assert_almost_equal(
+        rb_6dof.velocity_body(sim.result)[..., -1],
+        [vx, 0, 0]
+    )
+    npt.assert_almost_equal(
+        rb_6dof.omega_body(sim.result)[..., -1],
+        [0, 0, omega]
+    )
 
 
 def test_rigidbody_defaults():

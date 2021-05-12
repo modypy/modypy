@@ -102,17 +102,26 @@ class RigidBody6DOFFlatEarth(Block):
         ])
         return skew_sym_matrix @ self.dcm(data)
 
+    @signal_method(shape=(3, 3))
+    def dcm_inverse(self, data):
+        """The inverse of the direct cosine matrix"""
+        return np.swapaxes(self.dcm(data), 0, 1)
+
     @signal_method(shape=3)
     def velocity_body(self, data):
-        """Calculate the velocity in the body reference frame
-        """
-        return self.dcm(data).T @ self.velocity_earth(data)
+        """Calculate the velocity in the body reference frame"""
+
+        return np.einsum("ij...,j...->i...",
+                         self.dcm_inverse(data),
+                         self.velocity_earth(data))
 
     @signal_method(shape=3)
     def omega_body(self, data):
-        """Calculate the angular velocity in the body reference frame
-        """
-        return self.dcm(data).T @ self.omega_earth(data)
+        """Calculate the angular velocity in the body reference frame"""
+
+        return np.einsum("ij...,j...->i...",
+                         self.dcm_inverse(data),
+                         self.omega_earth(data))
 
 
 class DirectCosineToEuler(Block):
