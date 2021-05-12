@@ -19,12 +19,6 @@
     :alt: Cove Coverage
     :target: https://codecov.io/gh/modypy/modypy
 
-.. image:: https://www.code-inspector.com/project/17342/score/svg
-    :alt: Code Quality Store
-
-.. image:: https://www.code-inspector.com/project/17342/status/svg
-    :alt: Code Grade
-
 MoDyPy (rhymes with "modify") is a Python framework for *Mo*\ delling *dy*\ namic
 systems in *Py*\ thon. The framework provides methods for describing continuous-time
 linear and non-linear systems in
