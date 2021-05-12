@@ -59,7 +59,7 @@ def propeller_model(thrust_coefficient=0.09,
     torque_1 = InputSignal(system)
     torque_2 = InputSignal(system)
 
-    density_signal = constant(system, density)
+    density_signal = constant(density)
 
     def speed_1_dt(data):
         """Derivative of the speed of the first propeller"""

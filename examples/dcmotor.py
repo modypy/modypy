@@ -41,8 +41,8 @@ propeller.torque.connect(dcmotor.external_torque)
 dcmotor.speed_rps.connect(propeller.speed_rps)
 
 # Create the sources for voltage and air density
-voltage = constant(system, value=3.5)
-density = constant(system, value=1.29)
+voltage = constant(value=3.5)
+density = constant(value=1.29)
 
 # Connect the voltage to the motor
 voltage.connect(dcmotor.voltage)

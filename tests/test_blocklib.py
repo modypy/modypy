@@ -37,8 +37,8 @@ def test_aerodyn_blocks(thrust_coefficient, power_coefficient):
                         vector=np.c_[0, 0, -1],
                         arm=np.c_[1, 1, 0],
                         direction=1)
-    density = constant(system, value=1.29)
-    gravity = constant(system, value=[0, 0, 1.5/4*9.81])
+    density = constant(value=1.29)
+    gravity = constant(value=[0, 0, 1.5/4*9.81])
     voltage = InputSignal(system)
 
     voltage.connect(dcmotor.voltage)
@@ -48,9 +48,7 @@ def test_aerodyn_blocks(thrust_coefficient, power_coefficient):
     propeller.thrust.connect(thruster.scalar_thrust)
     dcmotor.torque.connect(thruster.scalar_torque)
 
-    force_sum = sum_signal(system,
-                           (thruster.thrust_vector,
-                            gravity))
+    force_sum = sum_signal((thruster.thrust_vector, gravity))
 
     # Determine the steady state
     steady_state_config = SteadyStateConfiguration(system)
@@ -89,8 +87,8 @@ def test_rigidbody_movement():
                                      initial_transformation=np.eye(3, 3),
                                      moment_of_inertia=moment_of_inertia)
     dcm_to_euler = DirectCosineToEuler(system)
-    thrust = constant(system, value=np.r_[0, mass * omega * vx, 0])
-    moment = constant(system, value=np.r_[0, 0, 0])
+    thrust = constant(value=np.r_[0, mass * omega * vx, 0])
+    moment = constant(value=np.r_[0, 0, 0])
 
     thrust.connect(rb_6dof.forces_body)
     moment.connect(rb_6dof.moments_body)
@@ -133,10 +131,8 @@ def test_rigidbody_defaults():
                                      mass=mass,
                                      moment_of_inertia=moment_of_inertia)
     dcm_to_euler = DirectCosineToEuler(system)
-    thrust = constant(system,
-                      value=np.r_[0, 0, 0])
-    moment = constant(system,
-                      value=moment_of_inertia @ np.r_[0, 0, math.pi/30**2])
+    thrust = constant(value=np.r_[0, 0, 0])
+    moment = constant(value=moment_of_inertia @ np.r_[0, 0, math.pi/30**2])
 
     thrust.connect(rb_6dof.forces_body)
     moment.connect(rb_6dof.moments_body)

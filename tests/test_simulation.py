@@ -208,7 +208,7 @@ def test_clock_handling():
     initial_value = 2.0
     system = System()
 
-    input_signal = constant(system, value=0.0)
+    input_signal = constant(value=0.0)
     lag = LTISystem(parent=system,
                     system_matrix=-1 / time_constant,
                     input_matrix=1,
@@ -279,7 +279,7 @@ def test_integrator():
     """Test an integrator"""
 
     system = System()
-    int_input = constant(system, 1.0)
+    int_input = constant(1.0)
     int_output = integrator(system, int_input)
 
     simulator = Simulator(system, start_time=0.0)

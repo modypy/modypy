@@ -116,13 +116,12 @@ def _gain_function(gain_matrix, input_signal, data):
     return gain_matrix @ input_signal(data)
 
 
-def gain(owner, gain_matrix, input_signal):
+def gain(gain_matrix, input_signal):
     """
     Create a signal that represents the product of the given gain matrix and the
     value of the given input signal.
 
     Args:
-        owner: The owner of the result signal
         gain_matrix: The gain matrix
         input_signal: The input signal to consider
 
@@ -202,7 +201,7 @@ def _sum_function(signals, gains, data):
     return signal_sum
 
 
-def sum_signal(owner, input_signals, gains=None):
+def sum_signal(input_signals, gains=None):
     """
     Create a signal that represents the sum of the input signals multiplied by
     the given gains.
@@ -211,7 +210,6 @@ def sum_signal(owner, input_signals, gains=None):
     entries in the ``gains`` tuple as there are input signals.
 
     Args:
-        owner: The owner of the sum signal
         input_signals: A tuple of input signals
         gains:  A tuple of gains for the input signals. Optional: Default value
             is all ones.

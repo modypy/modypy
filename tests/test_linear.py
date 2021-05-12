@@ -69,7 +69,7 @@ def test_lti_no_states():
                     input_matrix=np.empty((0, 1)),
                     output_matrix=np.empty((1, 0)),
                     feed_through_matrix=1)
-    source = constant(system, value=1)
+    source = constant(value=1)
     source.connect(lti.input)
 
     system_state = SystemState(time=0, system=system)
@@ -93,7 +93,7 @@ def test_lti_empty():
 def test_gain_class():
     system = System()
     gain_block = Gain(system, k=[[1, 2], [3, 4]])
-    gain_in = constant(system, value=[3, 4])
+    gain_in = constant(value=[3, 4])
     gain_block.input.connect(gain_in)
 
     npt.assert_almost_equal(gain_block.output(None),
@@ -102,9 +102,8 @@ def test_gain_class():
 
 def test_gain_function():
     system = System()
-    gain_in = constant(system, value=[3, 4])
-    gain_signal = gain(system,
-                       gain_matrix=[[1, 2], [3, 4]],
+    gain_in = constant(value=[3, 4])
+    gain_signal = gain(gain_matrix=[[1, 2], [3, 4]],
                        input_signal=gain_in)
 
     npt.assert_almost_equal(gain_signal(None),
@@ -147,9 +146,7 @@ def test_sum_signal(channel_weights, output_size, inputs, expected_output):
                                  shape=output_size,
                                  value=input_value)
                      for input_value in inputs]
-    sum_result = sum_signal(system,
-                            input_signals,
-                            gains=channel_weights)
+    sum_result = sum_signal(input_signals, gains=channel_weights)
 
     system_state = SystemState(time=0, system=system)
     actual_output = sum_result(system_state)
@@ -159,13 +156,11 @@ def test_sum_signal(channel_weights, output_size, inputs, expected_output):
 def test_sum_signal_shape_mismatch():
     """Test the shape mismatch exception of ``sum_signal``."""
 
-    system = System()
     signal_1 = Signal()
     signal_2 = Signal(shape=2)
 
     with pytest.raises(ValueError):
-        sum_result = sum_signal(system,
-                                input_signals=(signal_1, signal_2))
+        sum_signal(input_signals=(signal_1, signal_2))
 
 
 def test_sum_signal_gain_mismatch():

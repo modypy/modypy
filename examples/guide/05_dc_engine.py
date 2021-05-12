@@ -159,8 +159,8 @@ engine = Engine(system,
                 diameter=8*25.4E-3)
 
 # Provide constant signals for the voltage and the air density
-voltage = constant(system, value=3.5)
-density = constant(system, value=1.29)
+voltage = constant(value=3.5)
+density = constant(value=1.29)
 
 # Connect them to the corresponding inputs of the engine
 engine.voltage.connect(voltage)

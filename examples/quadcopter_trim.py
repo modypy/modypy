@@ -139,7 +139,7 @@ voltages = [
 ]
 
 # Provide the air density as input
-density = constant(system, value=1.29)
+density = constant(value=1.29)
 
 # Connect the engines
 for idx, engine in zip(itertools.count(), engines):
@@ -149,20 +149,17 @@ for idx, engine in zip(itertools.count(), engines):
 
 # We consider gravity and a possible counter torque that need to be compensated
 # by thrust and torque
-gravity_source = constant(system, value=np.r_[0, 0, 1.5 * 9.81])
-counter_torque = constant(system, value=np.r_[0, 0, 0])
+gravity_source = constant(value=np.r_[0, 0, 1.5 * 9.81])
+counter_torque = constant(value=np.r_[0, 0, 0])
 
 # Determine the sum of forces and torques
-forces_sum = sum_signal(system,
-                        [engine.thrust_vector for engine in engines] +
+forces_sum = sum_signal([engine.thrust_vector for engine in engines] +
                         [gravity_source])
-torques_sum = sum_signal(system,
-                         [engine.torque_vector for engine in engines] +
+torques_sum = sum_signal([engine.torque_vector for engine in engines] +
                          [counter_torque])
 
 # Determine the sum of all currents
-total_current = sum_signal(system,
-                           [engine.dcmotor.current for engine in engines])
+total_current = sum_signal([engine.dcmotor.current for engine in engines])
 
 # Configure the steady-state finder
 steady_state_config = SteadyStateConfiguration(system)

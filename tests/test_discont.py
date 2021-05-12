@@ -14,8 +14,7 @@ def test_saturation():
     def _sine_source(system_state):
         return np.sin(2*np.pi*system_state.time)
 
-    saturated_out = saturation(system,
-                               _sine_source,
+    saturated_out = saturation(_sine_source,
                                lower_limit=-0.5,
                                upper_limit=0.6)
 

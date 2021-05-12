@@ -37,9 +37,9 @@ rb_6dof = RigidBody6DOFFlatEarth(system,
 dcm_to_euler = DirectCosineToEuler(system)
 
 # We provide some thrust as centripetal force
-thrust = constant(system, value=np.r_[0, MASS * OMEGA * VELOCITY_X, 0])
+thrust = constant(value=np.r_[0, MASS * OMEGA * VELOCITY_X, 0])
 # No torques
-torque = constant(system, value=np.r_[0, 0, 0])
+torque = constant(value=np.r_[0, 0, 0])
 
 # Connect thrust and torque to the rigid-body block
 thrust.connect(rb_6dof.forces_body)

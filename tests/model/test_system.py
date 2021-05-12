@@ -95,7 +95,7 @@ def test_system_state():
     state_b2 = State(system,
                      shape=3,
                      derivative_function=None)
-    signal_c = constant(system, value=16)
+    signal_c = constant(value=16)
     event_a = ZeroCrossEventSource(system, event_function=(lambda data: 23))
 
     system_state = SystemState(time=0, system=system)
