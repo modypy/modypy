@@ -4,20 +4,20 @@
 .. image:: https://img.shields.io/pypi/pyversions/modypy
     :alt: PyPI - Python Version
 
-.. image:: https://img.shields.io/github/license/ralfgerlich/modypy
+.. image:: https://img.shields.io/github/license/modypy/modypy
     :alt: GitHub
 
-.. image:: https://travis-ci.com/ralfgerlich/modypy.svg?branch=master
+.. image:: https://travis-ci.com/modypy/modypy.svg?branch=master
     :alt: Build Status
-    :target: https://travis-ci.com/ralfgerlich/modypy
+    :target: https://travis-ci.com/modypy/modypy
 
 .. image:: https://readthedocs.org/projects/modypy/badge/
     :alt: ReadTheDocs Build Status
     :target: https://modypy.readthedocs.io/
 
-.. image:: https://codecov.io/gh/ralfgerlich/modypy/branch/master/graph/badge.svg
+.. image:: https://codecov.io/gh/modypy/modypy/branch/master/graph/badge.svg
     :alt: Cove Coverage
-    :target: https://codecov.io/gh/ralfgerlich/modypy
+    :target: https://codecov.io/gh/modypy/modypy
 
 .. image:: https://www.code-inspector.com/project/17342/score/svg
     :alt: Code Quality Store
