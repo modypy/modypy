@@ -4,7 +4,7 @@ An engine consisting of a DC motor and a static propeller.
 import numpy as np
 import matplotlib.pyplot as plt
 
-from modypy.model import System, Signal, SignalState, Block, Port, signal_method
+from modypy.model import System, SignalState, Block, Port, signal_method
 from modypy.blocks.sources import constant
 from modypy.simulation import Simulator
 

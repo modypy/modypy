@@ -27,9 +27,9 @@ system = System()
 
 
 # Define the derivatives
-def velocity_dt(data):
+def velocity_dt(system_state):
     """Calculate the derivative of the velocity"""
-    pos = position(data)
+    pos = position(system_state)
     distance = linalg.norm(pos)
     return -G * SUN_MASS/(distance**3) * pos
 

@@ -205,8 +205,8 @@ def signal_method(user_function, *args, **kwargs):
 
 class InputSignal(AbstractSignal):
     """An ``InputSignal`` is a special kind of signal that is considered an
-    input into the system. In simulation and linearization, input signals play a
-    special role."""
+    input into the system. In steady-state identification and linearization,
+    input signals play a special role."""
 
     def __init__(self, owner, shape: ShapeType = (1,), value=None):
         super().__init__(shape)

@@ -28,7 +28,7 @@ Also, its magnitude will be diminished due to friction losses inside the ball,
 so we will have the new velocity after the bounce as follows:
 
 .. math::
-    v'\left(t\right) &= - \delta \times v\left(t\right)
+    v'\left(t\right) = - \delta \times v\left(t\right)
 
 Here, :math:`\delta` is the coefficient of restitution.
 
@@ -44,7 +44,6 @@ Let's define our system and our states first:
 
 .. code-block:: python
 
-    import numpy as np
     import matplotlib.pyplot as plt
 
     from modypy.blocks.linear import integrator
@@ -64,7 +63,7 @@ Let's define our system and our states first:
 
 
     # The system states
-    def velocity_dt(data):
+    def velocity_dt(system_state):
         """Calculate the derivative of the vertical speed"""
         return -G
 
@@ -82,9 +81,9 @@ But now we define our bounce-event:
 .. code-block:: python
 
     # Define the zero-crossing-event
-    def bounce_event_function(data):
+    def bounce_event_function(system_state):
         """Define the value of the event function for detecting bounces"""
-        return height(data)
+        return height(system_state)
 
 
     bounce_event = ZeroCrossEventSource(system,
@@ -127,8 +126,9 @@ Now we can run a simulation again:
 
     # Run a simulation
     simulator = Simulator(system,
-                          start_time=0.0)
-    msg = simulator.run_until(time_boundary=8.0)
+                          start_time=0.0,
+                          max_successive_event_count=10)
+    msg = simulator.run_until(time_boundary=8)
 
     if msg is not None:
         print("Simulation failed with message '%s'" % msg)
@@ -138,7 +138,7 @@ Now we can run a simulation again:
                  height(simulator.result)[0])
         plt.title("Bouncing Ball")
         plt.xlabel("Time")
-        plt.savefig("04_bouncing_ball_simulation.png")
+        plt.savefig("04_bouncing_ball_simulation_full.png")
         plt.show()
 
 The resulting plot is shown in :numref:`bouncing_ball_simulation`.
@@ -150,3 +150,18 @@ As you can see, our ball bounces happily.
     :alt: Results of bouncing ball simulation
 
     Bouncing ball simulation
+
+Simplifying
+-----------
+
+Our example is a special case in that our event function has the same value as
+a state in our system - namely, the height.
+As our states are callable using the same interface as the event functions, we
+can simply drop the `bounce_event_function` and simply use the `height` state
+in its place:
+
+.. code-block:: python
+
+    bounce_event = ZeroCrossEventSource(system,
+                                        event_function=height,
+                                        direction=-1)

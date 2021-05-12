@@ -7,7 +7,7 @@ As output we should get a sine wave.
 After this exercise, you will know
 
 - how to create a system,
-- how to add signals and states to it,
+- how to add states to it,
 - how to run a simulation of the system, and
 - how to access simulation results.
 
@@ -36,7 +36,7 @@ We start by importing the relevant declarations:
     import numpy as np
     import matplotlib.pyplot as plt
 
-    from modypy.model import System, State, Signal
+    from modypy.model import System, State, signal_function
     from modypy.simulation import Simulator
 
 Defining the System
@@ -49,44 +49,39 @@ All models in ``modypy`` are contained in a
 
     system = System()
 
-Now we can add states, signals and other elements to that system.
+Now we can add states and other elements to that system.
 Let us first define a function that will calculate the value of our input and
-create a signal out of it:
+turn it into a signal:
 
 .. code-block:: python
 
-    # Define the function for generating the cosine signal
+    # Define the cosine signal
+    @signal_function(shape=1)
     def cosine_input(system_state):
+        """Calculate the value of the input signal"""
         return np.cos(system_state.time)
 
+In our case, the signal is defined by a simple function that accepts the
+*system state*.
+That system state provides the current time, i.e., the time at which the signal
+is being evaluated.
+That time may be a scalar (when evaluating the signal at a single point in time)
+or a vector of times (when evaluating the signal at multiple points in time).
 
-    # Define the input signal
-    input_signal = Signal(system,
-                          shape=1,
-                          value=cosine_input)
-
-We add the signal to the system by specifying the latter as the *owner* of the
-former.
-Our signal is a scalar, which is why we specify a ``shape`` of ``1``.
-The value is determined by the ``cosine_input`` function.
-
-The ``cosine_input`` function is passed an object that represents the current
-state of the system.
-Among others, it has a property ``time`` that is set to the current time, which
-we pass on to the ``cos`` function.
+However, signals in modypy are actually instances of the
+:class:`Signal <modypy.model.ports.Signal>` class, which provides some
+additional information and functionality over normal callables.
+In order to turn our function into a signal instance, we use the
+:func:`signal_function <modypy.model.ports.signal_function>` decorator.
 
 Now we need to create the integrator.
-For that we need a callable that calculates the derivative of our integrator
-state.
-In our case, that value is simply the value of the cosine signal.
-Conveniently, signals are callables that also accept the system state object, so
-we can simply specify the signal as derivative:
+We can simply specify the signal we just created as the derivative function:
 
 .. code-block:: python
 
     integrator_state = State(system,
                              shape=1,
-                             derivative_function=input_signal)
+                             derivative_function=cosine_input)
 
 The state itself also is a scalar, so it has the same shape as our signal.
 Note that signals and states by default are scalar, so you could as well remove

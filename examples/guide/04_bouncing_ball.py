@@ -1,7 +1,6 @@
 """
 A bouncing ball
 """
-import numpy as np
 import matplotlib.pyplot as plt
 
 from modypy.blocks.linear import integrator
@@ -21,7 +20,7 @@ system = System()
 
 
 # The system states
-def velocity_dt(data):
+def velocity_dt(system_state):
     """Calculate the derivative of the vertical speed"""
     return -G
 
@@ -35,9 +34,9 @@ height = integrator(system,
 
 
 # Define the zero-crossing-event
-def bounce_event_function(data):
+def bounce_event_function(system_state):
     """Define the value of the event function for detecting bounces"""
-    return height(data)
+    return height(system_state)
 
 
 bounce_event = ZeroCrossEventSource(system,

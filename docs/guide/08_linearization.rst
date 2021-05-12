@@ -3,6 +3,8 @@ Linearizing the Water Tank
 
 In the previous exercise we said that steady states can be used to linearize
 systems around given operating points.
+This is useful if we want to define a linear controller to stabilize that
+operating point.
 In this exercise we will do just that with our tank example.
 
 We reuse the code from the previous exercise.
@@ -38,7 +40,6 @@ Then we call the `system_jacobian`-function:
 
 .. code-block:: python
 
-    # Find the system jacobian at the steady state
     jac_A, jac_B, jac_C, jac_D = system_jacobian(jacobian_config,
                                                  single_matrix=False)
     print("Linearization at steady-state point:")

@@ -31,7 +31,7 @@ We again start by importing our required elements:
 
     import matplotlib.pyplot as plt
 
-    from modypy.model import System, Signal, SignalState, Block, Port, Clock
+    from modypy.model import System, SignalState, Block, Clock
     from modypy.blocks.aerodyn import Propeller
     from modypy.blocks.elmech import DCMotor
     from modypy.blocks.sources import constant
@@ -45,7 +45,6 @@ previous exercise:
     class Engine(Block):
         # ...
 
-    # Create the system and the engine
     system = System()
     engine = Engine(system,
                     motor_constant=789.E-6,
@@ -57,8 +56,8 @@ previous exercise:
                     diameter=8*25.4E-3)
 
     # Provide constant signals for the voltage and the air density
-    voltage = constant(system, value=3.5)
-    density = constant(system, value=1.29)
+    voltage = constant(value=3.5)
+    density = constant(value=1.29)
 
     # Connect them to the corresponding inputs of the engine
     engine.voltage.connect(voltage)
@@ -68,7 +67,6 @@ Now, we define a state for keeping the last sampled value of the thrust signal:
 
 .. code-block:: python
 
-    # Set up the state for keeping the sampled value.
     sample_state = SignalState(system)
 
 Note how we did not specify a derivative function for this state.
@@ -82,7 +80,6 @@ events:
 
 .. code-block:: python
 
-    # Create a clock for sampling at 100Hz
     sample_clock = Clock(system, period=0.01)
 
 Finally, we define a function that updates our sampling state from the
@@ -90,13 +87,11 @@ sampled signal, and we register that function as an event handler on the clock:
 
 .. code-block:: python
 
-    # Define the function for updating the state
-    def update_sample(data):
+    def update_sample(system_state):
         """Update the state of the sampler"""
-        sample_state.set_value(data, engine.thrust(data))
+        sample_state.set_value(system_state, engine.thrust(system_state))
 
 
-    # Register it as event handler on the clock
     sample_clock.register_listener(update_sample)
 
 Running the Simulation
@@ -107,7 +102,6 @@ Now we want to run a simulation of it and plot the results:
 
 .. code-block:: python
 
-    # Create the simulator and run it
     simulator = Simulator(system, start_time=0.0)
     msg = simulator.run_until(time_boundary=0.5)
 

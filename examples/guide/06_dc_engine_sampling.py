@@ -4,7 +4,7 @@ generated thrust at regular intervals.
 """
 import matplotlib.pyplot as plt
 
-from modypy.model import System, Signal, SignalState, Block, Port, Clock
+from modypy.model import System, SignalState, Block, Clock
 from modypy.blocks.aerodyn import Propeller
 from modypy.blocks.elmech import DCMotor
 from modypy.blocks.sources import constant
@@ -80,9 +80,9 @@ sample_clock = Clock(system, period=0.01)
 
 
 # Define the function for updating the state
-def update_sample(data):
+def update_sample(system_state):
     """Update the state of the sampler"""
-    sample_state.set_value(data, engine.thrust(data))
+    sample_state.set_value(system_state, engine.thrust(system_state))
 
 
 # Register it as event handler on the clock

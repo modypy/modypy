@@ -15,7 +15,7 @@ amount of inflow necessary to keep the height at a specific level.
 After this example you will know
 
 - how to explicitly model inputs to a system, and
-- how to use the steady-state determination functionality of `MoDyPy` to find a
+- how to use the steady-state determination functionality of MoDyPy to find a
   steady state that fulfills a given set of constraints.
 
 A Water Tank
@@ -67,12 +67,6 @@ create a new system:
 
 .. code-block:: python
 
-    import numpy as np
-
-    from modypy.model import System, SignalState, InputSignal, OutputPort
-    from modypy.linearization import system_jacobian
-    from modypy.steady_state import SteadyStateConfiguration, find_steady_state
-
     # Constants
     G = 9.81    # Gravity
     A1 = 0.01   # Inflow cross section
@@ -91,19 +85,17 @@ input it can modify, we declare it as an
 
 .. code-block:: python
 
-    # Model the inflow
     inflow_velocity = InputSignal(system)
 
 Now we can define our fill height as a state:
 
 .. code-block:: python
 
-    # Model the height state
-    def height_derivative(data):
+    def height_derivative(system_state):
         """Calculate the time derivative of the height"""
 
-        return (A1*inflow_velocity(data)
-                - A2*np.sqrt(2*G*height_state(data)))/At
+        return (A1*inflow_velocity(system_state)
+                - A2*np.sqrt(2*G*height_state(system_state)))/At
 
 
     height_state = SignalState(system, derivative_function=height_derivative)
@@ -132,7 +124,6 @@ Similarly, we can specify a lower bound for the inflow input.
 
 .. code-block:: python
 
-    # Configure for steady-state determination
     steady_state_config = SteadyStateConfiguration(system)
     # Enforce the inflow to be non-negative
     steady_state_config.input_bounds[inflow_velocity.input_slice, 0] = 0
@@ -149,7 +140,6 @@ We will print these together with the theoretical steady state of our system:
 
 .. code-block:: python
 
-    # Find the steady state
     result = find_steady_state(steady_state_config)
     print("Target height: %f" % TARGET_HEIGHT)
     print("Steady state height: %f" % height_state(result.system_state))

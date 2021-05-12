@@ -78,9 +78,9 @@ Now let us define our system and our two states:
 
 
     # Define the derivatives of the states
-    def omega_dt(data):
+    def omega_dt(system_state):
         """Calculate the derivative of the angular velocity"""
-        return -GRAVITY/LENGTH * np.sin(alpha(data))
+        return -GRAVITY/LENGTH * np.sin(alpha(system_state))
 
 
     # Create the omega state
@@ -95,6 +95,13 @@ In the previous example, our state derivative function for the integrator only
 depended on the input signal.
 Here, each of the derivative functions depends on the value of the respective
 other state.
+
+States are callables that accept a system state object as their single
+parameter.
+If called that way, the return value is the value of the state or a time series
+of the values of the state, depending on the kind of system state object.
+Note that for time series in modypy, the last index iterates over the different
+points in time!
 
 Running the Simulation
 ----------------------
@@ -123,6 +130,11 @@ Again, we set up a simulator and run the system for 10 seconds:
         plt.xlabel("Time")
         plt.savefig("02_pendulum_simulation.png")
         plt.show()
+
+Note again how we get the time series of the angle and the angular velocity by
+simply calling the respective states on the simulation result.
+This way of accessing states, signals and the values of other objects in modypy
+permeates the whole framework.
 
 The result of that simulation can be seen in :numref:`pendulum_simulation`.
 
