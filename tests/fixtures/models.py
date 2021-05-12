@@ -6,7 +6,6 @@ from modypy.model import \
     System, \
     ZeroCrossEventSource, \
     InputSignal, \
-    Signal, \
     State, signal_method
 
 
@@ -120,10 +119,10 @@ class BouncingBall(Block):
         self.gravity = gravity
         self.gamma = gamma
 
-    def position_derivative(self, data):
-        return self.velocity(data)
+    def position_derivative(self, system_state):
+        return self.velocity(system_state)
 
-    def velocity_derivative(self, data):
+    def velocity_derivative(self, _system_state):
         return np.r_[0, self.gravity]
 
     @signal_method

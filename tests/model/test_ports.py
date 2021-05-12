@@ -15,7 +15,6 @@ from modypy.model.ports import \
 def test_port():
     """Test the ``Port`` class"""
 
-    system = System()
     port_a1 = Port(shape=3)
     port_a2 = Port(shape=3)
     port_a3 = Port(shape=3)
@@ -46,7 +45,6 @@ def test_port():
 def test_multiple_signals_error():
     """Test occurrence of ``MultipleSignalsError"""
 
-    system = System()
     port_a = Port()
     port_b = Port()
     signal_a = Signal()
@@ -61,7 +59,6 @@ def test_multiple_signals_error():
 def test_shape_mismatch_error():
     """Test occurrence of ``ShapeMismatchError``"""
 
-    system = System()
     port_a = Port(shape=(3, 3))
     port_b = Port()
     with pytest.raises(ShapeMismatchError):
@@ -71,7 +68,6 @@ def test_shape_mismatch_error():
 def test_signal():
     """Test the ``Signal`` class"""
 
-    system = System()
     signal_a = Signal()
     port_a = Port()
     port_b = Port()

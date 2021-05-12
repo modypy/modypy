@@ -2,7 +2,7 @@ import numpy as np
 import numpy.testing as npt
 
 from modypy.blocks.discont import saturation
-from modypy.model import System, Signal, Clock, signal_function
+from modypy.model import System, Clock, signal_function
 from modypy.simulation import Simulator
 
 

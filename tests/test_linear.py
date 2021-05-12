@@ -101,7 +101,6 @@ def test_gain_class():
 
 
 def test_gain_function():
-    system = System()
     gain_in = constant(value=[3, 4])
     gain_signal = gain(gain_matrix=[[1, 2], [3, 4]],
                        input_signal=gain_in)
@@ -170,5 +169,5 @@ def test_sum_signal_gain_mismatch():
     signal_2 = Signal()
 
     with pytest.raises(ValueError):
-        sum_result = sum_signal(input_signals=(signal_1, signal_2),
-                                gains=(1, 1, 1))
+        sum_signal(input_signals=(signal_1, signal_2),
+                   gains=(1, 1, 1))

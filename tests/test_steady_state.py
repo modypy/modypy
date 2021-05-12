@@ -8,8 +8,10 @@ import pytest
 from modypy.blocks.aerodyn import Propeller
 from modypy.blocks.linear import sum_signal
 from modypy.blocks.sources import constant
-from modypy.model import System, InputSignal, SignalState, State, PortNotConnectedError, Port, Signal
-from modypy.steady_state import SteadyStateConfiguration, find_steady_state, DuplicateSignalConstraintError
+from modypy.model import System, InputSignal, SignalState, State, \
+    PortNotConnectedError, Port, Signal
+from modypy.steady_state import SteadyStateConfiguration, find_steady_state, \
+    DuplicateSignalConstraintError
 
 
 def water_tank_model(inflow_area=0.01,
@@ -89,9 +91,9 @@ def propeller_model(thrust_coefficient=0.09,
     propeller_2.speed_rps.connect(speed_2)
 
     total_thrust = sum_signal((propeller_1.thrust,
-                                       propeller_2.thrust))
+                               propeller_2.thrust))
     total_power = sum_signal((propeller_1.power,
-                                      propeller_2.power))
+                              propeller_2.power))
 
     # Set up steady-state configuration
     config = SteadyStateConfiguration(system)

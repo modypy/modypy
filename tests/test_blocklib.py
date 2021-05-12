@@ -60,7 +60,7 @@ def test_aerodyn_blocks(thrust_coefficient, power_coefficient):
     sol = find_steady_state(steady_state_config)
     assert sol.success
 
-    npt.assert_almost_equal(sol.state, [856.57715753,  67.01693871])
+    npt.assert_almost_equal(sol.state, [856.57715753, 67.01693871])
     npt.assert_almost_equal(sol.inputs, [3.5776728])
 
     npt.assert_almost_equal(
@@ -68,7 +68,7 @@ def test_aerodyn_blocks(thrust_coefficient, power_coefficient):
         45.2926865)
     npt.assert_almost_equal(
         np.ravel(thruster.torque_vector(sol.system_state)),
-        [-3.67875,  3.67875, -0.0528764])
+        [-3.67875, 3.67875, -0.0528764])
 
 
 def test_rigidbody_movement():

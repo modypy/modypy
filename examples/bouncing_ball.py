@@ -47,23 +47,24 @@ class BouncingBall(Block):
         self.gravity = gravity
         self.gamma = gamma
 
-    def velocity_derivative(self, data):
+    def velocity_derivative(self, _system_state):
         """The time-derivative of the position (i.e. the acceleration)"""
         return np.r_[0, self.gravity]
 
     @signal_method
-    def posy(self, data):
+    def posy(self, system_state):
         """The output for the y-position"""
-        return self.position(data)[1]
+        return self.position(system_state)[1]
 
-    def ground_event(self, data):
+    def ground_event(self, system_state):
         """The event function for impact-detection"""
-        return self.position(data)[1]
+        return self.position(system_state)[1]
 
-    def on_ground_event(self, data):
+    def on_ground_event(self, system_state):
         """The handler for the ground event"""
-        self.position(data)[1] = abs(self.position(data)[1])
-        self.velocity(data)[1] = - self.gamma * self.velocity(data)[1]
+        self.position(system_state)[1] = abs(self.position(system_state)[1])
+        self.velocity(system_state)[1] = \
+            - self.gamma * self.velocity(system_state)[1]
 
 
 # Create a system containing the bouncing ball model

@@ -32,7 +32,6 @@ class ExcessiveEventError(RuntimeError):
     """
     Exception raised when an excessive number of successive events occurs.
     """
-    pass
 
 
 class SimulationResult:
@@ -612,7 +611,7 @@ def _find_event_time(f, a, b, tolerance, xtol=1E-12, maxiter=1000):
         A time at or after the sign change occurs
     """
 
-    if not (a < b):
+    if not a < b:
         raise ValueError("The interval to check must be non-empty")
 
     fa = f(a)

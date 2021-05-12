@@ -105,9 +105,7 @@ class MockupIntegrator:
     Mockup integrator class to force integration error.
     """
 
-    def __init__(self, fun, t0, y0, t_bound):
-        del fun  # unused
-        del t_bound  # unused
+    def __init__(self, _fun, t0, y0, _t_bound):
         self.status = "running"
         self.t = t0
         self.y = y0
