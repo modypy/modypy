@@ -16,7 +16,7 @@ a port.
 """
 import functools
 import operator
-from typing import Union, Sequence, Tuple
+from typing import Union, Sequence, Tuple, Optional
 
 import numpy as np
 
@@ -62,7 +62,7 @@ class Port:
         self._reference = value
 
     @property
-    def signal(self):
+    def signal(self) -> Optional['Port']:
         """The signal referenced by this port or ``None`` if this port is not
         connected to any signal."""
         if self._reference is not self:
@@ -174,6 +174,8 @@ def signal_method(user_function, *args, **kwargs):
     for each instance of the containing class."""
 
     class _SignalDescriptor:
+        """Descriptor that will return itself when accessed on a class, but a
+        unique Signal instance when accessed on a class instance."""
         def __init__(self, function):
             self.name = None
             self.function = function

@@ -5,7 +5,7 @@ events and event-handler functions.
 import numpy as np
 import matplotlib.pyplot as plt
 
-from modypy.model import System, Block, State, Signal, ZeroCrossEventSource, signal_method
+from modypy.model import System, Block, State, ZeroCrossEventSource, signal_method
 from modypy.simulation import Simulator
 
 

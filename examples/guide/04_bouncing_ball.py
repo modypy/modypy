@@ -20,7 +20,7 @@ system = System()
 
 
 # The system states
-def velocity_dt(system_state):
+def velocity_dt(_system_state):
     """Calculate the derivative of the vertical speed"""
     return -G
 

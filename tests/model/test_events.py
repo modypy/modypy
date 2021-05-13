@@ -96,8 +96,8 @@ def test_multiple_event_sources_error():
     [
         [0.0, None, False, [0.0, 1.0, 2.0, 3.0]],
         [1.5, None, False, [1.5, 2.5, 3.5, 4.5]],
-        [0.5, None, True,  [0.5, 1.5, 2.5, 3.5]],
-        [0.5, 2.0,  False, [0.5, 1.5]]
+        [0.5, None, True, [0.5, 1.5, 2.5, 3.5]],
+        [0.5, 2.0, False, [0.5, 1.5]]
     ]
 )
 def test_tick_generator(start_time,

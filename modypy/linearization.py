@@ -202,4 +202,5 @@ def _system_function(config: LinearizationConfiguration, x_ref):
         outputs[output.output_index:output.output_index + output.port.size] = \
             np.ravel(output.port(system_state))
 
-    return np.concatenate((config.system.state_derivative(system_state), outputs))
+    return np.concatenate((config.system.state_derivative(system_state),
+                           outputs))

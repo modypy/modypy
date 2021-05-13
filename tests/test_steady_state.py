@@ -133,7 +133,7 @@ def pendulum(length=1):
     config.objective = (lambda data: (g * length * (1 - np.cos(phi(data))) +
                                       (length * omega(data)) ** 2))
     # No steady states
-    config.steady_states = [False, ] * system.num_states
+    config.steady_states = [False,] * system.num_states
     # Bounds for the angle
     config.state_bounds[phi.state_slice, 0] = -np.pi
     config.state_bounds[phi.state_slice, 1] = np.pi

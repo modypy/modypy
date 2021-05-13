@@ -34,6 +34,7 @@ they do not trigger any unwanted events.
 
 from abc import ABC
 from math import ceil
+from typing import Optional
 
 from modypy.model.ports import PortNotConnectedError
 
@@ -64,7 +65,7 @@ class EventPort:
         self._reference = new_reference
 
     @property
-    def source(self):
+    def source(self) -> Optional['EventPort']:
         """The event source this port is connected to or ``None`` if it is
         not connected to any event source"""
 

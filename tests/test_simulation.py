@@ -63,7 +63,10 @@ def test_lti_simulation(lti_system_with_reference):
         inputs = simulator.result.inputs[:, idx]
         state = simulator.result.state[:, idx]
 
-        system_state = SystemState(time=time, system=sys, state=state, inputs=inputs)
+        system_state = SystemState(time=time,
+                                   system=sys,
+                                   state=state,
+                                   inputs=inputs)
         npt.assert_almost_equal(system_state.inputs, inputs)
         npt.assert_almost_equal(system_state.state, state)
 

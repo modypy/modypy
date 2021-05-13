@@ -320,7 +320,7 @@ class Simulator:
 
             # We will continue immediately after that event
             self.current_time = first_event_time + \
-                self.rootfinder_options['xtol']
+                                self.rootfinder_options['xtol']
             # Get the state at the event time
             self.current_state = state_interpolator(self.current_time)
 
@@ -355,9 +355,8 @@ class Simulator:
                                                        self.event_tolerances)
 
         # Determine sign changes
-        sign_changed = (
-                np.sign(last_event_values_rounded) !=
-                np.sign(new_event_values_rounded))
+        sign_changed = (np.sign(last_event_values_rounded) !=
+                        np.sign(new_event_values_rounded))
         sign_change_direction = np.sign(
             new_event_values_rounded - last_event_values_rounded)
 
@@ -612,7 +611,7 @@ def _find_event_time(f, a, b, tolerance, xtol=1E-12, maxiter=1000):
     """
 
     if not a < b:
-        raise ValueError("The interval to check must be non-empty")
+        raise ValueError('The interval to check must be non-empty')
 
     fa = f(a)
     fb = f(b)
@@ -621,8 +620,8 @@ def _find_event_time(f, a, b, tolerance, xtol=1E-12, maxiter=1000):
     fb = 0 if np.abs(fb) < tolerance else fb
 
     if np.sign(fa) == np.sign(fb):
-        raise ValueError("Rounded function value must have different signs at "
-                         "endpoints")
+        raise ValueError('Rounded function value must have different signs at '
+                         'endpoints')
 
     n = 0
     diff = b - a

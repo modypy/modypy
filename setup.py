@@ -12,14 +12,15 @@ setuptools.setup(
     version_format=__version__,
     author="Ralf Gerlich",
     author_email="ralf@ralfgerlich.biz",
-    description="A framework for hierarchical modelling and simulation of dynamic systems",
+    description="A framework for hierarchical modelling and simulation of "
+                "dynamic systems",
     long_description=long_description,
     long_description_content_type="text/x-rst",
     url="https://github.com/ralfgerlich/modypy",
     license="BSD 2-clause \"Simplified\" License",
     packages=setuptools.find_packages(),
     project_urls={
-        'documentation': 'https://modypy.readthedocs.io/',
+        "documentation": "https://modypy.readthedocs.io/",
     },
     classifiers=[
         "Programming Language :: Python :: 3.6",
@@ -34,7 +35,7 @@ setuptools.setup(
         "Topic :: Scientific/Engineering :: Physics",
         "Topic :: Scientific/Engineering :: Mathematics",
     ],
-    python_requires='>=3.6',
+    python_requires=">=3.6",
     install_requires=[
         "numpy>=1.18.1",
         "scipy>=1.5.4",

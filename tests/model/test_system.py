@@ -157,7 +157,8 @@ def test_evaluator_with_initial_state():
 
 
 def test_evaluator_with_initial_inputs():
-    """Test the ``SystemState`` class with explicitly specified initial inputs"""
+    """Test the ``SystemState`` class with explicitly specified initial inputs
+    """
 
     system = System()
     InputSignal(system, shape=(3, 3), value=np.eye(3))

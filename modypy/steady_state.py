@@ -78,7 +78,7 @@ class SteadyStateConfiguration:
         self.constrained_signals = set()
         # Flags indicating which states need to be steady
         # (by default, all states are steady states)
-        self.steady_states = [True, ] * self.system.num_states
+        self.steady_states = [True] * self.system.num_states
         # Set up the dictionary for solver options
         self.solver_options = dict()
 
@@ -126,8 +126,9 @@ def find_steady_state(config: SteadyStateConfiguration):
         inputs: ndarray
             The input part of the solution
         system_state: modypy.model.evaluation.SystemState
-            An :class:`SystemState <modypy.model.evaluation.SystemState>` object,
-            configured to evaluate the system at the determined steady-state
+            An :class:`SystemState <modypy.model.evaluation.SystemState>`
+            object, configured to evaluate the system at the determined
+            steady-state
     """
 
     # Set up the initial estimate
@@ -201,8 +202,8 @@ class _StateDerivativeConstraint(opt.NonlinearConstraint):
         # We will build a vector of the constrained derivatives, and for that
         # we assign offsets for the states in that vector
         self.state_offsets = \
-            [0, ] + list(accumulate(state.size
-                                    for state in self.constrained_states))
+            [0] + list(accumulate(state.size
+                                  for state in self.constrained_states))
 
         num_states = self.state_offsets[-1]
 
