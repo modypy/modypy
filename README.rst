@@ -19,10 +19,10 @@
     :alt: Code Coverage
     :target: https://codecov.io/gh/modypy/modypy
 
-.. image:: https://www.code-inspector.com/project/17342/score/svg
+.. image:: https://www.code-inspector.com/project/22584/score/svg
     :alt: Code Quality Store
 
-.. image:: https://www.code-inspector.com/project/17342/status/svg
+.. image:: https://www.code-inspector.com/project/22584/status/svg
     :alt: Code Grade
 
 MoDyPy (rhymes with "modify") is a Python framework for *Mo*\ delling *dy*\ namic
