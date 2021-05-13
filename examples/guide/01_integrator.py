@@ -27,21 +27,18 @@ simulator = Simulator(system,
                       start_time=0.0)
 
 # Run the simulation for 10s
-msg = simulator.run_until(time_boundary=10.0)
+simulator.run_until(time_boundary=10.0)
 
-if msg is not None:
-    print("Simulation failed with message '%s'" % msg)
-else:
-    # Plot the result
-    input_line, integrator_line = \
-        plt.plot(simulator.result.time,
-                 cosine_input(simulator.result),
-                 "r",
-                 simulator.result.time,
-                 integrator_state(simulator.result)[0],
-                 "g")
-    plt.legend((input_line, integrator_line), ("Input", "Integrator State"))
-    plt.title("Integrator")
-    plt.xlabel("Time")
-    plt.savefig("01_integrator_simulation.png")
-    plt.show()
+# Plot the result
+input_line, integrator_line = \
+    plt.plot(simulator.result.time,
+             cosine_input(simulator.result),
+             "r",
+             simulator.result.time,
+             integrator_state(simulator.result)[0],
+             "g")
+plt.legend((input_line, integrator_line), ("Input", "Integrator State"))
+plt.title("Integrator")
+plt.xlabel("Time")
+plt.savefig("01_integrator_simulation.png")
+plt.show()

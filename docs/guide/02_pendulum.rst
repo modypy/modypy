@@ -112,24 +112,21 @@ Again, we set up a simulator and run the system for 10 seconds:
 
     # Run a simulation
     simulator = Simulator(system, start_time=0.0)
-    msg = simulator.run_until(time_boundary=10.0)
+    simulator.run_until(time_boundary=10.0)
 
-    if msg is not None:
-        print("Simulation failed with message '%s'" % msg)
-    else:
-        # Plot the result
-        alpha_line, omega_line = \
-            plt.plot(simulator.result.time,
-                     alpha(simulator.result)[0],
-                     "r",
-                     simulator.result.time,
-                     omega(simulator.result)[0],
-                     "g")
-        plt.legend((alpha_line, omega_line), ("Alpha", "Omega"))
-        plt.title("Pendulum")
-        plt.xlabel("Time")
-        plt.savefig("02_pendulum_simulation.png")
-        plt.show()
+    # Plot the result
+    alpha_line, omega_line = \
+        plt.plot(simulator.result.time,
+                 alpha(simulator.result)[0],
+                 "r",
+                 simulator.result.time,
+                 omega(simulator.result)[0],
+                 "g")
+    plt.legend((alpha_line, omega_line), ("Alpha", "Omega"))
+    plt.title("Pendulum")
+    plt.xlabel("Time")
+    plt.savefig("02_pendulum_simulation.png")
+    plt.show()
 
 Note again how we get the time series of the angle and the angular velocity by
 simply calling the respective states on the simulation result.

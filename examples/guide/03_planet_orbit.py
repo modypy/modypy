@@ -47,14 +47,11 @@ simulator = Simulator(system,
                       integrator_options={
                           "rtol": 1E-6
                       })
-msg = simulator.run_until(time_boundary=PLANET_ORBIT_TIME)
+simulator.run_until(time_boundary=PLANET_ORBIT_TIME)
 
-if msg is not None:
-    print("Simulation failed with message '%s'" % msg)
-else:
-    # Plot the result
-    trajectory = position(simulator.result)
-    plt.plot(trajectory[0], trajectory[1])
-    plt.title("Planet Orbit")
-    plt.savefig("03_planet_orbit_simulation.png")
-    plt.show()
+# Plot the result
+trajectory = position(simulator.result)
+plt.plot(trajectory[0], trajectory[1])
+plt.title("Planet Orbit")
+plt.savefig("03_planet_orbit_simulation.png")
+plt.show()

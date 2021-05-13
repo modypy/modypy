@@ -50,10 +50,7 @@ rb_6dof.dcm.connect(dcm_to_euler.dcm)
 
 # Simulate the system for 2 minutes
 sim = Simulator(system, start_time=0)
-message = sim.run_until(time_boundary=120.0)
-
-# Assume that simulation was successful
-assert message is None
+sim.run_until(time_boundary=120.0)
 
 # Plot the Euler angles
 fig_euler, (ax_yaw, ax_pitch, ax_roll) = plt.subplots(nrows=3, sharex="row")

@@ -28,7 +28,15 @@ DEFAULT_ROOTFINDER_OPTIONS = {
 }
 
 
-class ExcessiveEventError(RuntimeError):
+class SimulationError(RuntimeError):
+    """Exception raised when an error occurs during simulation"""
+
+
+class IntegrationError(SimulationError):
+    """Exception raised when an error is reported by the integrator"""
+
+
+class ExcessiveEventError(SimulationError):
     """
     Exception raised when an excessive number of successive events occurs.
     """
@@ -228,7 +236,10 @@ class Simulator:
           t_bound: The maximum time until which the simulation may proceed
 
         Returns:
-          ``None`` if successful, a message string otherwise
+            Tuple '(time, state, inputs)'
+
+        Raises:
+            SimulationError: in case an error occurs during simulation
         """
 
         # Check if there is a clock event before the given boundary time.
@@ -247,7 +258,7 @@ class Simulator:
                                                      **self.integrator_options)
             message = integrator.step()
             if message is not None:
-                return message
+                raise IntegrationError(message)
 
             # Handle continuous-time events
             self.handle_continuous_time_events(
@@ -274,7 +285,7 @@ class Simulator:
         self.result.append(time=self.current_time,
                            inputs=self.current_inputs,
                            state=self.current_state)
-        return None
+        return self.current_time, self.current_inputs, self.current_state
 
     def handle_continuous_time_events(self,
                                       new_time,
@@ -495,14 +506,11 @@ class Simulator:
         Args:
           time_boundary: The end time
 
-        Returns:
-          ``None`` if successful, a message string otherwise
+        Raises:
+            SimulationError: if an error occurs during simulation
         """
         while self.current_time < time_boundary:
-            message = self.step(time_boundary)
-            if message is not None:
-                return message
-        return None
+            self.step(time_boundary)
 
     def state_derivative(self, time, state):
         """The state derivative function used for integrating the state over

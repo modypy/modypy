@@ -128,18 +128,15 @@ Now we can run a simulation again:
     simulator = Simulator(system,
                           start_time=0.0,
                           max_successive_event_count=10)
-    msg = simulator.run_until(time_boundary=8)
+    simulator.run_until(time_boundary=8)
 
-    if msg is not None:
-        print("Simulation failed with message '%s'" % msg)
-    else:
-        # Plot the result
-        plt.plot(simulator.result.time,
-                 height(simulator.result)[0])
-        plt.title("Bouncing Ball")
-        plt.xlabel("Time")
-        plt.savefig("04_bouncing_ball_simulation_full.png")
-        plt.show()
+    # Plot the result
+    plt.plot(simulator.result.time,
+             height(simulator.result)[0])
+    plt.title("Bouncing Ball")
+    plt.xlabel("Time")
+    plt.savefig("04_bouncing_ball_simulation_full.png")
+    plt.show()
 
 The resulting plot is shown in :numref:`bouncing_ball_simulation`.
 As you can see, our ball bounces happily.

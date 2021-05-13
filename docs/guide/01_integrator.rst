@@ -109,7 +109,7 @@ To run the simulation, we have to call ``run_until``:
 
 .. code-block:: python
 
-    msg = simulator.run_until(time_boundary=10.0)
+    simulator.run_until(time_boundary=10.0)
 
 The ``time_boundary`` parameter gives the time until that the simulation should
 be run.
@@ -121,32 +121,22 @@ use.
 Plotting the Result
 -------------------
 
-The result value of the ``run_until`` method is ``None`` when the simulation was
-successful and any other value if it failed.
-In that case, the result value gives some indication as to the reason for the
-failure.
-
-We check it and in case of failure print the reason.
-Otherwise, we want to plot the input and the integrator state.
+We now want to plot the input and the integrator state:
 
 .. code-block:: python
 
-    if msg is not None:
-        print("Simulation failed with message '%s'" % msg)
-    else:
-        # Plot the result
-        input_line, integrator_line = \
-            plt.plot(simulator.result.time,
-                     input_signal(simulator.result),
-                     "r",
-                     simulator.result.time,
-                     integrator_state(simulator.result)[0],
-                     "g")
-        plt.legend((input_line, integrator_line), ("Input", "Integrator State"))
-        plt.title("Integrator")
-        plt.xlabel("Time")
-        plt.savefig("01_integrator_simulation.png")
-        plt.show()
+    input_line, integrator_line = \
+        plt.plot(simulator.result.time,
+                 cosine_input(simulator.result),
+                 "r",
+                 simulator.result.time,
+                 integrator_state(simulator.result)[0],
+                 "g")
+    plt.legend((input_line, integrator_line), ("Input", "Integrator State"))
+    plt.title("Integrator")
+    plt.xlabel("Time")
+    plt.savefig("01_integrator_simulation.png")
+    plt.show()
 
 The result of that simulation can be seen in :numref:`integrator_simulation`.
 

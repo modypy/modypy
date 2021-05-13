@@ -19,9 +19,7 @@ def test_saturation():
                                upper_limit=0.6)
 
     simulator = Simulator(system, start_time=0.0)
-    message = simulator.run_until(time_boundary=1.0)
-
-    assert message is None
+    simulator.run_until(time_boundary=1.0)
 
     sine_data = _sine_source(simulator.result)
     saturated_data = saturated_out(simulator.result)

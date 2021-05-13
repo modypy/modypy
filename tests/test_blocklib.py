@@ -96,9 +96,7 @@ def test_rigidbody_movement():
     rb_6dof.dcm.connect(dcm_to_euler.dcm)
 
     sim = Simulator(system, start_time=0)
-    message = sim.run_until(time_boundary=30.0)
-
-    assert message is None
+    sim.run_until(time_boundary=30.0)
 
     npt.assert_almost_equal(
         dcm_to_euler.yaw(sim.result)[-1],
@@ -140,9 +138,7 @@ def test_rigidbody_defaults():
     rb_6dof.dcm.connect(dcm_to_euler.dcm)
 
     sim = Simulator(system, start_time=0)
-    message = sim.run_until(time_boundary=30.0)
-
-    assert message is None
+    sim.run_until(time_boundary=30.0)
 
     npt.assert_almost_equal(
         dcm_to_euler.yaw(sim.result)[-1],

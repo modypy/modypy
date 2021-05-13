@@ -90,24 +90,21 @@ sample_clock.register_listener(update_sample)
 
 # Create the simulator and run it
 simulator = Simulator(system, start_time=0.0)
-msg = simulator.run_until(time_boundary=0.5)
+simulator.run_until(time_boundary=0.5)
 
-if msg is not None:
-    print("Simulation failed with message '%s'" % msg)
-else:
-    # Plot the result
-    plt.plot(simulator.result.time,
-             engine.thrust(simulator.result)[0],
-             "r",
-             label="Continuous-Time")
-    plt.step(simulator.result.time,
-             sample_state(simulator.result)[0],
-             "g",
-             where="post",
-             label="Sampled")
-    plt.title("Engine with DC-Motor and Static Propeller")
-    plt.legend()
-    plt.xlabel("Time")
-    plt.ylabel("Thrust")
-    plt.savefig("06_dc_engine_sampling.png")
-    plt.show()
+# Plot the result
+plt.plot(simulator.result.time,
+         engine.thrust(simulator.result)[0],
+         "r",
+         label="Continuous-Time")
+plt.step(simulator.result.time,
+         sample_state(simulator.result)[0],
+         "g",
+         where="post",
+         label="Sampled")
+plt.title("Engine with DC-Motor and Static Propeller")
+plt.legend()
+plt.xlabel("Time")
+plt.ylabel("Thrust")
+plt.savefig("06_dc_engine_sampling.png")
+plt.show()

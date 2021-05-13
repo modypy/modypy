@@ -168,16 +168,13 @@ engine.density.connect(density)
 
 # Create the simulator and run it
 simulator = Simulator(system, start_time=0.0)
-msg = simulator.run_until(time_boundary=0.5)
+simulator.run_until(time_boundary=0.5)
 
-if msg is not None:
-    print("Simulation failed with message '%s'" % msg)
-else:
-    # Plot the result
-    plt.plot(simulator.result.time,
-             engine.thrust(simulator.result)[0])
-    plt.title("Engine with DC-Motor and Static Propeller")
-    plt.xlabel("Time")
-    plt.ylabel("Thrust")
-    plt.savefig("05_dc_engine_simulation.png")
-    plt.show()
+# Plot the result
+plt.plot(simulator.result.time,
+         engine.thrust(simulator.result)[0])
+plt.title("Engine with DC-Motor and Static Propeller")
+plt.xlabel("Time")
+plt.ylabel("Thrust")
+plt.savefig("05_dc_engine_simulation.png")
+plt.show()

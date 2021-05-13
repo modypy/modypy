@@ -14,7 +14,7 @@ from modypy.blocks.discrete import zero_order_hold
 from modypy.blocks.linear import LTISystem, integrator
 from modypy.blocks.sources import constant
 from modypy.model import SystemState, System, Clock, State, ZeroCrossEventSource
-from modypy.simulation import Simulator, ExcessiveEventError, _find_event_time
+from modypy.simulation import Simulator, ExcessiveEventError, _find_event_time, SimulationError
 
 
 @pytest.fixture(params=[
@@ -52,10 +52,7 @@ def test_lti_simulation(lti_system_with_reference):
     sys, ref_system, ref_time, _ = lti_system_with_reference
 
     simulator = Simulator(sys, start_time=0)
-    message = simulator.run_until(ref_time)
-
-    # Simulation must be successful
-    assert message is None
+    simulator.run_until(ref_time)
 
     # Check correspondence of the result with intermediate values
     for idx in range(simulator.result.time.shape[0]):
@@ -73,13 +70,13 @@ def test_lti_simulation(lti_system_with_reference):
     # Check that states are properly mapped in the result
     for state in sys.states:
         from_result = simulator.result.state[state.state_slice]
-        from_result = from_result.reshape(state.shape+(-1,))
+        from_result = from_result.reshape(state.shape + (-1,))
         npt.assert_equal(state(simulator.result), from_result)
 
     # Check that inputs are properly mapped in the result
     for input_signal in sys.inputs:
         from_result = simulator.result.inputs[input_signal.input_slice]
-        from_result = from_result.reshape(input_signal.shape+(-1,))
+        from_result = from_result.reshape(input_signal.shape + (-1,))
         npt.assert_equal(input_signal(simulator.result), from_result)
 
     # Determine the system response and state values of the reference system
@@ -126,10 +123,8 @@ def test_lti_simulation_failure(lti_system_with_reference):
                           start_time=0,
                           integrator_constructor=MockupIntegrator,
                           integrator_options={})
-    message = simulator.run_until(sim_time)
-
-    # Integration must fail
-    assert message is not None
+    with pytest.raises(SimulationError):
+        simulator.run_until(sim_time)
 
 
 def test_zero_crossing_event_detection():
@@ -158,10 +153,7 @@ def test_zero_crossing_event_detection():
                           start_time=0,
                           initial_condition=initial_condition,
                           rootfinder_options=rootfinder_options)
-    message = simulator.run_until(time_boundary=8.0)
-
-    # Check for successful run
-    assert message is None
+    simulator.run_until(time_boundary=8.0)
 
     # Determine the time of the first impact
     t_impact = (2 * vy0 + math.sqrt(4 * vy0 ** 2 + 8 * g * y0)) / (2 * g)
@@ -241,7 +233,8 @@ def test_clock_handling():
                           start_time=0.0)
     simulator.run_until(time_boundary=5.0)
 
-    time_floor1 = np.floor(simulator.result.time / clock1.period) * clock1.period
+    time_floor1 = np.floor(simulator.result.time / clock1.period) * \
+        clock1.period
     time_floor2 = np.minimum(clock2.end_time,
                              (np.floor(simulator.result.time / clock2.period) *
                               clock2.period))
@@ -268,7 +261,7 @@ def test_discrete_only():
     clock.register_listener(increase_counter)
 
     simulator = Simulator(system, start_time=0.0)
-    assert simulator.run_until(time_boundary=10.0) is None
+    simulator.run_until(time_boundary=10.0)
 
     npt.assert_almost_equal(simulator.result.time,
                             np.arange(start=0.0, stop=11.0))
@@ -284,7 +277,7 @@ def test_integrator():
     int_output = integrator(system, int_input)
 
     simulator = Simulator(system, start_time=0.0)
-    assert simulator.run_until(time_boundary=10.0) is None
+    simulator.run_until(time_boundary=10.0)
 
     npt.assert_almost_equal(
         int_output(simulator.result).flatten(),
