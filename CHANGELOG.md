@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added a __version__ property in the modypy package (now used in setup.py
   and sphinx conf.py)
+### Changed
+- Major changes to the evaluation interface: The dictionary-based access has
+  been dropped, as has the evaluation class. Both simulation and the simulator
+  results support the same way of accessing system states and inputs. This also
+  leads to signals/ports not being explicitly registered in the system anymore.
+- The results in ``SimulatorResult`` are now shaped differently: The last index
+  represents the sample number (#21)
 
 ## [2.1.0] - 2021-03-07
 ### Added
