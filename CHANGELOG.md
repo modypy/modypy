@@ -10,9 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and sphinx conf.py)
 ### Changed
 - Major changes to the evaluation interface: The dictionary-based access has
-  been dropped, as has the evaluation class. Both simulation and the simulator
-  results support the same way of accessing system states and inputs. This also
-  leads to signals/ports not being explicitly registered in the system anymore.
+  been deprecated, and the evaluation class has been removed. Both simulation
+  and the simulator results support the same way of accessing system states and
+  inputs by call. This also leads to signals/ports not being explicitly
+  registered in the system anymore (#20/#27).
 - The results in ``SimulatorResult`` are now shaped differently: The last index
   represents the sample number (#21)
 - The ``run_until`` method now returns a generator for the simulation sample
