@@ -8,7 +8,7 @@ After this exercise, you will know
 
 - how to create a system,
 - how to add states to it,
-- how to run a simulation of the system, and
+- how to run a simulation of the system and capture the results, and
 - how to access simulation results.
 
 An integrator is a very simple dynamic element with a single state
@@ -37,7 +37,7 @@ We start by importing the relevant declarations:
     import matplotlib.pyplot as plt
 
     from modypy.model import System, State, signal_function
-    from modypy.simulation import Simulator
+    from modypy.simulation import Simulator, SimulationResult
 
 Defining the System
 -------------------
@@ -101,37 +101,77 @@ For that, we create a :class:`Simulator <modypy.simulation.Simulator>`:
 
 .. code-block:: python
 
-    simulator = Simulator(system,
-                          start_time=0.0)
+    simulator = Simulator(system, start_time=0.0)
 
 We set the start time for the simulation to ``0``.
-To run the simulation, we have to call ``run_until``:
+To run the simulation, we have to call ``run_until``.
+That will return a generator that will provide a tuple of time, inputs and
+state values for each of the samples generated during simulation.
+One thing we can do with that is simply output the value of the individual
+samples:
 
 .. code-block:: python
 
-    simulator.run_until(time_boundary=10.0)
+    for state in simulator.run_until(time_boundary=10.0):
+        print("time=%s cosine_input=%s integrator_state=%s" % (
+            state.time,
+            cosine_input(state),
+            integrator_state(state)
+        ))
 
 The ``time_boundary`` parameter gives the time until that the simulation should
-be run.
-In our case, we want the simulation to run for ten time-units.
+be run, which in our case are 10 time-units.
 You can think of this as seconds, but if your system is expressed in the proper
 units, these can also be minutes, hours, days, years, or whatever you need to
 use.
 
+Also note how we are again using the signal and the state as callables on the
+value returned by the `run_until` generator.
+This pattern will re-occur all the time in `MoDyPy`:
+We treat signals, states, events, derivatives, etc. as functions of the system
+state.
+
+This should give us a long output similar to this:
+
+.. code-block::
+
+    time=0.0 cosine_input=1.0 integrator_state=[0.]
+    time=9.999999999999999e-05 cosine_input=0.999999995 integrator_state=[9.99999998e-05]
+    time=0.00020000000033333328 cosine_input=0.99999998 integrator_state=[0.0002]
+    time=0.0004000000033333331 cosine_input=0.9999999199999997 integrator_state=[0.0004]
+    time=0.0008000000280000011 cosine_input=0.9999996799999946 integrator_state=[0.0008]
+    ...
+    time=9.968455855495531 cosine_input=-0.8558119465073212 integrator_state=[-0.51728707]
+    time=9.987558178155167 cosine_input=-0.8457750253402622 integrator_state=[-0.5335397]
+    time=10.0 cosine_input=-0.8390715290764524 integrator_state=[-0.54402111]
+
+However, that's not very informative and also quite boring, so we'd rather have
+a plot of all of this.
+
 Plotting the Result
 -------------------
 
-We now want to plot the input and the integrator state:
+To plot the data, we need to capture all of it.
+One way of doing that is to use a
+:class:`SimulationResult <modypy.simulation.SimulationResult>` object, which can
+be used in place of a system state object to access signals, states, etc.
+
+However, simply re-running `run_until` with the same boundary now would just
+give us the most recent sample, as the simulation time of the simulator has
+already advanced to our time limit.
+
+So, let's remove the code for dumping all the data to the console and instead
+use the following code:
 
 .. code-block:: python
 
+    # Run the simulation for 10s and capture the result
+    result = SimulationResult(system, simulator.run_until(time_boundary=10.0))
+
+    # Plot the result
     input_line, integrator_line = \
-        plt.plot(simulator.result.time,
-                 cosine_input(simulator.result),
-                 "r",
-                 simulator.result.time,
-                 integrator_state(simulator.result)[0],
-                 "g")
+        plt.plot(result.time, cosine_input(result), "r",
+                 result.time, integrator_state(result)[0], "g")
     plt.legend((input_line, integrator_line), ("Input", "Integrator State"))
     plt.title("Integrator")
     plt.xlabel("Time")
@@ -150,10 +190,8 @@ The result of that simulation can be seen in :numref:`integrator_simulation`.
 In red, we see the input signal, while the value of our integrator state is
 plotted in green. Looks quite correct.
 
-But what happened here? We accessed the ``result`` property of our simulator.
-This is an instance of :class:`SimulationResult
-<modypy.simulation.SimulationResult>`, which can simply be used as a system
-state object.
+But what happened here?
+The `result` object we created can simply be used as a system state object.
 If we use it as a parameter for calling a state or signal object, we get the
 time series of the values of that state or signal over the time of the
 simulation.
@@ -172,7 +210,7 @@ performance of a controller we built against control performance constraints and
 many other things.
 
 Using the `integrator` block
------------------------------------
+-----------------------------
 
 As integrators are something that we need often, there is a pre-defined building
 block for that: :func:`modypy.blocks.linear.integrator`.

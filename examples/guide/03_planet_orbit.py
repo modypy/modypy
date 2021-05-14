@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 from modypy.blocks.linear import integrator
 from modypy.model import System, State
-from modypy.simulation import Simulator
+from modypy.simulation import Simulator, SimulationResult
 
 # Define the system parameters
 G = 6.67E-11*(24*60*60)**2
@@ -47,10 +47,11 @@ simulator = Simulator(system,
                       integrator_options={
                           "rtol": 1E-6
                       })
-simulator.run_until(time_boundary=PLANET_ORBIT_TIME)
+result = SimulationResult(system,
+                          simulator.run_until(time_boundary=PLANET_ORBIT_TIME))
 
 # Plot the result
-trajectory = position(simulator.result)
+trajectory = position(result)
 plt.plot(trajectory[0], trajectory[1])
 plt.title("Planet Orbit")
 plt.savefig("03_planet_orbit_simulation.png")

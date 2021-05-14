@@ -59,7 +59,7 @@ In addition, we will define some constants for our system:
 
     from modypy.blocks.linear import integrator
     from modypy.model import System, State
-    from modypy.simulation import Simulator
+    from modypy.simulation import Simulator, SimulationResult
 
     # Define the system parameters
     LENGTH = 1.0
@@ -110,18 +110,14 @@ Again, we set up a simulator and run the system for 10 seconds:
 
 .. code-block:: python
 
-    # Run a simulation
+    # Run a simulation and capture the result
     simulator = Simulator(system, start_time=0.0)
-    simulator.run_until(time_boundary=10.0)
+    result = SimulationResult(system, simulator.run_until(time_boundary=10.0))
 
     # Plot the result
     alpha_line, omega_line = \
-        plt.plot(simulator.result.time,
-                 alpha(simulator.result)[0],
-                 "r",
-                 simulator.result.time,
-                 omega(simulator.result)[0],
-                 "g")
+        plt.plot(result.time, alpha(result)[0], "r",
+                 result.time, omega(result)[0], "g")
     plt.legend((alpha_line, omega_line), ("Alpha", "Omega"))
     plt.title("Pendulum")
     plt.xlabel("Time")

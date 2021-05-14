@@ -111,7 +111,7 @@ Again, we start by importing everything we need:
 
     from modypy.model import System, SignalState, Block, Port, signal_method
     from modypy.blocks.sources import constant
-    from modypy.simulation import Simulator
+    from modypy.simulation import Simulator, SimulationResult
 
 A DC-Motor Block
 ^^^^^^^^^^^^^^^^
@@ -385,12 +385,13 @@ Now, our system is fully assembled. Let's run a simulation:
 
 .. code-block:: python
 
+    # Create the simulator and run it
     simulator = Simulator(system, start_time=0.0)
-    simulator.run_until(time_boundary=0.5)
+    result = SimulationResult(system,
+                              simulator.run_until(time_boundary=0.5))
 
     # Plot the result
-    plt.plot(simulator.result.time,
-             engine.thrust(simulator.result)[0])
+    plt.plot(result.time, engine.thrust(result)[0])
     plt.title("Engine with DC-Motor and Static Propeller")
     plt.xlabel("Time")
     plt.ylabel("Thrust")

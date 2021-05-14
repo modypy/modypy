@@ -8,7 +8,7 @@ from modypy.model import System, SignalState, Block, Clock
 from modypy.blocks.aerodyn import Propeller
 from modypy.blocks.elmech import DCMotor
 from modypy.blocks.sources import constant
-from modypy.simulation import Simulator
+from modypy.simulation import Simulator, SimulationResult
 
 
 # Define the engine
@@ -90,18 +90,12 @@ sample_clock.register_listener(update_sample)
 
 # Create the simulator and run it
 simulator = Simulator(system, start_time=0.0)
-simulator.run_until(time_boundary=0.5)
+result = SimulationResult(system, simulator.run_until(time_boundary=0.5))
 
 # Plot the result
-plt.plot(simulator.result.time,
-         engine.thrust(simulator.result)[0],
-         "r",
-         label="Continuous-Time")
-plt.step(simulator.result.time,
-         sample_state(simulator.result)[0],
-         "g",
-         where="post",
-         label="Sampled")
+plt.plot(result.time, engine.thrust(result)[0], "r", label="Continuous-Time")
+plt.step(result.time, sample_state(result)[0], "g", label="Sampled",
+         where="post")
 plt.title("Engine with DC-Motor and Static Propeller")
 plt.legend()
 plt.xlabel("Time")

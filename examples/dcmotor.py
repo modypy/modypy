@@ -10,7 +10,7 @@ from modypy.blocks.discrete import zero_order_hold
 from modypy.blocks.elmech import DCMotor
 from modypy.blocks.sources import constant
 from modypy.model import System, Clock
-from modypy.simulation import Simulator
+from modypy.simulation import Simulator, SimulationResult
 from modypy.utils.uiuc_db import load_static_propeller
 
 # Import thrust and torque coefficients from the UIUC propeller database
@@ -57,17 +57,12 @@ thrust_sampler = zero_order_hold(system,
 
 # Run a simulation for 1/2s
 simulator = Simulator(system=system, start_time=0)
-simulator.run_until(time_boundary=0.5)
+result = SimulationResult(system, simulator.run_until(time_boundary=0.5))
 
 # Plot the thrust output over time
 fig, ax = plt.subplots()
-ax.plot(simulator.result.time,
-        propeller.thrust(simulator.result)[0],
-        label="continuous-time")
-ax.step(simulator.result.time,
-        thrust_sampler(simulator.result)[0],
-        label="sampled",
-        where="post")
+ax.plot(result.time, propeller.thrust(result)[0], label="continuous-time")
+ax.step(result.time, thrust_sampler(result)[0], label="sampled", where="post")
 
 ax.set_title("Propeller Simulation")
 ax.legend()

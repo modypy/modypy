@@ -96,26 +96,26 @@ def test_rigidbody_movement():
     rb_6dof.dcm.connect(dcm_to_euler.dcm)
 
     sim = Simulator(system, start_time=0)
-    sim.run_until(time_boundary=30.0)
+    *_, last_item = sim.run_until(time_boundary=30.0)
 
     npt.assert_almost_equal(
-        dcm_to_euler.yaw(sim.result)[-1],
+        dcm_to_euler.yaw(last_item),
         math.pi/2)
     npt.assert_almost_equal(
-        dcm_to_euler.pitch(sim.result)[-1],
+        dcm_to_euler.pitch(last_item),
         0)
     npt.assert_almost_equal(
-        dcm_to_euler.roll(sim.result)[-1],
+        dcm_to_euler.roll(last_item),
         0)
     npt.assert_almost_equal(
-        rb_6dof.position_earth(sim.result)[..., -1],
+        rb_6dof.position_earth(last_item),
         [r, r, 0])
     npt.assert_almost_equal(
-        rb_6dof.velocity_body(sim.result)[..., -1],
+        rb_6dof.velocity_body(last_item),
         [vx, 0, 0]
     )
     npt.assert_almost_equal(
-        rb_6dof.omega_body(sim.result)[..., -1],
+        rb_6dof.omega_body(last_item),
         [0, 0, omega]
     )
 
@@ -138,17 +138,17 @@ def test_rigidbody_defaults():
     rb_6dof.dcm.connect(dcm_to_euler.dcm)
 
     sim = Simulator(system, start_time=0)
-    sim.run_until(time_boundary=30.0)
+    *_, last_item = sim.run_until(time_boundary=30.0)
 
     npt.assert_almost_equal(
-        dcm_to_euler.yaw(sim.result)[-1],
+        dcm_to_euler.yaw(last_item),
         math.pi/2)
     npt.assert_almost_equal(
-        dcm_to_euler.pitch(sim.result)[-1],
+        dcm_to_euler.pitch(last_item),
         0)
     npt.assert_almost_equal(
-        dcm_to_euler.roll(sim.result)[-1],
+        dcm_to_euler.roll(last_item),
         0)
     npt.assert_almost_equal(
-        rb_6dof.position_earth(sim.result)[:, -1],
+        rb_6dof.position_earth(last_item),
         [0, 0, 0])

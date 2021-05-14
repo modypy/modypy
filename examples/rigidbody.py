@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from modypy.model import System
 from modypy.blocks.sources import constant
 from modypy.blocks.rigid import RigidBody6DOFFlatEarth, DirectCosineToEuler
-from modypy.simulation import Simulator
+from modypy.simulation import Simulator, SimulationResult
 
 # Set up the basic parameters of the system
 # We want the body to rotate at 3 deg/s (leading to a full circle in 2min)
@@ -50,25 +50,19 @@ rb_6dof.dcm.connect(dcm_to_euler.dcm)
 
 # Simulate the system for 2 minutes
 sim = Simulator(system, start_time=0)
-sim.run_until(time_boundary=120.0)
+result = SimulationResult(system, sim.run_until(time_boundary=120.0))
 
 # Plot the Euler angles
 fig_euler, (ax_yaw, ax_pitch, ax_roll) = plt.subplots(nrows=3, sharex="row")
-ax_yaw.plot(sim.result.time,
-            np.rad2deg(
-                dcm_to_euler.yaw(sim.result)))
-ax_pitch.plot(sim.result.time,
-              np.rad2deg(
-                  dcm_to_euler.pitch(sim.result)))
-ax_roll.plot(sim.result.time,
-             np.rad2deg(
-                 dcm_to_euler.roll(sim.result)))
+ax_yaw.plot(result.time, np.rad2deg(dcm_to_euler.yaw(result)))
+ax_pitch.plot(result.time, np.rad2deg(dcm_to_euler.pitch(result)))
+ax_roll.plot(result.time, np.rad2deg(dcm_to_euler.roll(result)))
 ax_yaw.set_title("Yaw")
 ax_pitch.set_title("Pitch")
 ax_roll.set_title("Roll")
 
 # Plot the trajectory in top view
 fig_top_view, ax = plt.subplots()
-position = rb_6dof.position_earth(sim.result)
+position = rb_6dof.position_earth(result)
 ax.plot(position[0], position[1])
 plt.show()

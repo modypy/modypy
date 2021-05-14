@@ -50,13 +50,16 @@ class SimulationResult:
     time, state vector and inputs vector for each individual sample.
     """
 
-    def __init__(self, system: System):
+    def __init__(self, system: System, source = None):
         self.system = system
         self._t = np.empty(INITIAL_RESULT_SIZE)
         self._inputs = np.empty((self.system.num_inputs, INITIAL_RESULT_SIZE))
         self._state = np.empty((self.system.num_states, INITIAL_RESULT_SIZE))
 
         self.current_idx = 0
+
+        if source is not None:
+            self.collect_from(source)
 
     @property
     def time(self):
@@ -73,7 +76,16 @@ class SimulationResult:
         """The state vector of the simulation result"""
         return self._state[:, 0:self.current_idx]
 
-    def append(self, time, inputs, state):
+    def collect_from(self, source):
+        """Collect data points from the given source
+
+        The source must be an iterable providing a series system states
+        representing the system states at the individual time points"""
+
+        for state in source:
+            self._append(state.time, state.inputs, state.state)
+
+    def _append(self, time, inputs, state):
         """Append an entry to the result vectors.
 
         Args:
@@ -186,8 +198,6 @@ class Simulator:
             for state in self.system.states
         )
 
-        self.result = SimulationResult(system)
-
         # Set up the state of the system
         self.current_time = self.start_time
         self.current_state = self.initial_condition
@@ -209,11 +219,6 @@ class Simulator:
         self.current_inputs = system_state.inputs
         self.current_event_values = self.system.event_values(system_state)
 
-        # Store the initial sample
-        self.result.append(time=self.current_time,
-                           inputs=self.current_inputs,
-                           state=self.current_state)
-
     def start_clocks(self):
         """Set up all the clock ticks"""
 
@@ -230,13 +235,13 @@ class Simulator:
                 pass
 
     def step(self, t_bound):
-        """Execute a single execution step.
+        """Execute a single simulation step.
 
         Args:
           t_bound: The maximum time until which the simulation may proceed
 
         Returns:
-            Tuple '(time, state, inputs)'
+            The system state after the simulation step
 
         Raises:
             SimulationError: in case an error occurs during simulation
@@ -282,10 +287,10 @@ class Simulator:
         self.current_inputs = system_state.inputs
         self.current_event_values = self.system.event_values(system_state)
 
-        self.result.append(time=self.current_time,
+        return SystemState(system=self.system,
+                           time=self.current_time,
                            inputs=self.current_inputs,
                            state=self.current_state)
-        return self.current_time, self.current_inputs, self.current_state
 
     def handle_continuous_time_events(self,
                                       new_time,
@@ -503,14 +508,21 @@ class Simulator:
     def run_until(self, time_boundary):
         """Run the simulation until the given end time
 
+        Yields a series of tuples `(time, inputs, state)` with each tuple
+        representing one time sample of the process.
+
         Args:
           time_boundary: The end time
 
         Raises:
             SimulationError: if an error occurs during simulation
         """
+        yield SystemState(system=self.system,
+                          time=self.current_time,
+                          inputs=self.current_inputs,
+                          state=self.current_state)
         while self.current_time < time_boundary:
-            self.step(time_boundary)
+            yield self.step(time_boundary)
 
     def state_derivative(self, time, state):
         """The state derivative function used for integrating the state over

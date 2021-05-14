@@ -3,7 +3,7 @@ import numpy.testing as npt
 
 from modypy.blocks.discont import saturation
 from modypy.model import System, Clock, signal_function
-from modypy.simulation import Simulator
+from modypy.simulation import Simulator, SimulationResult
 
 
 def test_saturation():
@@ -19,9 +19,10 @@ def test_saturation():
                                upper_limit=0.6)
 
     simulator = Simulator(system, start_time=0.0)
-    simulator.run_until(time_boundary=1.0)
+    result = SimulationResult(system,
+                              simulator.run_until(time_boundary=1.0))
 
-    sine_data = _sine_source(simulator.result)
-    saturated_data = saturated_out(simulator.result)
+    sine_data = _sine_source(result)
+    saturated_data = saturated_out(result)
     saturated_exp = np.minimum(np.maximum(sine_data, -0.5), 0.6)
     npt.assert_almost_equal(saturated_data, saturated_exp)

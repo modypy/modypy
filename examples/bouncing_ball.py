@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from modypy.model import System, Block, State, ZeroCrossEventSource, signal_method
-from modypy.simulation import Simulator
+from modypy.simulation import Simulator, SimulationResult
 
 
 class BouncingBall(Block):
@@ -73,9 +73,9 @@ block = BouncingBall(system, initial_velocity=[1, 0], initial_position=[0, 10])
 
 # Run a simulation for 10s
 simulator = Simulator(system, start_time=0.0)
-simulator.run_until(10.0)
+result = SimulationResult(system, simulator.run_until(10.0))
 
 # Plot the x- and y-position of the ball against each other
-position = simulator.result.state[block.position.state_slice]
+position = block.position(result)
 plt.plot(position[0], position[1])
 plt.show()

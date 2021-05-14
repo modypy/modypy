@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from modypy.blocks.linear import integrator
 from modypy.model import System, State, ZeroCrossEventSource
-from modypy.simulation import Simulator
+from modypy.simulation import Simulator, SimulationResult
 
 # The system parameters
 DELTA = 0.7
@@ -57,11 +57,11 @@ bounce_event.register_listener(bounce_event_handler)
 simulator = Simulator(system,
                       start_time=0.0,
                       max_successive_event_count=10)
-simulator.run_until(time_boundary=8)
+result = SimulationResult(system,
+                          simulator.run_until(time_boundary=8))
 
 # Plot the result
-plt.plot(simulator.result.time,
-         height(simulator.result)[0])
+plt.plot(result.time, height(result)[0])
 plt.title("Bouncing Ball")
 plt.xlabel("Time")
 plt.savefig("04_bouncing_ball_simulation_full.png")

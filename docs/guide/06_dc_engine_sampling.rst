@@ -102,19 +102,14 @@ Now we want to run a simulation of it and plot the results:
 
 .. code-block:: python
 
+    # Create the simulator and run it
     simulator = Simulator(system, start_time=0.0)
-    simulator.run_until(time_boundary=0.5)
+    result = SimulationResult(system, simulator.run_until(time_boundary=0.5))
 
     # Plot the result
-    plt.plot(simulator.result.time,
-             engine.thrust(simulator.result)[0],
-             "r",
-             label="Continuous-Time")
-    plt.step(simulator.result.time,
-             sample_state(simulator.result)[0],
-             "g",
-             where="post",
-             label="Sampled")
+    plt.plot(result.time, engine.thrust(result)[0], "r", label="Continuous-Time")
+    plt.step(result.time, sample_state(result)[0], "g", label="Sampled",
+             where="post")
     plt.title("Engine with DC-Motor and Static Propeller")
     plt.legend()
     plt.xlabel("Time")
