@@ -305,3 +305,48 @@ def test_find_event_no_change():
 
     with pytest.raises(ValueError):
         _find_event_time(np.sin, a=np.pi / 8, b=np.pi / 4, tolerance=1E-12)
+
+
+def test_simulation_result_dictionary_access():
+    """Test the deprecated dictionary access for simulation results"""
+
+    system = System()
+    state_a = State(system, initial_condition=10)
+    state_b = State(system, shape=2, initial_condition=[11, 12])
+    state_c = State(system, shape=(2, 2), initial_condition=[[13, 14],
+                                                             [15, 16]])
+
+    system_state = SystemState(time=0,
+                               system=system)
+
+    result = SimulationResult(system)
+    result.append(system_state)
+
+    npt.assert_equal(result[state_a], state_a(result))
+    npt.assert_equal(result[state_b], state_b(result))
+    npt.assert_equal(result[state_b, 0], state_b(result)[0])
+    npt.assert_equal(result[state_b, 1], state_b(result)[1])
+    npt.assert_equal(result[state_c, 0, 0], state_c(result)[0, 0])
+
+
+def test_system_state_updater_dictionary_access():
+    """Test the deprecated dictionary access for simulation results"""
+
+    system = System()
+    counter = State(system, shape=(2, 2))
+
+    clock = Clock(system, 1.0)
+
+    def _update_counter(system_state):
+        old_val = counter(system_state).copy()
+        system_state[counter] += 1
+        system_state[counter, 0] += 1
+        system_state[counter, 0, 0] += 1
+        new_val = counter(system_state)
+        npt.assert_almost_equal(old_val+[[3, 2], [1, 1]], new_val)
+
+    clock.register_listener(_update_counter)
+
+    simulator = Simulator(system, start_time=0)
+    for _state in simulator.run_until(time_boundary=10):
+        pass

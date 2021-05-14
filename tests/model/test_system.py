@@ -170,3 +170,22 @@ def test_evaluator_with_initial_inputs():
 
     npt.assert_almost_equal(system_state.inputs,
                             initial_inputs)
+
+
+def test_system_state_dictionary_access():
+    """Test the deprecated dictionary access for system states"""
+
+    system = System()
+    state_a = State(system, initial_condition=10)
+    state_b = State(system, shape=2, initial_condition=[11, 12])
+    state_c = State(system, shape=(2, 2), initial_condition=[[13, 14],
+                                                             [15, 16]])
+
+    system_state = SystemState(time=0,
+                               system=system)
+
+    npt.assert_equal(system_state[state_a], state_a(system_state))
+    npt.assert_equal(system_state[state_b], state_b(system_state))
+    npt.assert_equal(system_state[state_b, 0], state_b(system_state)[0])
+    npt.assert_equal(system_state[state_b, 1], state_b(system_state)[1])
+    npt.assert_equal(system_state[state_c, 0, 0], state_c(system_state)[0, 0])

@@ -1,6 +1,7 @@
 """
 Provides classes for constructing systems and block hierarchies.
 """
+import warnings
 from typing import List
 
 import numpy as np
@@ -183,3 +184,19 @@ class SystemState:
             The value of the input signal
         """
         return self.inputs[signal.input_slice].reshape(signal.shape)
+
+    def __getitem__(self, key):
+        warnings.warn("The dictionary access interface is deprecated",
+                      DeprecationWarning)
+        if isinstance(key, tuple):
+            # In case of a tuple, the first entity is the actual object to
+            # access and the remainder is the index into the object
+            obj = key[0]
+            idx = key[1:]
+            value = obj(self)
+            if len(idx) > 1:
+                return value[idx]
+            return value[idx[0]]
+        # Otherwise, the item is an object to access, and we simply defer to
+        # the callable interface
+        return key(self)

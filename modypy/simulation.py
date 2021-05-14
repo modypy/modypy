@@ -3,6 +3,7 @@ Provide classes for simulation.
 """
 import heapq
 import itertools
+import warnings
 from functools import partial
 
 import numpy as np
@@ -83,7 +84,15 @@ class SimulationResult:
         representing the system states at the individual time points"""
 
         for state in source:
-            self._append(state.time, state.inputs, state.state)
+            self.append(state)
+
+    def append(self, system_state):
+        """Append an entry to the result vectors.
+
+        Args:
+            system_state: The system state to append
+        """
+        self._append(system_state.time, system_state.inputs, system_state.state)
 
     def _append(self, time, inputs, state):
         """Append an entry to the result vectors.
@@ -122,6 +131,22 @@ class SimulationResult:
         """Determine the value of the given input in this result object"""
 
         return self.inputs[signal.input_slice].reshape(signal.shape + (-1,))
+
+    def __getitem__(self, key):
+        warnings.warn("The dictionary access interface is deprecated",
+                      DeprecationWarning)
+        if isinstance(key, tuple):
+            # In case of a tuple, the first entity is the actual object to
+            # access and the remainder is the index into the object
+            obj = key[0]
+            idx = key[1:]
+            value = obj(self)
+            if len(idx) > 1:
+                return value[idx]
+            return value[idx[0]]
+        # Otherwise, the item is an object to access, and we simply defer to
+        # the callable interface
+        return key(self)
 
 
 class Simulator:
@@ -579,6 +604,24 @@ class _SystemStateUpdater(SystemState):
         start_index = state.state_index
         end_index = start_index + state.size
         self.state[start_index:end_index] = np.asarray(value).flatten()
+
+    def __setitem__(self, key, value):
+        print("setitem(%s, %s)" % (key, value))
+        warnings.warn("The dictionary access interface is deprecated",
+                      DeprecationWarning)
+        if isinstance(key, tuple):
+            # In case the key is a tuple, its first element is the object to
+            # access, and the remainder is the index of the element to address
+            obj = key[0]
+            idx = key[1:]
+            if len(idx) > 1:
+                obj(self)[idx] = value
+            else:
+                obj(self)[idx[0]] = value
+        else:
+            # Otherwise, we'll fall back to the set_value interface
+            key.set_value(self, value)
+
 
 
 class TickEntry:
