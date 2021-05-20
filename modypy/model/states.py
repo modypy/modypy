@@ -61,14 +61,6 @@ class State:
         return slice(self.state_index,
                      self.state_index + self.size)
 
-    @property
-    def state_range(self):
-        """A range object that represents the indices of this state in the
-        states vector."""
-
-        return range(self.state_index,
-                     self.state_index + self.size)
-
     def __call__(self, system_state):
         return system_state.get_state_value(self)
 

@@ -33,9 +33,7 @@ class System:
         """The initial condition vector for the state of this system"""
         initial_condition = np.zeros(self.num_states)
         for state in self.states:
-            start_index = state.state_index
-            end_index = start_index + state.size
-            initial_condition[start_index:end_index] = \
+            initial_condition[state.state_slice] = \
                 state.initial_condition.flatten()
         return initial_condition
 
