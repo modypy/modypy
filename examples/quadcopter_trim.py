@@ -166,13 +166,16 @@ steady_state_config = SteadyStateConfiguration(system)
 # Minimize total current
 steady_state_config.objective = total_current
 # Force that the input voltages are non-negative
-steady_state_config.input_bounds[:, 0] = 0
+for voltage in voltages:
+    steady_state_config.inputs[voltage].lower_bounds = 0
 # Force that currents and speeds are non-negative
-steady_state_config.state_bounds[:, 0] = 0
+for engine in engines:
+    steady_state_config.states[engine.dcmotor.current].lower_bounds = 0
+    steady_state_config.states[engine.dcmotor.omega].lower_bounds = 0
+
 # Enforce the total torque to be zero
-steady_state_config.add_port_constraint(torques_sum,
-                                        lower_limit=[0, 0, 0],
-                                        upper_limit=[0, 0, 0])
+steady_state_config.ports[torques_sum].lower_bounds = 0
+steady_state_config.ports[torques_sum].upper_bounds = 0
 # Enforce the total vertical force to be zero
 # Note that we only force the vertical force to zero, as otherwise we'd have
 # too many equality constraints.
@@ -183,9 +186,8 @@ steady_state_config.add_port_constraint(torques_sum,
 # - The eight state derivatives (which are constrained to zero)
 # - The three components of the torque vector
 # - The vertical component of the thrust vector
-steady_state_config.add_port_constraint(forces_sum,
-                                        lower_limit=[-np.inf, -np.inf, 0],
-                                        upper_limit=[np.inf, np.inf, 0])
+steady_state_config.ports[forces_sum].lower_bounds[2] = 0
+steady_state_config.ports[forces_sum].upper_bounds[2] = 0
 
 # Find the steady state of the system
 sol = find_steady_state(steady_state_config)

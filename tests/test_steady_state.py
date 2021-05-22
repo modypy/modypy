@@ -8,16 +8,17 @@ import pytest
 from modypy.blocks.aerodyn import Propeller
 from modypy.blocks.linear import sum_signal
 from modypy.blocks.sources import constant
-from modypy.model import System, InputSignal, SignalState, State, \
-    PortNotConnectedError, Port, Signal
-from modypy.steady_state import SteadyStateConfiguration, find_steady_state, \
-    DuplicateSignalConstraintError
+from modypy.model import System, InputSignal, SignalState, State
+from modypy.steady_state import SteadyStateConfiguration, find_steady_state
 
 
 def water_tank_model(inflow_area=0.01,
                      outflow_area=0.02,
                      tank_area=0.2,
-                     target_height=5):
+                     target_height=5,
+                     initial_condition=None,
+                     initial_guess=None,
+                     max_inflow_velocity=None):
     """Create a steady-state configuration for a water tank"""
 
     g = 9.81  # Gravity
@@ -41,9 +42,17 @@ def water_tank_model(inflow_area=0.01,
     # Set up the steady-state configuration
     config = SteadyStateConfiguration(system)
     # Enforce the inflow to be non-negative
-    config.input_bounds[inflow_velocity.input_slice, 0] = 0
+    config.inputs[inflow_velocity].lower_bounds = 0
+    if max_inflow_velocity is not None:
+        config.inputs[inflow_velocity].upper_bounds = max_inflow_velocity
     # Define the target height
-    config.state_bounds[height_state.state_slice] = target_height
+    config.states[height_state].lower_bounds[0] = target_height
+    config.states[height_state].upper_bounds[0] = target_height
+
+    if initial_condition is not None:
+        config.states[height_state].initial_condition = initial_condition
+    if initial_guess is not None:
+        config.inputs[inflow_velocity].initial_guess = initial_guess
 
     return config
 
@@ -53,7 +62,8 @@ def propeller_model(thrust_coefficient=0.09,
                     density=1.29,
                     diameter=8 * 25.4E-3,
                     moment_of_inertia=5.284E-6,
-                    target_thrust=1.5 * 9.81 / 4):
+                    target_thrust=1.5 * 9.81 / 4,
+                    maximum_torque=None):
     """Create a steady-state configuration for two propellers"""
 
     system = System()
@@ -63,19 +73,6 @@ def propeller_model(thrust_coefficient=0.09,
 
     density_signal = constant(density)
 
-    def speed_1_dt(data):
-        """Derivative of the speed of the first propeller"""
-        return torque_1(data) / (2 * np.pi * moment_of_inertia)
-
-    def speed_2_dt(data):
-        """Derivative of the speed of the second propeller"""
-        return torque_2(data) / (2 * np.pi * moment_of_inertia)
-
-    speed_1 = SignalState(system,
-                          derivative_function=speed_1_dt)
-    speed_2 = SignalState(system,
-                          derivative_function=speed_2_dt)
-
     propeller_1 = Propeller(system,
                             thrust_coefficient=thrust_coefficient,
                             power_coefficient=power_coefficient,
@@ -84,6 +81,21 @@ def propeller_model(thrust_coefficient=0.09,
                             thrust_coefficient=thrust_coefficient,
                             power_coefficient=power_coefficient,
                             diameter=diameter)
+
+    def speed_1_dt(data):
+        """Derivative of the speed of the first propeller"""
+        tot_torque = torque_1(data) - propeller_1.torque(data)
+        return tot_torque / (2 * np.pi * moment_of_inertia)
+
+    def speed_2_dt(data):
+        """Derivative of the speed of the second propeller"""
+        tot_torque = torque_2(data) - propeller_2.torque(data)
+        return tot_torque / (2 * np.pi * moment_of_inertia)
+
+    speed_1 = SignalState(system,
+                          derivative_function=speed_1_dt)
+    speed_2 = SignalState(system,
+                          derivative_function=speed_2_dt)
 
     propeller_1.density.connect(density_signal)
     propeller_2.density.connect(density_signal)
@@ -99,8 +111,19 @@ def propeller_model(thrust_coefficient=0.09,
     config = SteadyStateConfiguration(system)
     # Minimize the total power
     config.objective = total_power
+    # Constrain the speed to be positive
+    config.states[speed_1].lower_bounds = 0
+    config.states[speed_2].lower_bounds = 0
+    # Constrain the torques to be positive
+    config.inputs[torque_1].lower_bounds[0] = 0
+    config.inputs[torque_2].lower_bounds[0] = 0
+    if maximum_torque is not None:
+        config.inputs[torque_1].upper_bounds[0] = maximum_torque
+        config.inputs[torque_2].upper_bounds = maximum_torque
+
     # Constrain the total thrust
-    config.add_port_constraint(total_thrust, target_thrust)
+    config.ports[total_thrust].lower_bounds = target_thrust
+    config.ports[total_thrust].upper_bounds = target_thrust
 
     return config
 
@@ -132,11 +155,12 @@ def pendulum(length=1):
     # Minimize the total energy
     config.objective = (lambda data: (g * length * (1 - np.cos(phi(data))) +
                                       (length * omega(data)) ** 2))
-    # No steady states
-    config.steady_states = [False,] * system.num_states
-    # Bounds for the angle
-    config.state_bounds[phi.state_slice, 0] = -np.pi
-    config.state_bounds[phi.state_slice, 1] = np.pi
+    # Constrain the angular velocity (no steady state)
+    config.states[omega].steady_state = False
+    # Constrain the angle
+    config.states[phi].steady_state = False
+    config.states[phi].lower_bounds = -np.pi
+    config.states[phi].upper_bounds = np.pi
 
     return config
 
@@ -145,7 +169,9 @@ def pendulum(length=1):
     "config",
     [
         water_tank_model(),
+        water_tank_model(initial_guess=3, initial_condition=10),
         propeller_model(),
+        propeller_model(maximum_torque=0.2),
         pendulum()
     ]
 )
@@ -153,35 +179,43 @@ def test_steady_state(config):
     """Test the find_steady_state function"""
 
     # Adjust solver options
-    config.solver_options["gtol"] = 1E-17
+    config.solver_options["gtol"] = 1E-10
 
     sol = find_steady_state(config)
-    assert sol.success is True
+    assert sol.success
 
     # Structural checks
     assert sol.state.size == config.system.num_states
     assert sol.inputs.size == config.system.num_inputs
 
     # Check state bounds
-    assert (config.state_bounds[:, 0] <= sol.state).all()
-    assert (sol.state <= config.state_bounds[:, 1]).all()
+    assert (-config.solver_options["gtol"] <=
+            (sol.state - config.state_bounds[:, 0])).all()
+    assert (-config.solver_options["gtol"] <=
+            (config.state_bounds[:, 1] - sol.state)).all()
 
     # Check input bounds
-    assert (config.input_bounds[:, 0] <= sol.inputs).all()
-    assert (sol.inputs <= config.input_bounds[:, 1]).all()
+    assert (-config.solver_options["gtol"] <=
+            (sol.inputs - config.input_bounds[:, 0])).all()
+    assert (-config.solver_options["gtol"] <=
+            (config.input_bounds[:, 1] - sol.inputs)).all()
 
-    for signal_constraint in config.signal_constraints:
-        value = signal_constraint.signal(sol.system_state)
-        assert signal_constraint.lb <= value
-        assert value <= signal_constraint.ub
+    # Check port constraints
+    for signal_constraint in config.ports.values():
+        value = signal_constraint.port(sol.system_state)
+        assert (-config.solver_options["gtol"] <=
+                (value - signal_constraint.lb)).all()
+        assert (-config.solver_options["gtol"] <=
+                (signal_constraint.ub - value)).all()
 
     # Check for steady states
-    steady_state_count = np.count_nonzero(config.steady_states)
+    num_steady_states = np.count_nonzero(config.steady_states)
+    diff_tol = np.sqrt(config.solver_options["gtol"]*num_steady_states)
     steady_state_derivatives = \
         config.system.state_derivative(sol.system_state)[config.steady_states]
     npt.assert_allclose(steady_state_derivatives.flatten(),
-                        np.zeros(steady_state_count),
-                        atol=1E-8)
+                        0,
+                        atol=diff_tol)
 
 
 def test_invalid_objective():
@@ -206,33 +240,3 @@ def test_without_goal():
 
     with pytest.raises(ValueError):
         find_steady_state(config)
-
-
-def test_unconnected_port():
-    """Test whether adding a port constraint for an unconnected port
-    leads to an exception"""
-
-    system = System()
-    port = Port()
-
-    config = SteadyStateConfiguration(system)
-
-    with pytest.raises(PortNotConnectedError):
-        config.add_port_constraint(port)
-
-
-def test_duplicate_signal_constraint():
-    """Test whether adding multiple constraints for the same signal leads
-    to an exception."""
-
-    system = System()
-    port_a = Port()
-    port_b = Port()
-    signal = Signal()
-    port_a.connect(signal)
-    port_b.connect(signal)
-
-    config = SteadyStateConfiguration(system)
-    config.add_port_constraint(port_a)
-    with pytest.raises(DuplicateSignalConstraintError):
-        config.add_port_constraint(port_b)

@@ -37,9 +37,8 @@ def test_lti_linearization(param, interpolation_order):
     steady_state_config = SteadyStateConfiguration(system)
     # Constrain all outputs to zero
     for output in outputs:
-        steady_state_config.add_port_constraint(output,
-                                                lower_limit=0,
-                                                upper_limit=0)
+        steady_state_config.ports[output].lower_limit = 0
+        steady_state_config.ports[output].upper_limit = 0
     # Find the steady state
     sol = find_steady_state(steady_state_config)
 

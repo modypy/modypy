@@ -36,9 +36,11 @@ height_state = SignalState(system, derivative_function=height_derivative)
 # Configure for steady-state determination
 steady_state_config = SteadyStateConfiguration(system)
 # Enforce the inflow to be non-negative
-steady_state_config.input_bounds[inflow_velocity.input_slice, 0] = 0
+steady_state_config.inputs[inflow_velocity].lower_bounds = 0
+steady_state_config.inputs[inflow_velocity].upper_bounds = 0
 # Enforce the height to equal the target height
-steady_state_config.state_bounds[height_state.state_slice] = TARGET_HEIGHT
+steady_state_config.states[height_state].lower_bounds = TARGET_HEIGHT
+steady_state_config.states[height_state].upper_bounds = TARGET_HEIGHT
 
 # Find the steady state
 result = find_steady_state(steady_state_config)
