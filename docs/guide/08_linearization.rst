@@ -36,7 +36,8 @@ The :class:`OutputDescriptor <modypy.linearization.OutputDescriptor>` objects
 provides us with information about where in the output and feed-through matrices
 the respective output is represented.
 
-Then we call the `system_jacobian`-function:
+Then we call the
+:func:`system_jacobian <modypy.linearization.system_jacobian>`-function:
 
 .. code-block:: python
 
@@ -83,3 +84,20 @@ The matrices :math:`C` and :math:`D` describe the relationship of our state and
 input signals to the value of the output ports.
 Clearly, our output is the height difference, and the inflow velocity does not
 directly influence it.
+
+Getting the Results in a Structure
+==================================
+
+Instead of the individual matrices, it is possible to instruct
+:func:`system_jacobian <modypy.linearization.system_jacobian>` to return a
+structure containing the matrices in individual fields.
+This allows for a bit more readable code:
+
+.. code-block:: python
+
+    # Do the same, but requesting a structure containing the data
+    jacobian = system_jacobian(jacobian_config, single_matrix="struct")
+    print("system_matrix=%s" % jacobian.system_matrix)
+    print("input_matrix=%s" % jacobian.input_matrix)
+    print("output_matrix=%s" % jacobian.output_matrix)
+    print("feed_through_matrix=%s" % jacobian.feed_through_matrix)
