@@ -85,7 +85,7 @@ class Propeller(Block):
         speed_rps = self.speed_rps(data)
         density = self.density(data)
         return self.power_coefficient(speed_rps) * \
-            density * self.diameter ** 5 * speed_rps ** 3
+            density * self.diameter ** 5 * np.abs(speed_rps ** 3)
 
 
 class Thruster(Block):
