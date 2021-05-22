@@ -92,7 +92,7 @@ def test_lti_linearization(param, interpolation_order):
     output = OutputDescriptor(jacobian_config_def, lti.output)
     jacobian_config_def.interpolation_order = interpolation_order
 
-    # Linearize the system
+    # Linearize the system, but get the individual matrices
     A, B, C, D = system_jacobian(jacobian_config_def)
 
     # Check the matrices
@@ -102,6 +102,23 @@ def test_lti_linearization(param, interpolation_order):
     npt.assert_almost_equal(D, lti.feed_through_matrix)
     npt.assert_almost_equal(C[output.output_slice], lti.output_matrix)
     npt.assert_almost_equal(D[output.output_slice], lti.feed_through_matrix)
+
+    # Linearize the system, but get the structure
+    jacobian = system_jacobian(jacobian_config_def, single_matrix="struct")
+
+    # Check the matrices
+    npt.assert_almost_equal(jacobian.system_matrix,
+                            lti.system_matrix)
+    npt.assert_almost_equal(jacobian.input_matrix,
+                            lti.input_matrix)
+    npt.assert_almost_equal(jacobian.output_matrix,
+                            lti.output_matrix)
+    npt.assert_almost_equal(jacobian.feed_through_matrix,
+                            lti.feed_through_matrix)
+    npt.assert_almost_equal(jacobian.output_matrix[output.output_slice],
+                            lti.output_matrix)
+    npt.assert_almost_equal(jacobian.feed_through_matrix[output.output_slice],
+                            lti.feed_through_matrix)
 
 
 def test_empty_system():

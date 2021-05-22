@@ -2,9 +2,11 @@
 Provides functions to determine the jacobi matrix for linearizing the system
 around a given state with specified inputs.
 """
+from dataclasses import dataclass
 from typing import List
 
 import numpy as np
+import numpy.typing
 from scipy.misc import central_diff_weights
 
 from modypy.model import Port, System, SystemState
@@ -150,12 +152,35 @@ def system_jacobian(config: LinearizationConfiguration,
             jac[:, var_ind] += weights[k] * y_k
         jac[:, var_ind] /= config.default_step_size
 
+    if single_matrix == "struct":
+        system_matrix = jac[:config.system.num_states,
+                            :config.system.num_states]
+        input_matrix = jac[:config.system.num_states,
+                           config.system.num_states:]
+        output_matrix = jac[config.system.num_states:,
+                            :config.system.num_states]
+        feed_through_matrix = jac[config.system.num_states:,
+                                  config.system.num_states:]
+        return SystemJacobian(config=config,
+                              system_matrix=system_matrix,
+                              input_matrix=input_matrix,
+                              output_matrix=output_matrix,
+                              feed_through_matrix=feed_through_matrix)
     if single_matrix:
         return jac
     return jac[:config.system.num_states, :config.system.num_states], \
         jac[:config.system.num_states, config.system.num_states:], \
         jac[config.system.num_states:, :config.system.num_states], \
         jac[config.system.num_states:, config.system.num_states:]
+
+
+@dataclass
+class SystemJacobian:
+    config: LinearizationConfiguration
+    system_matrix: np.typing.ArrayLike
+    input_matrix: np.typing.ArrayLike
+    output_matrix: np.typing.ArrayLike
+    feed_through_matrix: np.typing.ArrayLike
 
 
 def _get_central_diff_weights(order):

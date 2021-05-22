@@ -67,3 +67,10 @@ print("A=%s" % jac_A)
 print("B=%s" % jac_B)
 print("C=%s" % jac_C)
 print("D=%s" % jac_D)
+
+# Do the same, but requesting a structure containing the data
+jacobian = system_jacobian(jacobian_config, single_matrix="struct")
+print("system_matrix=%s" % jacobian.system_matrix)
+print("input_matrix=%s" % jacobian.input_matrix)
+print("output_matrix=%s" % jacobian.output_matrix)
+print("feed_through_matrix=%s" % jacobian.feed_through_matrix)
