@@ -113,22 +113,47 @@ Our steady state is characterized by three properties:
 To tell the steady-state algorithm about these constraints, we define a
 :class:`SteadyStateConfiguration <modypy.steady_state.SteadyStateConfiguration>`
 instance.
-This instance is automatically configured in such a way that the algorithm
-searches for a state in which the state derivative is zero.
-If we wanted, we could change that by assigning `False` to the respective
-entries of the `steady_states` property of the configuration object.
-
-To constrain the height we define lower and upper bounds for the value of the
-`height` state.
-Similarly, we can specify a lower bound for the inflow input.
 
 .. code-block:: python
 
     steady_state_config = SteadyStateConfiguration(system)
-    # Enforce the inflow to be non-negative
-    steady_state_config.input_bounds[inflow_velocity.input_slice, 0] = 0
+
+We want to ensure that the height stays at our target height.
+To do so, we use the `states` property of the steady-state configuration object.
+This property is a dictionary, and we can use state objects to index it.
+The values of this dictionary are
+:class:`StateConstraint <modypy.steady_state.StateConstraint>` objects, which
+among other aspects allow us to set upper and lower bounds for the value of the
+respective state.
+In this case, we want an exact value, so we set the lower and upper bounds to
+the same value:
+
+.. code-block:: python
+
     # Enforce the height to equal the target height
-    steady_state_config.state_bounds[height_state.state_slice] = TARGET_HEIGHT
+    steady_state_config.states[height_state].lower_bounds = TARGET_HEIGHT
+    steady_state_config.states[height_state].upper_bounds = TARGET_HEIGHT
+
+Note that by default these state constraints also include a setting that
+enforces the derivatives of all states to be zero.
+However, by setting the `steady_state` property accordingly, you can let states
+or individual components thereof become non-steady.
+Further, you can specify initial guesses for the states different from the
+initial condition configured for the state.
+Check the documentation of the :class:`StateConstraint
+<modypy.steady_state.StateConstraint>` class for more possibilities.
+
+Similarly to the states, we can also constrain inputs using the `inputs`
+property.
+This dictionary contains
+:class:`InputConstraint <modypy.steady_state.InputConstraint>` objects,
+which also allow setting lower and upper bounds for the input values.
+It is also possible to set initial guesses here, similar to the states.
+
+.. code-block:: python
+
+    # Enforce the inflow to be non-negative
+    steady_state_config.inputs[inflow_velocity].lower_bounds = 0
 
 Now our system including its constraints and inputs is defined and we can run
 the steady-state algorithm.
