@@ -146,15 +146,12 @@ def test_zero_crossing_event_detection():
     initial_condition = np.empty(system.num_states)
     initial_condition[bouncing_ball.velocity.state_slice] = [vx0, vy0]
     initial_condition[bouncing_ball.position.state_slice] = [x0, y0]
-    rootfinder_options = {
-        "xtol": 1.E-9,
-        "maxiter": 1000
-    }
 
     simulator = Simulator(system,
                           start_time=0,
                           initial_condition=initial_condition,
-                          rootfinder_options=rootfinder_options)
+                          event_xtol=1.E-9,
+                          event_maxiter=1000)
     result = SimulationResult(system,
                               simulator.run_until(time_boundary=8.0))
 
@@ -350,3 +347,18 @@ def test_system_state_updater_dictionary_access():
     simulator = Simulator(system, start_time=0)
     for _state in simulator.run_until(time_boundary=10):
         pass
+
+
+def test_rootfinder_deprecation_warning():
+    """Test whether the simulator constructor warns about the deprecation of the
+    rootfinder parameters"""
+
+    sys = System()
+    with pytest.warns(DeprecationWarning):
+        Simulator(sys,
+                  start_time=0,
+                  rootfinder_constructor=scipy.optimize.brentq)
+    with pytest.warns(DeprecationWarning):
+        Simulator(sys,
+                  start_time=0,
+                  rootfinder_options={'xtol':1.E-9})

@@ -22,12 +22,6 @@ DEFAULT_INTEGRATOR_OPTIONS = {
     'atol': 1.E-12,
 }
 
-DEFAULT_ROOTFINDER = scipy.optimize.brentq
-DEFAULT_ROOTFINDER_OPTIONS = {
-    'xtol': 1.E-12,
-    'maxiter': 1000
-}
-
 
 class SimulationError(RuntimeError):
     """Exception raised when an error occurs during simulation"""
@@ -51,7 +45,7 @@ class SimulationResult:
     time, state vector and inputs vector for each individual sample.
     """
 
-    def __init__(self, system: System, source = None):
+    def __init__(self, system: System, source=None):
         self.system = system
         self._t = np.empty(INITIAL_RESULT_SIZE)
         self._inputs = np.empty((self.system.num_inputs, INITIAL_RESULT_SIZE))
@@ -159,7 +153,9 @@ class Simulator:
                  max_successive_event_count=1000,
                  integrator_constructor=DEFAULT_INTEGRATOR,
                  integrator_options=None,
-                 rootfinder_constructor=DEFAULT_ROOTFINDER,
+                 event_xtol=1.E-12,
+                 event_maxiter=1000,
+                 rootfinder_constructor=None,
                  rootfinder_options=None):
         """
         Construct a simulator for the system.
@@ -182,11 +178,12 @@ class Simulator:
                 ``DEFAULT_INTEGRATOR`` is used.
             integrator_options: The options for ``integrator_constructor``;
                 optional: if not given, ``DEFAULT_INTEGRATOR_OPTIONS`` is used.
-            rootfinder_constructor: The constructor function for the
-                root finder to be used; optional: if not given,
-                ``DEFAULT_ROOTFINDER`` is used.
-            rootfinder_options: The options for ``rootfinder_constructor``;
-                optional: if not given, ``DEFAULT_ROOTFINDER_OPTIONS`` is used
+            rootfinder_constructor: Deprecated.
+            rootfinder_options: Deprecated.
+            event_xtol: The absolute tolerance for identifying the time of a
+                zero-crossing event.
+            event_maxiter: The maximum number of iterations for identifying the
+                time of a zero-crossing event.
         """
 
         self.system = system
@@ -205,11 +202,13 @@ class Simulator:
         else:
             self.integrator_options = integrator_options
 
-        self.rootfinder_constructor = rootfinder_constructor
-        if rootfinder_options is None:
-            self.rootfinder_options = DEFAULT_ROOTFINDER_OPTIONS
-        else:
-            self.rootfinder_options = rootfinder_options
+        if (rootfinder_constructor is not None or
+                rootfinder_options is not None):
+            warnings.warn("Specifying a root finder is deprecated",
+                          DeprecationWarning)
+
+        self.event_xtol = event_xtol
+        self.event_maxiter = event_maxiter
 
         # Collect information about zero-crossing events
         self.event_directions = np.array([event.direction
@@ -360,8 +359,7 @@ class Simulator:
                 raise ExcessiveEventError()
 
             # We will continue immediately after that event
-            self.current_time = first_event_time + \
-                                self.rootfinder_options['xtol']
+            self.current_time = first_event_time + self.event_xtol
             # Get the state at the event time
             self.current_state = state_interpolator(self.current_time)
 
@@ -523,7 +521,8 @@ class Simulator:
                                  a=start_time,
                                  b=end_time,
                                  tolerance=event.tolerance,
-                                 **self.rootfinder_options)
+                                 xtol=self.event_xtol,
+                                 maxiter=self.event_maxiter)
         minimum_list_index = np.argmin(event_times)
         first_event = events_occurred[minimum_list_index]
         first_event_time = event_times[minimum_list_index]
@@ -621,7 +620,6 @@ class _SystemStateUpdater(SystemState):
             key.set_value(self, value)
 
 
-
 class TickEntry:
     """A ``TickEntry`` holds information about the next tick of a given clock.
     An order over ``TickEntry`` instances is defined by their time.
@@ -655,7 +653,7 @@ def _round_towards_zero(values, tolerances):
     return rounded_values
 
 
-def _find_event_time(f, a, b, tolerance, xtol=1E-12, maxiter=1000):
+def _find_event_time(f, a, b, tolerance, xtol=1.E-12, maxiter=1000):
     """
     Find the time when the sign change occurs.
 
