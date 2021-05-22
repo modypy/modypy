@@ -143,7 +143,7 @@ def system_jacobian(config: LinearizationConfiguration,
     for var_ind in range(num_invars):
         x_step = config.default_step_size * np.eye(N=1,
                                                    M=num_invars,
-                                                   k=var_ind).flatten()
+                                                   k=var_ind).ravel()
         for k in range(config.interpolation_order):
             x_k = x_ref0 + (k - half_offset) * x_step
             y_k = _system_function(config, x_k)

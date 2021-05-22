@@ -601,7 +601,7 @@ class _SystemStateUpdater(SystemState):
     def set_state_value(self, state: State, value):
         """Update the value of the given state"""
 
-        self.state[state.state_slice] = np.asarray(value).flatten()
+        self.state[state.state_slice] = np.asarray(value).ravel()
 
     def __setitem__(self, key, value):
         print("setitem(%s, %s)" % (key, value))

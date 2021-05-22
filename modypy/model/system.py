@@ -34,7 +34,7 @@ class System:
         initial_condition = np.zeros(self.num_states)
         for state in self.states:
             initial_condition[state.state_slice] = \
-                state.initial_condition.flatten()
+                state.initial_condition.ravel()
         return initial_condition
 
     @property

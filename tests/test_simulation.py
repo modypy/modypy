@@ -288,7 +288,7 @@ def test_integrator():
                               simulator.run_until(time_boundary=10.0))
 
     npt.assert_almost_equal(
-        int_output(result).flatten(),
+        int_output(result).ravel(),
         result.time)
 
 

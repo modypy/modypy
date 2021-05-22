@@ -213,7 +213,7 @@ def test_steady_state(config):
     diff_tol = np.sqrt(config.solver_options["gtol"]*num_steady_states)
     steady_state_derivatives = \
         config.system.state_derivative(sol.system_state)[config.steady_states]
-    npt.assert_allclose(steady_state_derivatives.flatten(),
+    npt.assert_allclose(steady_state_derivatives.ravel(),
                         0,
                         atol=diff_tol)
 

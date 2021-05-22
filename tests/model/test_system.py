@@ -37,17 +37,17 @@ def test_system():
     # This also checks that state indices are disjoint.
     initial_condition = system.initial_condition
     npt.assert_almost_equal(initial_condition[state_a.state_slice],
-                            state_a.initial_condition.flatten())
+                            state_a.initial_condition.ravel())
     npt.assert_almost_equal(initial_condition[state_b.state_slice],
-                            state_b.initial_condition.flatten())
+                            state_b.initial_condition.ravel())
 
     # Check the initial inputs
     # This also checks that input indices are disjoint.
     initial_input = system.initial_input
     npt.assert_almost_equal(initial_input[input_c.input_slice],
-                            np.atleast_1d(input_c.value).flatten())
+                            np.atleast_1d(input_c.value).ravel())
     npt.assert_almost_equal(initial_input[input_d.input_slice],
-                            np.atleast_1d(input_d.value).flatten())
+                            np.atleast_1d(input_d.value).ravel())
 
     # Check that event indices are disjoint
     assert event_a.event_index != event_b.event_index
@@ -102,13 +102,13 @@ def test_system_state():
 
     # Check the initial state
     npt.assert_almost_equal(system_state.state[state_a.state_slice],
-                            state_a.initial_condition.flatten())
+                            state_a.initial_condition.ravel())
     npt.assert_almost_equal(system_state.state[state_a_dep.state_slice],
-                            state_a_dep.initial_condition.flatten())
+                            state_a_dep.initial_condition.ravel())
     npt.assert_almost_equal(system_state.state[state_b.state_slice],
-                            state_b.initial_condition.flatten())
+                            state_b.initial_condition.ravel())
     npt.assert_almost_equal(system_state.state[state_b1.state_slice],
-                            state_b1.initial_condition.flatten())
+                            state_b1.initial_condition.ravel())
     npt.assert_almost_equal(system_state.state[state_b2.state_slice],
                             np.zeros(state_b2.size))
 
