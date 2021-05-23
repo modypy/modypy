@@ -231,10 +231,10 @@ class Simulator:
 
         # Start all the clocks
         self.clock_queue = []
-        self.start_clocks()
+        self._start_clocks()
 
         # Run the first tick of each clock
-        self.run_clock_ticks()
+        self._run_clock_ticks()
 
         # Determine the initial sample
         system_state = SystemState(system=self.system,
@@ -243,7 +243,7 @@ class Simulator:
         self.current_inputs = system_state.inputs
         self.current_event_values = self.system.event_values(system_state)
 
-    def start_clocks(self):
+    def _start_clocks(self):
         """Set up all the clock ticks"""
 
         for clock in self.system.clocks:
@@ -258,7 +258,7 @@ class Simulator:
                 # so we just ignore it
                 pass
 
-    def step(self, t_bound):
+    def _step(self, t_bound):
         """Execute a single simulation step.
 
         Args:
@@ -280,7 +280,7 @@ class Simulator:
         if self.have_continuous_time_states:
             # We have at least one continuous time state, so we integrate for a
             # single step
-            integrator = self.integrator_constructor(fun=self.state_derivative,
+            integrator = self.integrator_constructor(fun=self._state_derivative,
                                                      t0=self.current_time,
                                                      y0=self.current_state,
                                                      t_bound=t_bound,
@@ -290,7 +290,7 @@ class Simulator:
                 raise IntegrationError(message)
 
             # Handle continuous-time events
-            self.handle_continuous_time_events(
+            self._handle_continuous_time_events(
                 new_time=integrator.t,
                 new_state=integrator.y,
                 state_interpolator=integrator.dense_output())
@@ -302,7 +302,7 @@ class Simulator:
             self.current_time = t_bound
 
         # Execute any pending clock ticks
-        self.run_clock_ticks()
+        self._run_clock_ticks()
 
         # Determine all characteristics of the current sample and store it
         system_state = SystemState(system=self.system,
@@ -316,10 +316,10 @@ class Simulator:
                            inputs=self.current_inputs,
                            state=self.current_state)
 
-    def handle_continuous_time_events(self,
-                                      new_time,
-                                      new_state,
-                                      state_interpolator):
+    def _handle_continuous_time_events(self,
+                                       new_time,
+                                       new_state,
+                                       state_interpolator):
         """
         Determine if any zero-crossing events occurred, and if so, handle
         them.
@@ -343,15 +343,15 @@ class Simulator:
         new_event_values = self.system.event_values(system_state)
 
         occurred_events = \
-            self.find_occurred_events(last_event_values, new_event_values)
+            self._find_occurred_events(last_event_values, new_event_values)
 
         if len(occurred_events) > 0:
             # Identify the first event that occurred
             first_event, first_event_time = \
-                self.find_first_event(state_interpolator,
-                                      last_time,
-                                      new_time,
-                                      occurred_events)
+                self._find_first_event(state_interpolator,
+                                       last_time,
+                                       new_time,
+                                       occurred_events)
 
             # Check for excessive counts of successive events
             self.successive_event_count += 1
@@ -364,7 +364,7 @@ class Simulator:
             self.current_state = state_interpolator(self.current_time)
 
             # Run the event handlers on the event to update the state
-            self.run_event_listeners((first_event,))
+            self._run_event_listeners((first_event,))
         else:
             # No event occurred, so we simply accept the integrator end-point as
             # the next sample point.
@@ -374,7 +374,7 @@ class Simulator:
             # Also, we reset the count of successive events
             self.successive_event_count = 0
 
-    def find_occurred_events(self, last_event_values, new_event_values):
+    def _find_occurred_events(self, last_event_values, new_event_values):
         """
         Determine the events for which sign changes occurred and the direction
         of the change.
@@ -407,7 +407,7 @@ class Simulator:
         occurred_event = [self.system.events[idx] for idx in event_indices]
         return occurred_event
 
-    def run_clock_ticks(self):
+    def _run_clock_ticks(self):
         """Run all the pending clock ticks."""
 
         # We collect the clocks to tick here and executed all their listeners
@@ -435,9 +435,9 @@ class Simulator:
                 pass
 
         # Run all the event listeners
-        self.run_event_listeners(clocks_to_tick)
+        self._run_event_listeners(clocks_to_tick)
 
-    def run_event_listeners(self, event_sources):
+    def _run_event_listeners(self, event_sources):
         """Run the event listeners on the given events.
         """
 
@@ -476,8 +476,8 @@ class Simulator:
             new_event_values = self.system.event_values(post_update_evaluator)
 
             # Determine which events occurred as a result of the changed state
-            event_sources = self.find_occurred_events(last_event_values,
-                                                      new_event_values)
+            event_sources = self._find_occurred_events(last_event_values,
+                                                       new_event_values)
 
             if len(event_sources) > 0:
                 # Check for excessive counts of successive events
@@ -486,11 +486,11 @@ class Simulator:
                         self.max_successive_event_count):
                     raise ExcessiveEventError()
 
-    def find_first_event(self,
-                         state_trajectory,
-                         start_time,
-                         end_time,
-                         events_occurred):
+    def _find_first_event(self,
+                          state_trajectory,
+                          start_time,
+                          end_time,
+                          events_occurred):
         """Determine the event that occurred first.
 
         Args:
@@ -515,7 +515,7 @@ class Simulator:
 
         for list_index, event in zip(itertools.count(), events_occurred):
             event_times[list_index] = \
-                _find_event_time(f=partial(self.objective_function,
+                _find_event_time(f=partial(self._objective_function,
                                            state_trajectory,
                                            event),
                                  a=start_time,
@@ -546,9 +546,9 @@ class Simulator:
                           inputs=self.current_inputs,
                           state=self.current_state)
         while self.current_time < time_boundary:
-            yield self.step(time_boundary)
+            yield self._step(time_boundary)
 
-    def state_derivative(self, time, state):
+    def _state_derivative(self, time, state):
         """The state derivative function used for integrating the state over
         time.
 
@@ -566,7 +566,7 @@ class Simulator:
         state_derivative = self.system.state_derivative(system_state)
         return state_derivative
 
-    def objective_function(self, state_trajectory, event, time):
+    def _objective_function(self, state_trajectory, event, time):
         """
         Determine the value of the event at different points in
         time.
