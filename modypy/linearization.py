@@ -2,11 +2,9 @@
 Provides functions to determine the jacobi matrix for linearizing the system
 around a given state with specified inputs.
 """
-from dataclasses import dataclass
 from typing import List
 
 import numpy as np
-import numpy.typing
 from scipy.misc import central_diff_weights
 
 from modypy.model import Port, System, SystemState
@@ -174,13 +172,18 @@ def system_jacobian(config: LinearizationConfiguration,
         jac[config.system.num_states:, config.system.num_states:]
 
 
-@dataclass
 class SystemJacobian:
-    config: LinearizationConfiguration
-    system_matrix: np.typing.ArrayLike
-    input_matrix: np.typing.ArrayLike
-    output_matrix: np.typing.ArrayLike
-    feed_through_matrix: np.typing.ArrayLike
+    def __init__(self,
+                 config: LinearizationConfiguration,
+                 system_matrix,
+                 input_matrix,
+                 output_matrix,
+                 feed_through_matrix):
+        self.config = config
+        self.system_matrix = system_matrix
+        self.input_matrix = input_matrix
+        self.output_matrix = output_matrix
+        self.feed_through_matrix = feed_through_matrix
 
 
 def _get_central_diff_weights(order):
