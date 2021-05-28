@@ -386,7 +386,7 @@ Now, our system is fully assembled. Let's run a simulation:
 .. code-block:: python
 
     # Create the simulator and run it
-    simulator = Simulator(system, start_time=0.0)
+    simulator = Simulator(system, start_time=0.0, max_step=0.01)
     result = SimulationResult(system,
                               simulator.run_until(time_boundary=0.5))
 

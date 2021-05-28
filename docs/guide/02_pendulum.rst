@@ -106,12 +106,13 @@ points in time!
 Running the Simulation
 ----------------------
 
-Again, we set up a simulator and run the system for 10 seconds:
+Again, we set up a simulator and run the system for 10 seconds at a maximum step
+size of 0\.1 seconds.
 
 .. code-block:: python
 
     # Run a simulation and capture the result
-    simulator = Simulator(system, start_time=0.0)
+    simulator = Simulator(system, start_time=0.0, max_step=0.1)
     result = SimulationResult(system, simulator.run_until(time_boundary=10.0))
 
     # Plot the result

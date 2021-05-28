@@ -126,6 +126,17 @@ The result is shown in :numref:`dc_engine_sampling`.
 
     DC-Engine simulation with discrete-time sampling
 
+Note that this time we did not specify the `max_step` parameter.
+The simulator takes care that intermediate samples are available on every tick
+of every clock in our system.
+
+Of course, we could add the `max_step` parameter anyway, for example, if we were
+not only interested in the behaviour of the system at the clock ticks, but also
+in between.
+However, for simulation of a discrete-time control system, we might be satisfied
+with simulating the system accurately at the sampling points implied by the
+sampling clock.
+
 Working with Clocks
 -------------------
 

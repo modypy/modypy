@@ -86,7 +86,7 @@ Clearly, our output is the height difference, and the inflow velocity does not
 directly influence it.
 
 Getting the Results in a Structure
-==================================
+----------------------------------
 
 Instead of the individual matrices, it is possible to instruct
 :func:`system_jacobian <modypy.linearization.system_jacobian>` to return a

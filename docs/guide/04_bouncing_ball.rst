@@ -127,7 +127,7 @@ Now we can run a simulation again:
     # Run a simulation
     simulator = Simulator(system,
                           start_time=0.0,
-                          max_successive_event_count=10)
+                          max_step=0.1)
     result = SimulationResult(system,
                               simulator.run_until(time_boundary=8))
 

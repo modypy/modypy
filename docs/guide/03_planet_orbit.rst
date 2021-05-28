@@ -126,9 +126,7 @@ Finally, let us set up a simulation, run it and plot the results:
     # Run a simulation
     simulator = Simulator(system,
                           start_time=0.0,
-                          integrator_options={
-                              "rtol": 1E-6
-                          })
+                          max_step=1)
     result = SimulationResult(system,
                               simulator.run_until(time_boundary=PLANET_ORBIT_TIME))
 
@@ -142,15 +140,6 @@ Finally, let us set up a simulation, run it and plot the results:
 This time, we do not plot the values of the states over time, but instead we
 plot the trajectory.
 The result can be seen in :numref:`planet_orbit_simulation`.
-
-Note the additional parameter ``integrator_options`` to the
-:class:`Simulator <modypy.simulation.Simulator>` constructor.
-It is a dictionary of options which are to be passed to the constructor of the
-integrator being used. The ``rtol`` parameter increases the relative tolerance
-of the integration result to reduce the time til the simulator is done.
-For the planetary orbit, we do not need sub-meter resolution.
-The value of ``rtol`` given here still allows us to calculate the orbit
-positions and velocities to around 1,000 km or 1,000 km/d accuracy.
 
 .. _planet_orbit_simulation:
 .. figure:: 03_planet_orbit_simulation.png

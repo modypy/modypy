@@ -14,7 +14,7 @@ from modypy.blocks.discrete import zero_order_hold
 from modypy.blocks.linear import LTISystem, integrator
 from modypy.blocks.sources import constant
 from modypy.model import SystemState, System, Clock, State, ZeroCrossEventSource
-from modypy.simulation import Simulator, ExcessiveEventError, _find_event_time, SimulationError, SimulationResult
+from modypy.simulation import Simulator, ExcessiveEventError, SimulationError, SimulationResult, _EventDetector
 
 
 @pytest.fixture(params=[
@@ -51,22 +51,14 @@ def lti_system_with_reference(request):
 def test_lti_simulation(lti_system_with_reference):
     sys, ref_system, ref_time, _ = lti_system_with_reference
 
-    simulator = Simulator(sys, start_time=0)
-    result = SimulationResult(sys,
-                              simulator.run_until(ref_time))
-
-    # Check correspondence of the result with intermediate values
-    for idx in range(result.time.shape[0]):
-        time = result.time[idx]
-        inputs = result.inputs[:, idx]
-        state = result.state[:, idx]
-
-        system_state = SystemState(time=time,
-                                   system=sys,
-                                   state=state,
-                                   inputs=inputs)
-        npt.assert_almost_equal(system_state.inputs, inputs)
-        npt.assert_almost_equal(system_state.state, state)
+    rtol = 1E-12
+    atol = 1E-12
+    simulator = Simulator(sys, start_time=0, rtol=rtol, atol=atol)
+    result = SimulationResult(sys)
+    result.collect_from(simulator.run_until(time_boundary=ref_time/2,
+                                            include_last=False))
+    result.collect_from(simulator.run_until(time_boundary=ref_time,
+                                            include_last=False))
 
     # Check that states are properly mapped in the result
     for state in sys.states:
@@ -86,19 +78,20 @@ def test_lti_simulation(lti_system_with_reference):
         X0=sys.initial_condition,
         T=result.time,
         U=None,
-        rtol=simulator.integrator_options["rtol"],
-        atol=simulator.integrator_options["atol"])
+        rtol=rtol,
+        atol=atol)
 
     # Determine the state values at the simulated times
     # as per the reference value
     npt.assert_allclose(ref_time,
                         result.time,
-                        rtol=simulator.integrator_options["rtol"],
-                        atol=simulator.integrator_options["atol"])
+                        rtol=rtol,
+                        atol=atol)
+    # FIXME: These factors are somewhat arbitrary
     npt.assert_allclose(result.state,
                         ref_state.T,
-                        rtol=simulator.integrator_options["rtol"] * 1E2,
-                        atol=simulator.integrator_options["atol"] * 1E2)
+                        rtol=rtol * 1E2,
+                        atol=atol * 1E2)
 
 
 class MockupIntegrator:
@@ -106,7 +99,7 @@ class MockupIntegrator:
     Mockup integrator class to force integration error.
     """
 
-    def __init__(self, fun, t0, y0, t_bound):
+    def __init__(self, fun, t0, y0, t_bound, vectorized=False):
         self.status = "running"
         self.t = t0
         self.y = y0
@@ -122,8 +115,7 @@ def test_lti_simulation_failure(lti_system_with_reference):
 
     simulator = Simulator(sys,
                           start_time=0,
-                          integrator_constructor=MockupIntegrator,
-                          integrator_options={})
+                          solver_method=MockupIntegrator)
     with pytest.raises(SimulationError):
         for _state in simulator.run_until(sim_time):
             pass
@@ -150,6 +142,7 @@ def test_zero_crossing_event_detection():
     simulator = Simulator(system,
                           start_time=0,
                           initial_condition=initial_condition,
+                          max_step=0.05,
                           event_xtol=1.E-9,
                           event_maxiter=1000)
     result = SimulationResult(system,
@@ -159,12 +152,14 @@ def test_zero_crossing_event_detection():
     t_impact = (2 * vy0 + math.sqrt(4 * vy0 ** 2 + 8 * g * y0)) / (2 * g)
 
     # Check that the y-component of velocity changes sign around time of impact
-    idx = bisect.bisect_left(result.time, t_impact)
-    assert result.time[idx - 1] < t_impact
-    assert result.time[idx] >= t_impact
-    vy = bouncing_ball.velocity(result)[1]
-
-    assert np.sign(vy[idx - 1]) != np.sign(vy[idx + 1])
+    t_tolerance = 0.1
+    idx_start = bisect.bisect_left(result.time, t_impact-t_tolerance)
+    idx_end = bisect.bisect_left(result.time, t_impact+t_tolerance)
+    assert result.time[idx_start] < t_impact
+    assert result.time[idx_end] >= t_impact
+    vy = bouncing_ball.velocity(result)[1][idx_start:idx_end]
+    sign_change = np.sign(vy[:-1]) != np.sign(vy[1:])
+    assert any(sign_change)
 
     # Check detection of excessive event error
     with pytest.raises(ExcessiveEventError):
@@ -264,13 +259,14 @@ def test_discrete_only():
     clock.register_listener(increase_counter)
 
     simulator = Simulator(system, start_time=0.0)
-    result = SimulationResult(system,
-                              simulator.run_until(time_boundary=10.0))
+    result = SimulationResult(system)
+    result.collect_from(simulator.run_until(5.5, include_last=False))
+    result.collect_from(simulator.run_until(10))
 
     npt.assert_almost_equal(result.time,
-                            np.arange(start=0.0, stop=11.0))
+                            [0, 1, 2, 3, 4, 5, 5.5, 6, 7, 8, 9, 10])
     npt.assert_almost_equal(counter(result),
-                            np.arange(start=1.0, stop=12.0).reshape(1, -1))
+                            [[1, 2, 3, 4, 5, 6, 6, 7, 8, 9, 10, 11]])
 
 
 def test_integrator():
@@ -288,20 +284,6 @@ def test_integrator():
         int_output(result).ravel(),
         result.time)
 
-
-def test_find_event_empty():
-    """Test the _find_event_time function with an empty interval"""
-
-    with pytest.raises(ValueError):
-        _find_event_time(None, a=-1, b=-2, tolerance=1E-12)
-
-
-def test_find_event_no_change():
-    """Test the _find_event_time function with a function that does not
-    change sign in the given interval"""
-
-    with pytest.raises(ValueError):
-        _find_event_time(np.sin, a=np.pi / 8, b=np.pi / 4, tolerance=1E-12)
 
 
 def test_simulation_result_dictionary_access():
@@ -347,18 +329,3 @@ def test_system_state_updater_dictionary_access():
     simulator = Simulator(system, start_time=0)
     for _state in simulator.run_until(time_boundary=10):
         pass
-
-
-def test_rootfinder_deprecation_warning():
-    """Test whether the simulator constructor warns about the deprecation of the
-    rootfinder parameters"""
-
-    sys = System()
-    with pytest.warns(DeprecationWarning):
-        Simulator(sys,
-                  start_time=0,
-                  rootfinder_constructor=scipy.optimize.brentq)
-    with pytest.warns(DeprecationWarning):
-        Simulator(sys,
-                  start_time=0,
-                  rootfinder_options={'xtol':1.E-9})

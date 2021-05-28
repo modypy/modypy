@@ -95,28 +95,42 @@ def test_rigidbody_movement():
 
     rb_6dof.dcm.connect(dcm_to_euler.dcm)
 
-    sim = Simulator(system, start_time=0)
-    *_, last_item = sim.run_until(time_boundary=30.0)
+    rtol=1E-12
+    atol=1E-12
+    sim = Simulator(system, start_time=0, rtol=rtol, atol=atol)
+    *_, last_item = sim.run_until(time_boundary=30.0, include_last=True)
 
-    npt.assert_almost_equal(
+    npt.assert_allclose(
         dcm_to_euler.yaw(last_item),
-        math.pi/2)
-    npt.assert_almost_equal(
+        math.pi/2,
+        rtol=rtol,
+        atol=atol)
+    npt.assert_allclose(
         dcm_to_euler.pitch(last_item),
-        0)
-    npt.assert_almost_equal(
+        0,
+        rtol=rtol,
+        atol=atol)
+    npt.assert_allclose(
         dcm_to_euler.roll(last_item),
-        0)
-    npt.assert_almost_equal(
+        0,
+        rtol=rtol,
+        atol=atol)
+    npt.assert_allclose(
         rb_6dof.position_earth(last_item),
-        [r, r, 0])
-    npt.assert_almost_equal(
+        [r, r, 0],
+        rtol=rtol,
+        atol=atol)
+    npt.assert_allclose(
         rb_6dof.velocity_body(last_item),
-        [vx, 0, 0]
+        [vx, 0, 0],
+        rtol=rtol,
+        atol=atol
     )
-    npt.assert_almost_equal(
+    npt.assert_allclose(
         rb_6dof.omega_body(last_item),
-        [0, 0, omega]
+        [0, 0, omega],
+        rtol=rtol,
+        atol=atol
     )
 
 
@@ -137,18 +151,28 @@ def test_rigidbody_defaults():
 
     rb_6dof.dcm.connect(dcm_to_euler.dcm)
 
-    sim = Simulator(system, start_time=0)
-    *_, last_item = sim.run_until(time_boundary=30.0)
+    rtol = 1E-12
+    atol = 1E-12
+    sim = Simulator(system, start_time=0, rtol=rtol, atol=atol)
+    *_, last_item = sim.run_until(time_boundary=30.0, include_last=True)
 
-    npt.assert_almost_equal(
+    npt.assert_allclose(
         dcm_to_euler.yaw(last_item),
-        math.pi/2)
-    npt.assert_almost_equal(
+        math.pi/2,
+        rtol=rtol,
+        atol=atol)
+    npt.assert_allclose(
         dcm_to_euler.pitch(last_item),
-        0)
-    npt.assert_almost_equal(
+        0,
+        rtol=rtol,
+        atol=atol)
+    npt.assert_allclose(
         dcm_to_euler.roll(last_item),
-        0)
-    npt.assert_almost_equal(
+        0,
+        rtol=rtol,
+        atol=atol)
+    npt.assert_allclose(
         rb_6dof.position_earth(last_item),
-        [0, 0, 0])
+        [0, 0, 0],
+        rtol=rtol,
+        atol=atol)

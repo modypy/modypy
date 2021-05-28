@@ -167,7 +167,7 @@ engine.voltage.connect(voltage)
 engine.density.connect(density)
 
 # Create the simulator and run it
-simulator = Simulator(system, start_time=0.0)
+simulator = Simulator(system, start_time=0.0, max_step=0.01)
 result = SimulationResult(system,
                           simulator.run_until(time_boundary=0.5))
 

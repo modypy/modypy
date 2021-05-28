@@ -23,7 +23,7 @@ integrator_state = State(system,
                          derivative_function=cosine_input)
 
 # Set up a simulation
-simulator = Simulator(system, start_time=0.0)
+simulator = Simulator(system, start_time=0.0, max_step=0.1)
 
 # Run the simulation for 10s and capture the result
 result = SimulationResult(system, simulator.run_until(time_boundary=10.0))

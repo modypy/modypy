@@ -35,7 +35,7 @@ omega = State(system,
 alpha = integrator(system, input_signal=omega, initial_condition=ALPHA_0)
 
 # Run a simulation and capture the result
-simulator = Simulator(system, start_time=0.0)
+simulator = Simulator(system, start_time=0.0, max_step=0.1)
 result = SimulationResult(system, simulator.run_until(time_boundary=10.0))
 
 # Plot the result

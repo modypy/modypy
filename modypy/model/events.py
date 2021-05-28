@@ -31,7 +31,7 @@ occurrence of another, and it is possible that a single event results in an
 endless event loop. Thus, event listeners need to be expressed carefully so that
 they do not trigger any unwanted events.
 """
-
+import heapq
 from abc import ABC
 from math import ceil
 from typing import Optional
@@ -241,3 +241,72 @@ class Clock(AbstractEventSource):
             yield tick_time
             k += 1
             tick_time = self.start_time + k * self.period
+
+
+class ClockQueue:
+    """Queue of clock events"""
+    def __init__(self, start_time, clocks):
+        self.clock_queue = []
+
+        # Fill the queue
+        for clock in clocks:
+            # Get a tick generator, started at the current time
+            tick_generator = clock.tick_generator(start_time)
+            try:
+                first_tick = next(tick_generator)
+                entry = _TickEntry(first_tick, clock, tick_generator)
+                heapq.heappush(self.clock_queue, entry)
+            except StopIteration:
+                # The block did not produce any ticks at all,
+                # so we just ignore it
+                pass
+
+    @property
+    def next_clock_tick(self):
+        """The time at which the next clock tick will occur or `None` if there
+        are no further clock ticks"""
+        if len(self.clock_queue)>0:
+            return self.clock_queue[0].tick_time
+        return None
+
+    def tick(self, current_time):
+        """Advance all the clocks until the current time"""
+        # We collect the clocks to tick here and executed all their listeners
+        # later.
+        clocks_to_tick = list()
+
+        while (len(self.clock_queue) > 0 and
+               self.clock_queue[0].tick_time <= current_time):
+            tick_entry = heapq.heappop(self.clock_queue)
+            clock = tick_entry.clock
+
+            clocks_to_tick.append(clock)
+
+            try:
+                # Get the next tick for the clock
+                next_tick_time = next(tick_entry.tick_generator)
+                next_tick_entry = _TickEntry(next_tick_time,
+                                             clock,
+                                             tick_entry.tick_generator)
+                # Add the clock tick to the queue
+                heapq.heappush(self.clock_queue, next_tick_entry)
+            except StopIteration:
+                # This clock does not deliver any more ticks, so we simply
+                # ignore it from now on.
+                pass
+
+        return clocks_to_tick
+
+
+class _TickEntry:
+    """A ``_TickEntry`` holds information about the next tick of a given clock.
+    An order over ``_TickEntry`` instances is defined by their time.
+    """
+
+    def __init__(self, tick_time, clock, tick_generator):
+        self.tick_time = tick_time
+        self.clock = clock
+        self.tick_generator = tick_generator
+
+    def __lt__(self, other):
+        return self.tick_time < other.tick_time

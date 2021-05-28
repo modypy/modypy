@@ -112,12 +112,15 @@ samples:
 
 .. code-block:: python
 
-    for state in simulator.run_until(time_boundary=10.0):
-        print("time=%s cosine_input=%s integrator_state=%s" % (
-            state.time,
-            cosine_input(state),
-            integrator_state(state)
-        ))
+    time=0.0 cosine_input=1.0 integrator_state=[0.]
+    time=9.999999999999999e-05 cosine_input=0.999999995 integrator_state=[9.99999998e-05]
+    time=0.0011 cosine_input=0.999999395000061 integrator_state=[0.0011]
+    time=0.0111 cosine_input=0.9999383956325267 integrator_state=[0.01109977]
+    time=0.1111 cosine_input=0.9938347405067498 integrator_state=[0.11087159]
+    time=1.1111 cosine_input=0.44367597936596415 integrator_state=[0.89618727]
+    time=4.512648865706943 cosine_input=-0.19841461917041545 integrator_state=[-0.98015265]
+    time=7.830624150908611 cosine_input=0.02335535925895628 integrator_state=[0.99972234]
+    time=10.0 cosine_input=-0.8390715290764524 integrator_state=[-0.54402658]
 
 The ``time_boundary`` parameter gives the time until that the simulation should
 be run, which in our case are 10 time-units.
@@ -178,19 +181,46 @@ use the following code:
     plt.savefig("01_integrator_simulation.png")
     plt.show()
 
-The result of that simulation can be seen in :numref:`integrator_simulation`.
+The result of that simulation can be seen in
+:numref:`integrator_simulation_coarse`.
 
-.. _integrator_simulation:
-.. figure:: 01_integrator_simulation.png
+.. _integrator_simulation_coarse:
+.. figure:: 01_integrator_simulation_coarse.png
     :align: center
     :alt: Results of integrator simulation
 
     Results of integrator simulation: Input and integrator state
 
+That looks a bit rough around the edges.
+The reason is simple:
+The simulator works using numerical approximations, and chooses the step size as
+large as possible without the numerical error exceeding a given threshold.
+In case of our example, this step size can be pretty large - one of the steps
+covers nearly 4 time units in the graph.
+
+However, if we wanted the output a bit finer, we could just add a `max_step`
+parameter to our :class:`Simulator <modypy.simulation.Simulator>` constructor:
+
+.. code-block:: python
+
+    simulator = Simulator(system, start_time=0.0, max_step=0.1)
+
+So, let's try this again.
+The result of this new simulation is now seen in
+:numref:`integrator_simulation`.
+
+.. _integrator_simulation:
+.. figure:: 01_integrator_simulation.png
+    :align: center
+    :alt: Results of integrator simulation, maximum step 0.1
+
+    Results of integrator simulation with a maximum step of 0.1
+
+That looks much more smooth.
 In red, we see the input signal, while the value of our integrator state is
 plotted in green. Looks quite correct.
 
-But what happened here?
+But what exactly happened here?
 The `result` object we created can simply be used as a system state object.
 If we use it as a parameter for calling a state or signal object, we get the
 time series of the values of that state or signal over the time of the

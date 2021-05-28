@@ -44,9 +44,7 @@ position = integrator(system, input_signal=velocity, initial_condition=X_0)
 # Run a simulation
 simulator = Simulator(system,
                       start_time=0.0,
-                      integrator_options={
-                          "rtol": 1E-6
-                      })
+                      max_step=1)
 result = SimulationResult(system,
                           simulator.run_until(time_boundary=PLANET_ORBIT_TIME))
 
