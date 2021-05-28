@@ -13,7 +13,7 @@
 
 .. image:: https://readthedocs.org/projects/modypy/badge/
     :alt: ReadTheDocs Build Status
-    :target: https://modypy.readthedocs.io/
+    :target: https://docs.modypy.org
 
 .. image:: https://codecov.io/gh/modypy/modypy/branch/master/graph/badge.svg
     :alt: Code Coverage
