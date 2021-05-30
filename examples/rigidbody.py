@@ -49,7 +49,7 @@ torque.connect(rb_6dof.moments_body)
 rb_6dof.dcm.connect(dcm_to_euler.dcm)
 
 # Simulate the system for 2 minutes
-sim = Simulator(system, start_time=0)
+sim = Simulator(system, start_time=0, max_step=0.1)
 result = SimulationResult(system, sim.run_until(time_boundary=120.0))
 
 # Plot the Euler angles
