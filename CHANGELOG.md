@@ -4,11 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.0.0rc1 - 2021-05-30]
 ### Added
 - Added a __version__ property in the modypy package (now used in setup.py
   and sphinx conf.py)
 ### Changed
+- Major reorganisation of the Simulator, in preparation for an extensible
+  event detection concept. With optimisiations on the Simulator, the ODE solver
+  is now only re-initialized if events lead to state changes. This also means
+  that control of step size using `max_step` may be necessary.
+- States and ports may now be scalar instead of just of shape `(1)`.
 - Major changes to the evaluation interface: The dictionary-based access has
   been deprecated, and the evaluation class has been removed. Both simulation
   and the simulator results support the same way of accessing system states and
