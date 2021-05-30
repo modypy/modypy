@@ -61,8 +61,8 @@ result = SimulationResult(system, simulator.run_until(time_boundary=0.5))
 
 # Plot the thrust output over time
 fig, ax = plt.subplots()
-ax.plot(result.time, propeller.thrust(result)[0], label="continuous-time")
-ax.step(result.time, thrust_sampler(result)[0], label="sampled", where="post")
+ax.plot(result.time, propeller.thrust(result), label="continuous-time")
+ax.step(result.time, thrust_sampler(result), label="sampled", where="post")
 
 ax.set_title("Propeller Simulation")
 ax.legend()

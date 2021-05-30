@@ -31,12 +31,12 @@ occurrence of another, and it is possible that a single event results in an
 endless event loop. Thus, event listeners need to be expressed carefully so that
 they do not trigger any unwanted events.
 """
+from math import ceil
+
 import heapq
 from abc import ABC
-from math import ceil
-from typing import Optional
-
 from modypy.model.ports import PortNotConnectedError
+from typing import Optional
 
 
 class MultipleEventSourcesError(RuntimeError):
@@ -125,6 +125,9 @@ class EventPort:
     def __call__(self, provider):
         if self.source is None:
             raise PortNotConnectedError()
+        # pylint does not recognise that source is either None or an EventPort,
+        # which is callable.
+        # pylint: disable=not-callable
         return self.source(provider)
 
 
@@ -245,6 +248,7 @@ class Clock(AbstractEventSource):
 
 class ClockQueue:
     """Queue of clock events"""
+
     def __init__(self, start_time, clocks):
         self.clock_queue = []
 
@@ -265,7 +269,7 @@ class ClockQueue:
     def next_clock_tick(self):
         """The time at which the next clock tick will occur or `None` if there
         are no further clock ticks"""
-        if len(self.clock_queue)>0:
+        if len(self.clock_queue) > 0:
             return self.clock_queue[0].tick_time
         return None
 

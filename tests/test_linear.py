@@ -1,93 +1,89 @@
-import pytest
 import numpy as np
-import numpy.testing as npt
-
-from modypy.blocks.linear import LTISystem, Gain, gain, sum_signal, Sum
+import pytest
+from modypy.blocks.linear import (
+    Gain,
+    InvalidLTIException,
+    LTISystem,
+    Sum,
+    gain,
+    sum_signal,
+)
 from modypy.blocks.sources import constant
-from modypy.model import System, InputSignal, Signal, SystemState
+from modypy.model import InputSignal, Signal, System, SystemState
+from numpy import testing as npt
 
 
-def test_lti_nonsquare_state_matrix():
+def _make_array_or_scalar(shape):
+    if shape == ():
+        return np.float_()
+    return np.empty(shape=shape)
+
+
+@pytest.mark.parametrize(
+    'input_shape,system_shape,output_shape,feed_through_shape',
+    [
+        # More than two dimensions on system matrix
+        (0, (2, 2, 2), 0, 0),
+        # Empty system matrix
+        (0, (0, 2), 0, 0),
+        # Non-square system matrix
+        (0, (2, 3), 0, 0),
+
+        # Scalar system matrix with mismatching inputs
+        (2, (), 0, 0),
+        # Scalar input matrix with mismatching states
+        ((), (2, 2), 0, 0),
+        # Column input vector with mismatching states
+        (2, (3, 3), (), ()),
+        # Input matrix with mismatching states
+        ((2, 2), (3, 3), (), ()),
+        # Three-dimensional input matrix
+        ((2, 2, 2), (3, 3), (), ()),
+
+        # Scalar output matrix with multiple states
+        ((2, 1), (2, 2), (), 0),
+        # Row output vector with mismatching states
+        ((2, 1), (2, 2), 3, ()),
+        # Output matrix with mismatching states
+        ((2, 1), (2, 2), (3, 3), ()),
+        # Non-square output matrix
+        ((2, 1), (2, 2), (3, 3, 3), ()),
+
+        # Scalar feed-through matrix with more than one input
+        ((2, 2), (2, 2), (2, 2), ()),
+        # Scalar feed-through matrix with more than one output
+        (2, (2, 2), (2, 2), ()),
+        # Row feed-through vector without outputs
+        (2, (2, 2), (0, 2), 1),
+        # Row feed-through vector with more than one output
+        (2, (2, 2), (2, 2), 1),
+        # Row feed-through vector mismatching number of inputs
+        ((2, 2), (2, 2), (1, 2), 1),
+        # Feed-through matrix height mismatching number of outputs
+        ((2, 2), (2, 2), (1, 2), (2, 2)),
+        # Feed-through matrix width mismatching number of inputs
+        ((2, 2), (2, 2), (1, 2), (1, 1)),
+        # Feed-through matrix with invalid number of dimensions
+        ((2, 2), (2, 2), (1, 2), (1, 1, 1)),
+    ]
+)
+def test_invalid_lti_configurations(input_shape,
+                                    system_shape,
+                                    output_shape,
+                                    feed_through_shape):
+    """Test the detection of invalid LTI matrix configurations"""
+    input_matrix = _make_array_or_scalar(shape=input_shape)
+    system_matrix = _make_array_or_scalar(shape=system_shape)
+    output_matrix = _make_array_or_scalar(shape=output_shape)
+    feed_through_matrix = _make_array_or_scalar(shape=feed_through_shape)
+
     system = System()
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidLTIException):
         LTISystem(parent=system,
-                  system_matrix=[[-1, 0]],
-                  input_matrix=[[]],
-                  output_matrix=[[1, 0]],
-                  feed_through_matrix=[[]])
-
-
-def test_lti_state_input_mismatch():
-    system = System()
-    with pytest.raises(ValueError):
-        LTISystem(parent=system,
-                  system_matrix=[[-1, 0],
-                                 [0, -1]],
-                  input_matrix=[[1]],
-                  output_matrix=[[1, 0]],
-                  feed_through_matrix=[[1]])
-
-
-def test_lti_state_output_mismatch():
-    system = System()
-    with pytest.raises(ValueError):
-        LTISystem(parent=system,
-                  system_matrix=[[-1, 0],
-                                 [0, -1]],
-                  input_matrix=[[1], [1]],
-                  output_matrix=[[1]],
-                  feed_through_matrix=[[1]])
-
-
-def test_lti_output_feed_through_mismatch():
-    system = System()
-    with pytest.raises(ValueError):
-        LTISystem(parent=system,
-                  system_matrix=[[-1, 0],
-                                 [0, -1]],
-                  input_matrix=[[1], [1]],
-                  output_matrix=[[1, 1]],
-                  feed_through_matrix=[[1], [0]])
-
-
-def test_lti_input_feed_through_mismatch():
-    system = System()
-    with pytest.raises(ValueError):
-        LTISystem(parent=system,
-                  system_matrix=[[-1, 0],
-                                 [0, -1]],
-                  input_matrix=[[1, 1],
-                                [1, 1]],
-                  output_matrix=[[1, 1]],
-                  feed_through_matrix=[[1]])
-
-
-def test_lti_no_states():
-    system = System()
-    lti = LTISystem(parent=system,
-                    system_matrix=np.empty((0, 0)),
-                    input_matrix=np.empty((0, 1)),
-                    output_matrix=np.empty((1, 0)),
-                    feed_through_matrix=1)
-    source = constant(value=1)
-    source.connect(lti.input)
-
-    system_state = SystemState(time=0, system=system)
-    state_derivative = lti.state.derivative_function(system_state)
-    assert state_derivative.size == 0
-
-
-def test_lti_empty():
-    system = System()
-    lti = LTISystem(parent=system,
-                    system_matrix=np.empty((0, 0)),
-                    input_matrix=np.empty((0, 0)),
-                    output_matrix=np.empty((0, 0)),
-                    feed_through_matrix=np.empty((0, 0)))
-
-    system_state = SystemState(time=0, system=system)
-    output = lti.output(system_state)
-    assert output.size == 0
+                  input_matrix=input_matrix,
+                  system_matrix=system_matrix,
+                  output_matrix=output_matrix,
+                  feed_through_matrix=feed_through_matrix)
 
 
 def test_gain_class():
@@ -110,7 +106,7 @@ def test_gain_function():
 
 
 @pytest.mark.parametrize(
-    "channel_weights, output_size, inputs, expected_output",
+    'channel_weights, output_size, inputs, expected_output',
     [
         ([1, 1], 1, [1, -1], [0]),
         ([1, 2], 2, [[1, 2], [3, 4]], [7, 10]),
@@ -132,7 +128,7 @@ def test_sum_block(channel_weights, output_size, inputs, expected_output):
 
 
 @pytest.mark.parametrize(
-    "channel_weights, output_size, inputs, expected_output",
+    'channel_weights, output_size, inputs, expected_output',
     [
         ([1, 1], 1, [1, -1], [0]),
         ([1, 2], 2, [[1, 2], [3, 4]], [7, 10]),

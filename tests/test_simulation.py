@@ -1,20 +1,27 @@
-import bisect
 import math
 
+import bisect
 import numpy as np
-import numpy.testing as npt
 import pytest
 import scipy.signal
-
-from fixtures.models import \
-    first_order_lag, first_order_lag_no_input, \
-    damped_oscillator, damped_oscillator_with_events, \
-    BouncingBall
+from fixtures.models import (
+    BouncingBall,
+    damped_oscillator,
+    damped_oscillator_with_events,
+    first_order_lag,
+    first_order_lag_no_input,
+)
 from modypy.blocks.discrete import zero_order_hold
 from modypy.blocks.linear import LTISystem, integrator
 from modypy.blocks.sources import constant
-from modypy.model import SystemState, System, Clock, State, ZeroCrossEventSource
-from modypy.simulation import Simulator, ExcessiveEventError, SimulationError, SimulationResult, _EventDetector
+from modypy.model import Clock, State, System, SystemState, ZeroCrossEventSource
+from modypy.simulation import (
+    ExcessiveEventError,
+    SimulationError,
+    SimulationResult,
+    Simulator,
+)
+from numpy import testing as npt
 
 
 @pytest.fixture(params=[
@@ -73,7 +80,7 @@ def test_lti_simulation(lti_system_with_reference):
         npt.assert_equal(input_signal(result), from_result)
 
     # Determine the system response and state values of the reference system
-    ref_time, ref_output, ref_state = scipy.signal.lsim2(
+    ref_time, _ref_output, ref_state = scipy.signal.lsim2(
         ref_system,
         X0=sys.initial_condition,
         T=result.time,
@@ -100,13 +107,16 @@ class MockupIntegrator:
     """
 
     def __init__(self, fun, t0, y0, t_bound, vectorized=False):
-        self.status = "running"
+        del fun  # unused
+        del t_bound  # unused
+        del vectorized  # unused
+        self.status = 'running'
         self.t = t0
         self.y = y0
 
     def step(self):
-        self.status = "failed"
-        return "failed"
+        self.status = 'failed'
+        return 'failed'
 
 
 def test_lti_simulation_failure(lti_system_with_reference):
@@ -117,7 +127,7 @@ def test_lti_simulation_failure(lti_system_with_reference):
                           start_time=0,
                           solver_method=MockupIntegrator)
     with pytest.raises(SimulationError):
-        for _state in simulator.run_until(sim_time):
+        for _ in simulator.run_until(sim_time):
             pass
 
 
@@ -239,9 +249,9 @@ def test_clock_handling():
     reference1 = initial_value * np.exp(-time_floor1 / time_constant)
     reference2 = initial_value * np.exp(-time_floor2 / time_constant)
 
-    npt.assert_almost_equal(hold1(result)[0], reference1)
-    npt.assert_almost_equal(hold2(result)[0], reference2)
-    npt.assert_almost_equal(hold3(result)[0], initial_value)
+    npt.assert_almost_equal(hold1(result), reference1)
+    npt.assert_almost_equal(hold2(result), reference2)
+    npt.assert_almost_equal(hold3(result), initial_value)
 
 
 def test_discrete_only():
@@ -266,7 +276,7 @@ def test_discrete_only():
     npt.assert_almost_equal(result.time,
                             [0, 1, 2, 3, 4, 5, 5.5, 6, 7, 8, 9, 10])
     npt.assert_almost_equal(counter(result),
-                            [[1, 2, 3, 4, 5, 6, 6, 7, 8, 9, 10, 11]])
+                            [1, 2, 3, 4, 5, 6, 6, 7, 8, 9, 10, 11])
 
 
 def test_integrator():
@@ -283,7 +293,6 @@ def test_integrator():
     npt.assert_almost_equal(
         int_output(result).ravel(),
         result.time)
-
 
 
 def test_simulation_result_dictionary_access():
@@ -327,5 +336,5 @@ def test_system_state_updater_dictionary_access():
     clock.register_listener(_update_counter)
 
     simulator = Simulator(system, start_time=0)
-    for _state in simulator.run_until(time_boundary=10):
+    for _ in simulator.run_until(time_boundary=10):
         pass

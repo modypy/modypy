@@ -391,7 +391,7 @@ Now, our system is fully assembled. Let's run a simulation:
                               simulator.run_until(time_boundary=0.5))
 
     # Plot the result
-    plt.plot(result.time, engine.thrust(result)[0])
+    plt.plot(result.time, engine.thrust(result))
     plt.title("Engine with DC-Motor and Static Propeller")
     plt.xlabel("Time")
     plt.ylabel("Thrust")

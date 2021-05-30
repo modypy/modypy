@@ -2,9 +2,8 @@
 Blocks for stiff body dynamics
 """
 import numpy as np
-import numpy.linalg as linalg
-
 from modypy.model import Block, Port, SignalState, signal_method
+from numpy import linalg
 
 
 class RigidBody6DOFFlatEarth(Block):
@@ -102,24 +101,30 @@ class RigidBody6DOFFlatEarth(Block):
         ])
         return skew_sym_matrix @ self.dcm(data)
 
+    # pylint does not recognize the modifications to the signal_method decorator
+    # pylint: disable=no-value-for-parameter
     @signal_method(shape=(3, 3))
     def dcm_inverse(self, data):
         """The inverse of the direct cosine matrix"""
         return np.swapaxes(self.dcm(data), 0, 1)
 
+    # pylint does not recognize the modifications to the signal_method decorator
+    # pylint: disable=no-value-for-parameter
     @signal_method(shape=3)
     def velocity_body(self, data):
         """Calculate the velocity in the body reference frame"""
 
-        return np.einsum("ij...,j...->i...",
+        return np.einsum('ij...,j...->i...',
                          self.dcm_inverse(data),
                          self.velocity_earth(data))
 
+    # pylint does not recognize the modifications to the signal_method decorator
+    # pylint: disable=no-value-for-parameter
     @signal_method(shape=3)
     def omega_body(self, data):
         """Calculate the angular velocity in the body reference frame"""
 
-        return np.einsum("ij...,j...->i...",
+        return np.einsum('ij...,j...->i...',
                          self.dcm_inverse(data),
                          self.omega_earth(data))
 

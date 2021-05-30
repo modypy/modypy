@@ -1,12 +1,13 @@
 import numpy as np
-
 from modypy.blocks.linear import LTISystem
-from modypy.model import \
-    Block, \
-    System, \
-    ZeroCrossEventSource, \
-    InputSignal, \
-    State, signal_method
+from modypy.model import (
+    Block,
+    InputSignal,
+    State,
+    System,
+    ZeroCrossEventSource,
+    signal_method,
+)
 
 
 def first_order_lag(time_constant=1, initial_value=10):
@@ -14,7 +15,7 @@ def first_order_lag(time_constant=1, initial_value=10):
     lti = LTISystem(parent=system,
                     system_matrix=-1 / time_constant,
                     input_matrix=1,
-                    output_matrix=1,
+                    output_matrix=[1],
                     feed_through_matrix=0,
                     initial_condition=[initial_value])
 
@@ -29,9 +30,9 @@ def first_order_lag_no_input(time_constant=1, initial_value=10):
     system = System()
     lti = LTISystem(parent=system,
                     system_matrix=-1 / time_constant,
-                    input_matrix=[],
+                    input_matrix=np.empty(shape=(1, 0)),
                     output_matrix=1,
-                    feed_through_matrix=[],
+                    feed_through_matrix=np.empty(shape=(0,)),
                     initial_condition=[initial_value])
 
     return system, lti, 3 * time_constant, [lti.output]
@@ -52,7 +53,7 @@ def damped_oscillator(mass=100.,
                     initial_condition=[initial_value, 0])
     time_constant = 2 * mass / damping_coefficient
 
-    src = InputSignal(system)
+    src = InputSignal(system, shape=1)
     lti.input.connect(src)
 
     return system, lti, 3 * time_constant, [lti.output]
@@ -75,7 +76,7 @@ def damped_oscillator_with_events(mass=100.,
                          event_function=(lambda data: lti.state(data)[1]))
     time_constant = 2 * mass / damping_coefficient
 
-    src = InputSignal(system)
+    src = InputSignal(system, shape=1)
     lti.input.connect(src)
 
     return system, lti, 3 * time_constant, [lti.output]

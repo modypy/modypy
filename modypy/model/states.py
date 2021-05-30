@@ -14,10 +14,8 @@ States are represented as instances of the :class:`State` class. In addition,
 :class:`SignalState` instances are states that are also signals.
 """
 import functools
-import operator
-
 import numpy as np
-
+import operator
 from modypy.model.ports import AbstractSignal, ShapeType
 
 
@@ -35,7 +33,7 @@ class State:
     def __init__(self,
                  owner,
                  derivative_function=None,
-                 shape=1,
+                 shape=(),
                  initial_condition=None):
         self.owner = owner
         self.derivative_function = derivative_function
@@ -81,7 +79,7 @@ class SignalState(State, AbstractSignal):
     def __init__(self,
                  owner,
                  derivative_function=None,
-                 shape: ShapeType = (1,),
+                 shape: ShapeType = (),
                  initial_condition=None):
         State.__init__(self,
                        owner=owner,

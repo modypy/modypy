@@ -1,15 +1,16 @@
 """Tests for ``modypy.model.ports``"""
-from unittest.mock import Mock
-
 import pytest
-
 from modypy.model import System, SystemState
-from modypy.model.ports import \
-    Port, \
-    Signal, \
-    InputSignal, \
-    ShapeMismatchError, \
-    MultipleSignalsError, PortNotConnectedError, signal_method
+from modypy.model.ports import (
+    InputSignal,
+    MultipleSignalsError,
+    Port,
+    PortNotConnectedError,
+    ShapeMismatchError,
+    Signal,
+    signal_method,
+)
+from unittest.mock import Mock
 
 
 def test_port():
@@ -63,6 +64,14 @@ def test_shape_mismatch_error():
     port_b = Port()
     with pytest.raises(ShapeMismatchError):
         port_a.connect(port_b)
+
+
+def test_empty_port():
+    """Test a port with zero elements"""
+
+    port = Port(shape=0)
+    value = port()
+    assert value.shape == port.shape
 
 
 def test_signal():

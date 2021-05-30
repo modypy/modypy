@@ -2,14 +2,13 @@
 Test the steady-state determination algorithm.
 """
 import numpy as np
-import numpy.testing as npt
 import pytest
-
 from modypy.blocks.aerodyn import Propeller
 from modypy.blocks.linear import sum_signal
 from modypy.blocks.sources import constant
-from modypy.model import System, InputSignal, SignalState, State
+from modypy.model import InputSignal, SignalState, State, System
 from modypy.steady_state import SteadyStateConfiguration, find_steady_state
+from numpy import testing as npt
 
 
 def water_tank_model(inflow_area=0.01,
@@ -46,8 +45,8 @@ def water_tank_model(inflow_area=0.01,
     if max_inflow_velocity is not None:
         config.inputs[inflow_velocity].upper_bounds = max_inflow_velocity
     # Define the target height
-    config.states[height_state].lower_bounds[0] = target_height
-    config.states[height_state].upper_bounds[0] = target_height
+    config.states[height_state].lower_bounds = target_height
+    config.states[height_state].upper_bounds = target_height
 
     if initial_condition is not None:
         config.states[height_state].initial_condition = initial_condition
@@ -115,10 +114,12 @@ def propeller_model(thrust_coefficient=0.09,
     config.states[speed_1].lower_bounds = 0
     config.states[speed_2].lower_bounds = 0
     # Constrain the torques to be positive
-    config.inputs[torque_1].lower_bounds[0] = 0
-    config.inputs[torque_2].lower_bounds[0] = 0
+    config.inputs[torque_1].lower_bounds = 0
+    config.inputs[torque_2].lower_bounds = 0
+    npt.assert_equal(config.inputs[torque_1].lower_bounds, 0)
+    npt.assert_equal(config.inputs[torque_2].lower_bounds, 0)
     if maximum_torque is not None:
-        config.inputs[torque_1].upper_bounds[0] = maximum_torque
+        config.inputs[torque_1].upper_bounds = maximum_torque
         config.inputs[torque_2].upper_bounds = maximum_torque
 
     # Constrain the total thrust
@@ -165,8 +166,50 @@ def pendulum(length=1):
     return config
 
 
+def test_state_constraint_access():
+    """Test access to state constraint properties"""
+
+    system = System()
+    state_1 = State(system)
+    state_2 = State(system)
+    config = SteadyStateConfiguration(system)
+
+    config.states[state_1].lower_bounds = 10
+    config.states[state_2].lower_bounds = 20
+    config.states[state_1].upper_bounds = 15
+    config.states[state_2].upper_bounds = 25
+    config.states[state_2].steady_state = False
+    config.states[state_1].initial_condition = 100
+    npt.assert_equal(config.states[state_1].lower_bounds, 10)
+    npt.assert_equal(config.states[state_2].lower_bounds, 20)
+    npt.assert_equal(config.states[state_1].upper_bounds, 15)
+    npt.assert_equal(config.states[state_2].upper_bounds, 25)
+    assert not config.states[state_2].steady_state
+    npt.assert_equal(config.states[state_1].initial_condition, 100)
+
+
+def test_input_constraint_access():
+    """Test access to input constraint properties"""
+
+    system = System()
+    input_1 = InputSignal(system)
+    input_2 = InputSignal(system)
+    config = SteadyStateConfiguration(system)
+
+    config.inputs[input_1].lower_bounds = 10
+    config.inputs[input_2].lower_bounds = 20
+    config.inputs[input_1].upper_bounds = 15
+    config.inputs[input_2].upper_bounds = 25
+    config.inputs[input_1].initial_guess = 100
+    npt.assert_equal(config.inputs[input_1].lower_bounds, 10)
+    npt.assert_equal(config.inputs[input_2].lower_bounds, 20)
+    npt.assert_equal(config.inputs[input_1].upper_bounds, 15)
+    npt.assert_equal(config.inputs[input_2].upper_bounds, 25)
+    npt.assert_equal(config.inputs[input_1].initial_guess, 100)
+
+
 @pytest.mark.parametrize(
-    "config",
+    'config',
     [
         water_tank_model(),
         water_tank_model(initial_guess=3, initial_condition=10),
@@ -179,7 +222,7 @@ def test_steady_state(config):
     """Test the find_steady_state function"""
 
     # Adjust solver options
-    config.solver_options["gtol"] = 1E-10
+    config.solver_options['gtol'] = 1E-10
 
     sol = find_steady_state(config)
     assert sol.success
@@ -189,28 +232,28 @@ def test_steady_state(config):
     assert sol.inputs.size == config.system.num_inputs
 
     # Check state bounds
-    assert (-config.solver_options["gtol"] <=
+    assert (-config.solver_options['gtol'] <=
             (sol.state - config.state_bounds[:, 0])).all()
-    assert (-config.solver_options["gtol"] <=
+    assert (-config.solver_options['gtol'] <=
             (config.state_bounds[:, 1] - sol.state)).all()
 
     # Check input bounds
-    assert (-config.solver_options["gtol"] <=
+    assert (-config.solver_options['gtol'] <=
             (sol.inputs - config.input_bounds[:, 0])).all()
-    assert (-config.solver_options["gtol"] <=
+    assert (-config.solver_options['gtol'] <=
             (config.input_bounds[:, 1] - sol.inputs)).all()
 
     # Check port constraints
     for signal_constraint in config.ports.values():
         value = signal_constraint.port(sol.system_state)
-        assert (-config.solver_options["gtol"] <=
+        assert (-config.solver_options['gtol'] <=
                 (value - signal_constraint.lb)).all()
-        assert (-config.solver_options["gtol"] <=
+        assert (-config.solver_options['gtol'] <=
                 (signal_constraint.ub - value)).all()
 
     # Check for steady states
     num_steady_states = np.count_nonzero(config.steady_states)
-    diff_tol = np.sqrt(config.solver_options["gtol"]*num_steady_states)
+    diff_tol = np.sqrt(config.solver_options['gtol']*num_steady_states)
     steady_state_derivatives = \
         config.system.state_derivative(sol.system_state)[config.steady_states]
     npt.assert_allclose(steady_state_derivatives.ravel(),

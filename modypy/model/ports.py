@@ -15,10 +15,10 @@ other and to signals using the ``connect`` method. In fact, each signal is also
 a port.
 """
 import functools
-import operator
-from typing import Union, Sequence, Tuple, Optional
-
 import numpy as np
+import operator
+from typing import Optional, Sequence, Tuple, Union
+
 
 ShapeType = Union[int, Sequence[int], Tuple[int]]
 
@@ -42,7 +42,7 @@ class Port:
     """A port is a structural element of a system that can be connected to a
     signal."""
 
-    def __init__(self, shape: ShapeType = (1,)):
+    def __init__(self, shape: ShapeType = ()):
         if isinstance(shape, int):
             shape = (shape,)
         self.shape = shape
@@ -82,7 +82,11 @@ class Port:
         """
         if self.shape != other.shape:
             # It is an error if the shapes of the ports do not match.
-            raise ShapeMismatchError()
+            raise ShapeMismatchError('Shape (%s) of left port does not match '
+                                     'shape (%s) of right port' % (
+                                         self.shape,
+                                         other.shape
+                                     ))
         if self.signal is not None and other.signal is not None:
             # Both ports are already connected to a signal.
             # It is an error if they are not connected to the same signal.
@@ -103,6 +107,9 @@ class Port:
             return np.empty(self.shape)
         if self.signal is None:
             raise PortNotConnectedError()
+        # pylint does not recognize that self.signal is either None or Port,
+        # which _is_ callable.
+        # pylint: disable=not-callable
         return self.signal(*args, **kwargs)
 
 
@@ -135,6 +142,7 @@ class Signal(AbstractSignal):
 
 def decorator(func):
     """Helper function to create decorators with optional arguments"""
+
     def _wrapper(*args, **kwargs):
         if len(args) == 1 and len(kwargs) == 0 and callable(args[0]):
             # We only have the function as parameter, so directly call the
@@ -176,6 +184,7 @@ def signal_method(user_function, *args, **kwargs):
     class _SignalDescriptor:
         """Descriptor that will return itself when accessed on a class, but a
         unique Signal instance when accessed on a class instance."""
+
         def __init__(self, function):
             self.name = None
             self.function = function
@@ -209,7 +218,7 @@ class InputSignal(AbstractSignal):
     input into the system. In steady-state identification and linearization,
     input signals play a special role."""
 
-    def __init__(self, owner, shape: ShapeType = (1,), value=None):
+    def __init__(self, owner, shape: ShapeType = (), value=None):
         super().__init__(shape)
         self.owner = owner
         self.input_index = self.owner.system.allocate_input_lines(self.size)

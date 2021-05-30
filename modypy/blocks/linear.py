@@ -1,9 +1,12 @@
 """Blocks for linear, time-invariant systems"""
-from functools import partial
-
 import numpy as np
+from functools import partial
+from modypy.model import Block, Port, Signal, SignalState, State
 
-from modypy.model import Block, Port, State, Signal, SignalState
+
+class InvalidLTIException(RuntimeError):
+    """An exception which is raised when the specification of an LTI is invalid.
+    """
 
 
 class LTISystem(Block):
@@ -25,52 +28,150 @@ class LTISystem(Block):
                  initial_condition=None):
         Block.__init__(self, parent)
 
-        system_matrix = np.atleast_2d(system_matrix)
-        input_matrix = np.atleast_2d(input_matrix)
-        output_matrix = np.atleast_2d(output_matrix)
-        feed_through_matrix = np.atleast_2d(feed_through_matrix)
+        # Determine the number of states and the shape of the state
+        if np.isscalar(system_matrix):
+            self.state_shape = ()
+            num_states = 1
+        else:
+            system_matrix = np.asarray(system_matrix)
+            if (system_matrix.ndim == 2 and
+                    system_matrix.shape[0] > 0 and
+                    system_matrix.shape[0] == system_matrix.shape[1]):
+                self.state_shape = system_matrix.shape[0]
+                num_states = self.state_shape
+            else:
+                raise InvalidLTIException('The system matrix must be a scalar '
+                                          'or a non-empty square matrix')
 
-        if system_matrix.shape[0] != system_matrix.shape[1]:
-            raise ValueError("The system matrix must be square")
-        if system_matrix.shape[0] != input_matrix.shape[0]:
-            raise ValueError(
-                "The height of the system matrix and the input matrix "
-                "must be the same")
-        if output_matrix.shape[0] != feed_through_matrix.shape[0]:
-            raise ValueError(
-                "The height of the output matrix and the "
-                "feed-through matrix feed_through_matrix must be the same")
-        if system_matrix.shape[1] != output_matrix.shape[1]:
-            raise ValueError(
-                "The width of the system matrix and the output matrix"
-                "must be the same")
-        if input_matrix.shape[1] != feed_through_matrix.shape[1]:
-            raise ValueError(
-                "The width of the output matrix and the feed-through "
-                "matrix must be the same")
+        # Determine the number of inputs and the shape of the input signal
+        if np.isscalar(input_matrix):
+            if num_states > 1:
+                raise InvalidLTIException('There is more than one state, but '
+                                          'the input matrix is neither empty, '
+                                          'nor a vector or a matrix')
+            num_inputs = 1
+            self.input_shape = ()
+        else:
+            input_matrix = np.asarray(input_matrix)
+            if input_matrix.ndim == 1:
+                # The input matrix is a column vector => one input
+                if num_states != input_matrix.shape[0]:
+                    raise InvalidLTIException('The height of the input matrix '
+                                              'must match the number of states')
+                num_inputs = 1
+            elif input_matrix.ndim == 2:
+                # The input matrix is a matrix
+                if num_states != input_matrix.shape[0]:
+                    raise InvalidLTIException('The height of the input matrix '
+                                              'does not match the number of '
+                                              'states')
+                num_inputs = input_matrix.shape[1]
+            else:
+                raise InvalidLTIException('The input matrix must be empty,'
+                                          'a scalar, a vector or a matrix')
+            self.input_shape = num_inputs
+
+        # Determine the number of outputs and the shape of the output array
+        if np.isscalar(output_matrix):
+            if num_states > 1:
+                raise InvalidLTIException('There is more than one state, but '
+                                          'the output matrix is neither an '
+                                          'empty, a vector nor a matrix')
+            num_outputs = 1
+            self.output_shape = ()
+        else:
+            output_matrix = np.asarray(output_matrix)
+            if output_matrix.ndim == 1:
+                # The output matrix is a row vector => one output
+                if num_states != output_matrix.shape[0]:
+                    raise InvalidLTIException('The width of the output matrix '
+                                              'does not match the number of '
+                                              'states')
+                num_outputs = 1
+            elif output_matrix.ndim == 2:
+                # The output matrix is a matrix
+                if num_states != output_matrix.shape[1]:
+                    raise InvalidLTIException('The width of the output matrix '
+                                              'does not match the number of '
+                                              'states')
+                num_outputs = output_matrix.shape[0]
+            else:
+                raise InvalidLTIException('The output matrix must be empty, a'
+                                          'scalar, a vector or a matrix')
+            self.output_shape = num_outputs
+
+        if np.isscalar(feed_through_matrix):
+            if not (num_inputs == 1 and num_outputs == 1):
+                raise InvalidLTIException('A scalar feed-through matrix is '
+                                          'only allowed for systems with '
+                                          'exactly one input and one output')
+        else:
+            feed_through_matrix = np.asarray(feed_through_matrix)
+            if feed_through_matrix.ndim == 1:
+                # A vector feed_through_matrix is interpreted as row vector,
+                # so there must be exactly one output.
+                if num_outputs == 0:
+                    raise InvalidLTIException('The feed-through matrix for a '
+                                              'system without outputs must be'
+                                              'empty')
+                elif num_outputs > 1:
+                    raise InvalidLTIException('The feed-through matrix for a '
+                                              'system with more than one '
+                                              'output must be a matrix')
+                if feed_through_matrix.shape[0] != num_inputs:
+                    raise InvalidLTIException('The width of the feed-through '
+                                              'matrix must match the number of '
+                                              'inputs')
+            elif feed_through_matrix.ndim == 2:
+                if feed_through_matrix.shape[0] != num_outputs:
+                    raise InvalidLTIException('The height of the feed-through '
+                                              'matrix must match the number of '
+                                              'outputs')
+                if feed_through_matrix.shape[1] != num_inputs:
+                    raise InvalidLTIException('The width of the feed-through '
+                                              'matrix must match the number of '
+                                              'inputs')
+            else:
+                raise InvalidLTIException('The feed-through matrix must be '
+                                          'empty, a scalar, a vector or a '
+                                          'matrix')
 
         self.system_matrix = system_matrix
         self.input_matrix = input_matrix
         self.output_matrix = output_matrix
         self.feed_through_matrix = feed_through_matrix
 
-        self.input = Port(shape=self.input_matrix.shape[1])
+        self.input = Port(shape=self.input_shape)
         self.state = State(self,
-                           shape=self.system_matrix.shape[0],
+                           shape=self.state_shape,
                            derivative_function=self.state_derivative,
                            initial_condition=initial_condition)
-        self.output = Signal(shape=self.output_matrix.shape[0],
+        self.output = Signal(shape=self.output_shape,
                              value=self.output_function)
 
     def state_derivative(self, data):
         """Calculates the state derivative for the system"""
-        return ((self.system_matrix @ self.state(data))
-                + (self.input_matrix @ self.input(data)))
+        if self.state.shape == ():
+            derivative = self.system_matrix * self.state(data)
+        else:
+            derivative = np.matmul(self.system_matrix, self.state(data))
+        if self.input.shape == ():
+            derivative += self.input_matrix * self.input(data)
+        elif self.input.size > 0:
+            derivative += np.matmul(self.input_matrix, self.input(data))
+        return derivative
 
     def output_function(self, data):
         """Calculates the output for the system"""
-        return ((self.output_matrix @ self.state(data))
-                + (self.feed_through_matrix @ self.input(data)))
+        if self.state.shape == ():
+            output = self.output_matrix * self.state(data)
+        else:
+            output = np.matmul(self.output_matrix, self.state(data))
+        if self.input.shape == ():
+            output += self.feed_through_matrix * self.input(data)
+        elif self.input.size > 0:
+            output += np.matmul(self.feed_through_matrix, self.input(data))
+        return output
 
 
 class Gain(Block):
@@ -113,7 +214,7 @@ def _gain_function(gain_matrix, input_signal, data):
         The product of the gain matrix and the value of the signal
     """
 
-    return gain_matrix @ input_signal(data)
+    return np.matmul(gain_matrix, input_signal(data))
 
 
 def gain(gain_matrix, input_signal):
@@ -197,7 +298,7 @@ def _sum_function(signals, gains, data):
 
     signal_sum = 0
     for signal, gain_value in zip(signals, gains):
-        signal_sum = signal_sum + gain_value * signal(data)
+        signal_sum = signal_sum + np.dot(gain_value, signal(data))
     return signal_sum
 
 
@@ -223,10 +324,10 @@ def sum_signal(input_signals, gains=None):
 
     shape = input_signals[0].shape
     if any(signal.shape != shape for signal in input_signals):
-        raise ValueError("The shapes of the input signals do not match")
+        raise ValueError('The shapes of the input signals do not match')
     if len(input_signals) != len(gains):
-        raise ValueError("There must be as many gains as there are "
-                         "input signals")
+        raise ValueError('There must be as many gains as there are '
+                         'input signals')
 
     return Signal(shape=shape,
                   value=partial(_sum_function,

@@ -4,15 +4,14 @@ Functions and classes for finding the steady state of a system.
 To determine a steady state, set up a :class:`SteadyStateConfiguration` object
 and pass it to :func:`find_steady_state`.
 """
-from collections.abc import Mapping
-from functools import partial
 from itertools import accumulate
-from typing import Union
 
 import numpy as np
-import scipy.optimize as opt
-
-from modypy.model import SystemState, Port, System, State, InputSignal
+from collections.abc import Mapping
+from functools import partial
+from modypy.model import InputSignal, Port, State, System, SystemState
+from scipy import optimize as opt
+from typing import Union
 
 
 class SteadyStateConfiguration:
@@ -170,14 +169,17 @@ class StateConstraint:
             A matrix with the shape of the state, representing the initial
             steady state guess for each component of the state
             (default: initial condition of the state)"""
+
     def __init__(self,
                  config: SteadyStateConfiguration,
                  state: State):
         self.config = config
         self.state = state
 
-        flat_state_bounds = self.config.state_bounds[self.state.state_slice]
-        self._state_bounds = flat_state_bounds.reshape(self.state.shape+(2,))
+        flat_lower_bounds = self.config.state_bounds[self.state.state_slice, 0]
+        flat_upper_bounds = self.config.state_bounds[self.state.state_slice, 1]
+        self._lower_bounds = flat_lower_bounds.reshape(self.state.shape)
+        self._upper_bounds = flat_upper_bounds.reshape(self.state.shape)
 
         flat_steady_states = self.config.steady_states[self.state.state_slice]
         self._steady_states = flat_steady_states.reshape(self.state.shape)
@@ -189,19 +191,19 @@ class StateConstraint:
 
     @property
     def lower_bounds(self):
-        return self._state_bounds[:, 0]
+        return self._lower_bounds
 
     @lower_bounds.setter
     def lower_bounds(self, value):
-        self._state_bounds[:, 0] = value
+        self.config.state_bounds[self.state.state_slice, 0] = np.ravel(value)
 
     @property
     def upper_bounds(self):
-        return self._state_bounds[:, 1]
+        return self._upper_bounds
 
     @upper_bounds.setter
     def upper_bounds(self, value):
-        self._state_bounds[:, 1] = value
+        self.config.state_bounds[self.state.state_slice, 1] = np.ravel(value)
 
     @property
     def steady_state(self):
@@ -209,7 +211,7 @@ class StateConstraint:
 
     @steady_state.setter
     def steady_state(self, value):
-        self.steady_state[:] = value
+        self.config.steady_states[self.state.state_slice] = np.ravel(value)
 
     @property
     def initial_condition(self):
@@ -217,7 +219,7 @@ class StateConstraint:
 
     @initial_condition.setter
     def initial_condition(self, value):
-        self.initial_condition[:] = value
+        self.config.initial_condition[self.state.state_slice] = np.ravel(value)
 
 
 class InputConstraint:
@@ -235,16 +237,19 @@ class InputConstraint:
             steady state guess for each component of the input
             (default: value of the input at the time of creation of the
             :class:`SteadyStateConfiguration` object)"""
+
     def __init__(self,
                  config: SteadyStateConfiguration,
                  input_signal: InputSignal):
         self.config = config
         self.input_signal = input_signal
 
-        flat_input_bounds = \
-            self.config.input_bounds[self.input_signal.input_slice]
-        self._input_bounds = \
-            flat_input_bounds.reshape(self.input_signal.shape+(2,))
+        flat_lower_bounds = \
+            self.config.input_bounds[self.input_signal.input_slice, 0]
+        flat_upper_bounds = \
+            self.config.input_bounds[self.input_signal.input_slice, 1]
+        self._lower_bounds = flat_lower_bounds.reshape(self.input_signal.shape)
+        self._upper_bounds = flat_upper_bounds.reshape(self.input_signal.shape)
 
         flat_initial_guess = \
             self.config.initial_input[self.input_signal.input_slice]
@@ -253,19 +258,21 @@ class InputConstraint:
 
     @property
     def lower_bounds(self):
-        return self._input_bounds[:, 0]
+        return self._lower_bounds
 
     @lower_bounds.setter
     def lower_bounds(self, value):
-        self._input_bounds[:, 0] = value
+        self.config.input_bounds[self.input_signal.input_slice, 0] = \
+            np.ravel(value)
 
     @property
     def upper_bounds(self):
-        return self._input_bounds[:, 1]
+        return self._upper_bounds
 
     @upper_bounds.setter
     def upper_bounds(self, value):
-        self._input_bounds[:, 1] = value
+        self.config.input_bounds[self.input_signal.input_slice, 1] = \
+            np.ravel(value)
 
     @property
     def initial_guess(self):
@@ -273,7 +280,8 @@ class InputConstraint:
 
     @initial_guess.setter
     def initial_guess(self, value):
-        self.initial_guess[:] = value
+        self.config.initial_input[self.input_signal.input_slice] = \
+            np.ravel(value)
 
 
 def find_steady_state(config: SteadyStateConfiguration):
@@ -318,8 +326,8 @@ def find_steady_state(config: SteadyStateConfiguration):
         if callable(config.objective):
             objective_function = partial(_general_objective_function, config)
         else:
-            raise ValueError("The objective function must be either a Port or "
-                             "a callable")
+            raise ValueError('The objective function must be either a Port or '
+                             'a callable')
     elif any(config.steady_states):
         # No objective function was specified, but we can use the steady-state
         # constraint function. The value of this function is intended to be
@@ -332,12 +340,12 @@ def find_steady_state(config: SteadyStateConfiguration):
         # state that is intended to be steady. We cannot use the signal
         # constraints to minimize, as these may specify ranges instead of a
         # target value. We cannot do anything about this.
-        raise ValueError("Either an objective function or at least one steady "
-                         "state is required")
+        raise ValueError('Either an objective function or at least one steady '
+                         'state is required')
 
     result = opt.minimize(fun=objective_function,
                           x0=x0,
-                          method="trust-constr",
+                          method='trust-constr',
                           bounds=bounds,
                           constraints=constraints,
                           options=config.solver_options)

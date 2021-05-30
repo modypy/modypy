@@ -2,16 +2,18 @@
 Simple integrator element with cosine wave input.
 """
 import numpy as np
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
+from modypy.model import State, System, signal_function
+from modypy.simulation import SimulationResult, Simulator
 
-from modypy.model import System, State, signal_function
-from modypy.simulation import Simulator, SimulationResult
 
 # Create a new system
 system = System()
 
 
 # Define the cosine signal
+# pylint does not recognize the modifications to the signal_function decorator
+# pylint: disable=no-value-for-parameter
 @signal_function(shape=1)
 def cosine_input(system_state):
     """Calculate the value of the input signal"""
@@ -30,10 +32,10 @@ result = SimulationResult(system, simulator.run_until(time_boundary=10.0))
 
 # Plot the result
 input_line, integrator_line = \
-    plt.plot(result.time, cosine_input(result), "r",
-             result.time, integrator_state(result)[0], "g")
-plt.legend((input_line, integrator_line), ("Input", "Integrator State"))
-plt.title("Integrator")
-plt.xlabel("Time")
-plt.savefig("01_integrator_simulation.png")
+    plt.plot(result.time, cosine_input(result), 'r',
+             result.time, integrator_state(result)[0], 'g')
+plt.legend((input_line, integrator_line), ('Input', 'Integrator State'))
+plt.title('Integrator')
+plt.xlabel('Time')
+plt.savefig('01_integrator_simulation.png')
 plt.show()

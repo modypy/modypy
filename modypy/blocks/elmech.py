@@ -4,7 +4,7 @@ A collection fo electro-mechanical blocks.
 
 import math
 
-from modypy.model import Block, Port, State, SignalState, signal_method
+from modypy.model import Block, Port, SignalState, State, signal_method
 
 
 class DCMotor(Block):
@@ -56,15 +56,13 @@ class DCMotor(Block):
         self.inductance = inductance
         self.moment_of_inertia = moment_of_inertia
 
-        self.voltage = Port(shape=1)
-        self.external_torque = Port(shape=1)
+        self.voltage = Port()
+        self.external_torque = Port()
 
         self.omega = State(self,
-                           shape=1,
                            derivative_function=self.omega_dot,
                            initial_condition=initial_omega)
         self.current = SignalState(self,
-                                   shape=1,
                                    derivative_function=self.current_dot,
                                    initial_condition=initial_current)
 

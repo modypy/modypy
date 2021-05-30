@@ -117,8 +117,8 @@ size of 0\.1 seconds.
 
     # Plot the result
     alpha_line, omega_line = \
-        plt.plot(result.time, alpha(result)[0], "r",
-                 result.time, omega(result)[0], "g")
+        plt.plot(result.time, alpha(result), "r",
+                 result.time, omega(result), "g")
     plt.legend((alpha_line, omega_line), ("Alpha", "Omega"))
     plt.title("Pendulum")
     plt.xlabel("Time")

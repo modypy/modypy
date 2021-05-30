@@ -132,7 +132,7 @@ Now we can run a simulation again:
                               simulator.run_until(time_boundary=8))
 
     # Plot the result
-    plt.plot(result.time, height(result)[0])
+    plt.plot(result.time, height(result))
     plt.title("Bouncing Ball")
     plt.xlabel("Time")
     plt.savefig("04_bouncing_ball_simulation_full.png")

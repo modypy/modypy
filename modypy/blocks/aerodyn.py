@@ -4,7 +4,6 @@ A collection of blocks useful for aerodynamics.
 import math
 
 import numpy as np
-
 from modypy.model import Block, Port, signal_method
 
 
@@ -57,8 +56,8 @@ class Propeller(Block):
         self.power_coefficient = power_coefficient
         self.diameter = diameter
 
-        self.speed_rps = Port(shape=1)
-        self.density = Port(shape=1)
+        self.speed_rps = Port()
+        self.density = Port()
 
     @signal_method
     def thrust(self, data):
@@ -127,9 +126,11 @@ class Thruster(Block):
         self.arm = arm
         self.direction = direction
 
-        self.scalar_thrust = Port(shape=1)
-        self.scalar_torque = Port(shape=1)
+        self.scalar_thrust = Port()
+        self.scalar_torque = Port()
 
+    # pylint does not recognize the modifications to the signal_method decorator
+    # pylint: disable=no-value-for-parameter
     @signal_method(shape=3)
     def thrust_vector(self, data):
         """Function used to calculate the ``thrust_vector`` output
@@ -138,6 +139,8 @@ class Thruster(Block):
         thrust_vector = self.vector * thrust
         return thrust_vector
 
+    # pylint does not recognize the modifications to the signal_method decorator
+    # pylint: disable=no-value-for-parameter
     @signal_method(shape=3)
     def torque_vector(self, data):
         """Function used to calculate the ``torque_vector`` output

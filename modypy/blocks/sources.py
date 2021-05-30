@@ -1,6 +1,5 @@
 """Provides some simple source blocks"""
 import numpy as np
-
 from modypy.model import Signal
 
 
@@ -15,6 +14,5 @@ def constant(value):
       A signal with the required constant value
     """
 
-    value = np.atleast_1d(value)
-    return Signal(shape=value.shape,
+    return Signal(shape=np.shape(value),
                   value=value)

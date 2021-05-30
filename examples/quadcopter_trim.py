@@ -30,8 +30,8 @@ class Engine(Block):
         Block.__init__(self, parent)
 
         # Create ports for the motor voltage and the air density
-        self.voltage = Port(shape=1)
-        self.density = Port(shape=1)
+        self.voltage = Port()
+        self.density = Port()
 
         # Create the motor
         self.dcmotor = DCMotor(self,
