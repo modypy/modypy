@@ -8,3 +8,5 @@ include requirements*.txt
 include tox.ini
 global-exclude .coverage *.py[cod]
 recursive-exclude examples *.png
+include versioneer.py
+include modypy/_version.py
