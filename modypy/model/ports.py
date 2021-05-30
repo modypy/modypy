@@ -62,7 +62,7 @@ class Port:
         self._reference = value
 
     @property
-    def signal(self) -> Optional['Port']:
+    def signal(self) -> Optional["Port"]:
         """The signal referenced by this port or ``None`` if this port is not
         connected to any signal."""
         if self._reference is not self:
@@ -82,11 +82,10 @@ class Port:
         """
         if self.shape != other.shape:
             # It is an error if the shapes of the ports do not match.
-            raise ShapeMismatchError('Shape (%s) of left port does not match '
-                                     'shape (%s) of right port' % (
-                                         self.shape,
-                                         other.shape
-                                     ))
+            raise ShapeMismatchError(
+                "Shape (%s) of left port does not match "
+                "shape (%s) of right port" % (self.shape, other.shape)
+            )
         if self.signal is not None and other.signal is not None:
             # Both ports are already connected to a signal.
             # It is an error if they are not connected to the same signal.
@@ -130,7 +129,7 @@ class Signal(AbstractSignal):
     """A signal is a port for which the value is defined by a callable or a
     constant."""
 
-    def __init__(self, value=0, *args, **kwargs):
+    def __init__(self, *args, value=0, **kwargs):
         super().__init__(*args, **kwargs)
         self.value = value
 
@@ -165,7 +164,7 @@ def decorator(func):
 @decorator
 def signal_function(user_function, *args, **kwargs):
     """Transform a function into a ``Signal``"""
-    the_signal = Signal(user_function, *args, **kwargs)
+    the_signal = Signal(*args, value=user_function, **kwargs)
 
     # Be a well-behaved decorator by copying name, documentation and attributes
     the_signal.__doc__ = user_function.__doc__
@@ -195,11 +194,14 @@ def signal_method(user_function, *args, **kwargs):
         def __get__(self, instance, owner):
             if instance is None:
                 return self
-            signal_name = '__signal_%s' % self.name
+            signal_name = "__signal_%s" % self.name
             the_signal = getattr(instance, signal_name, None)
             if the_signal is None:
-                the_signal = Signal(self.function.__get__(instance, owner),
-                                    *args, **kwargs)
+                the_signal = Signal(
+                    *args,
+                    value=self.function.__get__(instance, owner),
+                    **kwargs
+                )
                 the_signal.__name__ = self.function.__name__
                 the_signal.__doc__ = self.function.__doc__
                 the_signal.__dict__.update(self.function.__dict__)
@@ -232,16 +234,14 @@ class InputSignal(AbstractSignal):
         """A slice object that represents the indices of this input in the
         inputs vector."""
 
-        return slice(self.input_index,
-                     self.input_index + self.size)
+        return slice(self.input_index, self.input_index + self.size)
 
     @property
     def input_range(self):
         """A range object that represents the indices of this input in the
         inputs vector."""
 
-        return range(self.input_index,
-                     self.input_index + self.size)
+        return range(self.input_index, self.input_index + self.size)
 
     def __call__(self, system_state):
         return system_state.get_input_value(self)

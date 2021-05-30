@@ -9,7 +9,7 @@
 
 # Add files or directories to the blacklist. They should be base names, not
 # paths.
-ignore=third_party
+ignore=third_party,_version.py
 
 # Add files or directories matching the regex patterns to the blacklist. The
 # regex matches against base names, not paths.
@@ -56,8 +56,6 @@ confidence=
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
-# For the time being, we will deactivate unsubscriptable-object, as it seems to
-# be erroneously reported with type hints.
 disable=abstract-method,
         apply-builtin,
         arguments-differ,
@@ -91,6 +89,7 @@ disable=abstract-method,
         inconsistent-return-statements,
         input-builtin,
         intern-builtin,
+        invalid-name,
         invalid-str-codec,
         locally-disabled,
         long-builtin,

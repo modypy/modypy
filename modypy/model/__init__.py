@@ -1,5 +1,14 @@
-from .events import EventPort, Clock, ZeroCrossEventSource
-from .ports import Port, Signal, InputSignal, signal_method, signal_function, \
-    ShapeMismatchError, MultipleSignalsError, PortNotConnectedError
-from .states import State, SignalState
-from .system import System, Block, SystemState
+"""Declarations for creation of models"""
+from .events import Clock, EventPort, ZeroCrossEventSource
+from .ports import (
+    InputSignal,
+    MultipleSignalsError,
+    Port,
+    PortNotConnectedError,
+    ShapeMismatchError,
+    Signal,
+    signal_function,
+    signal_method,
+)
+from .states import SignalState, State
+from .system import Block, System, SystemState

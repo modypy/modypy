@@ -1,3 +1,4 @@
+# pylint: disable=redefined-outer-name,missing-module-docstring
 import numpy as np
 import pytest
 from fixtures.models import (
@@ -21,22 +22,21 @@ def interpolation_order(request):
 
 
 @pytest.mark.parametrize(
-    'param',
+    "param",
     [
         # 1 input, 1 output, 1 state
         first_order_lag(time_constant=1, initial_value=10),
-
         # no input, with state
         first_order_lag_no_input(time_constant=1, initial_value=10),
-
         # 1 input, 2 states, 1 output
-        damped_oscillator(mass=100,
-                          spring_coefficient=1.,
-                          damping_coefficient=20),   # critically damped
-        damped_oscillator(mass=100,
-                          spring_coefficient=0.5,
-                          damping_coefficient=20),  # overdamped
-    ])
+        damped_oscillator(
+            mass=100, spring_coefficient=1.0, damping_coefficient=20
+        ),  # critically damped
+        damped_oscillator(
+            mass=100, spring_coefficient=0.5, damping_coefficient=20
+        ),  # overdamped
+    ],
+)
 def test_lti_linearization(param, interpolation_order):
     system, lti, _, outputs = param
 
@@ -53,16 +53,17 @@ def test_lti_linearization(param, interpolation_order):
     assert sol.state.size == system.num_states
     assert sol.inputs.size == system.num_inputs
 
-    npt.assert_allclose(system.state_derivative(sol.system_state),
-                        np.zeros(system.num_states),
-                        rtol=0,
-                        atol=1E-5)
+    npt.assert_allclose(
+        system.state_derivative(sol.system_state),
+        np.zeros(system.num_states),
+        rtol=0,
+        atol=1e-5,
+    )
 
     # Set up the configuration for linearization at the steady state
-    jacobian_config = LinearizationConfiguration(system,
-                                                 time=0,
-                                                 state=sol.state,
-                                                 inputs=sol.inputs)
+    jacobian_config = LinearizationConfiguration(
+        system, time=0, state=sol.state, inputs=sol.inputs
+    )
     # Set up the single LTI output
     output = OutputDescriptor(jacobian_config, lti.output)
     jacobian_config.interpolation_order = interpolation_order
@@ -75,30 +76,32 @@ def test_lti_linearization(param, interpolation_order):
     npt.assert_almost_equal(B, np.atleast_2d(lti.input_matrix))
     npt.assert_almost_equal(C, np.atleast_2d(lti.output_matrix))
     npt.assert_almost_equal(D, np.atleast_2d(lti.feed_through_matrix))
-    npt.assert_almost_equal(C[output.output_slice],
-                            np.atleast_2d(lti.output_matrix))
-    npt.assert_almost_equal(D[output.output_slice],
-                            np.atleast_2d(lti.feed_through_matrix))
+    npt.assert_almost_equal(
+        C[output.output_slice], np.atleast_2d(lti.output_matrix)
+    )
+    npt.assert_almost_equal(
+        D[output.output_slice], np.atleast_2d(lti.feed_through_matrix)
+    )
 
     # Get the full jacobian
-    jac = system_jacobian(jacobian_config,
-                          single_matrix=True)
-    A = jac[:system.num_states, :system.num_states]
-    B = jac[:system.num_states, system.num_states:]
-    C = jac[system.num_states:, :system.num_states]
-    D = jac[system.num_states:, system.num_states:]
+    jac = system_jacobian(jacobian_config, single_matrix=True)
+    A = jac[: system.num_states, : system.num_states]
+    B = jac[: system.num_states, system.num_states :]
+    C = jac[system.num_states :, : system.num_states]
+    D = jac[system.num_states :, system.num_states :]
     npt.assert_almost_equal(A, np.atleast_2d(lti.system_matrix))
     npt.assert_almost_equal(B, np.atleast_2d(lti.input_matrix))
     npt.assert_almost_equal(C, np.atleast_2d(lti.output_matrix))
     npt.assert_almost_equal(D, np.atleast_2d(lti.feed_through_matrix))
-    npt.assert_almost_equal(C[output.output_slice],
-                            np.atleast_2d(lti.output_matrix))
-    npt.assert_almost_equal(D[output.output_slice],
-                            np.atleast_2d(lti.feed_through_matrix))
+    npt.assert_almost_equal(
+        C[output.output_slice], np.atleast_2d(lti.output_matrix)
+    )
+    npt.assert_almost_equal(
+        D[output.output_slice], np.atleast_2d(lti.feed_through_matrix)
+    )
 
     # Set up the configuration for linearization at default input and state
-    jacobian_config_def = LinearizationConfiguration(system,
-                                                     time=0)
+    jacobian_config_def = LinearizationConfiguration(system, time=0)
     # Set up the single LTI output
     output = OutputDescriptor(jacobian_config_def, lti.output)
     jacobian_config_def.interpolation_order = interpolation_order
@@ -111,27 +114,37 @@ def test_lti_linearization(param, interpolation_order):
     npt.assert_almost_equal(B, np.atleast_2d(lti.input_matrix))
     npt.assert_almost_equal(C, np.atleast_2d(lti.output_matrix))
     npt.assert_almost_equal(D, np.atleast_2d(lti.feed_through_matrix))
-    npt.assert_almost_equal(C[output.output_slice],
-                            np.atleast_2d(lti.output_matrix))
-    npt.assert_almost_equal(D[output.output_slice],
-                            np.atleast_2d(lti.feed_through_matrix))
+    npt.assert_almost_equal(
+        C[output.output_slice], np.atleast_2d(lti.output_matrix)
+    )
+    npt.assert_almost_equal(
+        D[output.output_slice], np.atleast_2d(lti.feed_through_matrix)
+    )
 
     # Linearize the system, but get the structure
-    jacobian = system_jacobian(jacobian_config_def, single_matrix='struct')
+    jacobian = system_jacobian(jacobian_config_def, single_matrix="struct")
 
     # Check the matrices
-    npt.assert_almost_equal(jacobian.system_matrix,
-                            np.atleast_2d(lti.system_matrix))
-    npt.assert_almost_equal(jacobian.input_matrix,
-                            np.atleast_2d(lti.input_matrix))
-    npt.assert_almost_equal(jacobian.output_matrix,
-                            np.atleast_2d(lti.output_matrix))
-    npt.assert_almost_equal(jacobian.feed_through_matrix,
-                            np.atleast_2d(lti.feed_through_matrix))
-    npt.assert_almost_equal(jacobian.output_matrix[output.output_slice],
-                            np.atleast_2d(lti.output_matrix))
-    npt.assert_almost_equal(jacobian.feed_through_matrix[output.output_slice],
-                            np.atleast_2d(lti.feed_through_matrix))
+    npt.assert_almost_equal(
+        jacobian.system_matrix, np.atleast_2d(lti.system_matrix)
+    )
+    npt.assert_almost_equal(
+        jacobian.input_matrix, np.atleast_2d(lti.input_matrix)
+    )
+    npt.assert_almost_equal(
+        jacobian.output_matrix, np.atleast_2d(lti.output_matrix)
+    )
+    npt.assert_almost_equal(
+        jacobian.feed_through_matrix, np.atleast_2d(lti.feed_through_matrix)
+    )
+    npt.assert_almost_equal(
+        jacobian.output_matrix[output.output_slice],
+        np.atleast_2d(lti.output_matrix),
+    )
+    npt.assert_almost_equal(
+        jacobian.feed_through_matrix[output.output_slice],
+        np.atleast_2d(lti.feed_through_matrix),
+    )
 
 
 def test_empty_system():

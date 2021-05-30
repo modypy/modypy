@@ -2,12 +2,10 @@
 Provides functions to determine the jacobi matrix for linearizing the system
 around a given state with specified inputs.
 """
-from typing import List
-
 import numpy as np
-from scipy.misc import central_diff_weights
-
 from modypy.model import Port, System, SystemState
+from scipy.misc import central_diff_weights
+from typing import List
 
 
 class LinearizationConfiguration:
@@ -41,11 +39,7 @@ class LinearizationConfiguration:
 
     """
 
-    def __init__(self,
-                 system: System,
-                 time=0,
-                 state=None,
-                 inputs=None):
+    def __init__(self, system: System, time=0, state=None, inputs=None):
         self.system = system
         self.time = time
 
@@ -98,8 +92,7 @@ class OutputDescriptor:
         return slice(self.output_index, self.port.size)
 
 
-def system_jacobian(config: LinearizationConfiguration,
-                    single_matrix=False):
+def system_jacobian(config: LinearizationConfiguration, single_matrix=False):
     """Numerically determine the jacobian of the system at the given state and
     input setting.
 
@@ -141,9 +134,10 @@ def system_jacobian(config: LinearizationConfiguration,
     x_ref0 = np.concatenate((config.state, config.inputs), axis=None)
 
     for var_ind in range(num_invars):
-        x_step = config.default_step_size * np.eye(N=1,
-                                                   M=num_invars,
-                                                   k=var_ind).ravel()
+        x_step = (
+            config.default_step_size
+            * np.eye(N=1, M=num_invars, k=var_ind).ravel()
+        )
         for k in range(config.interpolation_order):
             x_k = x_ref0 + (k - half_offset) * x_step
             y_k = _system_function(config, x_k)
@@ -151,34 +145,46 @@ def system_jacobian(config: LinearizationConfiguration,
         jac[:, var_ind] /= config.default_step_size
 
     if single_matrix == "struct":
-        system_matrix = jac[:config.system.num_states,
-                            :config.system.num_states]
-        input_matrix = jac[:config.system.num_states,
-                           config.system.num_states:]
-        output_matrix = jac[config.system.num_states:,
-                            :config.system.num_states]
-        feed_through_matrix = jac[config.system.num_states:,
-                                  config.system.num_states:]
-        return SystemJacobian(config=config,
-                              system_matrix=system_matrix,
-                              input_matrix=input_matrix,
-                              output_matrix=output_matrix,
-                              feed_through_matrix=feed_through_matrix)
+        system_matrix = jac[
+            : config.system.num_states, : config.system.num_states
+        ]
+        input_matrix = jac[
+            : config.system.num_states, config.system.num_states :
+        ]
+        output_matrix = jac[
+            config.system.num_states :, : config.system.num_states
+        ]
+        feed_through_matrix = jac[
+            config.system.num_states :, config.system.num_states :
+        ]
+        return SystemJacobian(
+            config=config,
+            system_matrix=system_matrix,
+            input_matrix=input_matrix,
+            output_matrix=output_matrix,
+            feed_through_matrix=feed_through_matrix,
+        )
     if single_matrix:
         return jac
-    return jac[:config.system.num_states, :config.system.num_states], \
-        jac[:config.system.num_states, config.system.num_states:], \
-        jac[config.system.num_states:, :config.system.num_states], \
-        jac[config.system.num_states:, config.system.num_states:]
+    return (
+        jac[: config.system.num_states, : config.system.num_states],
+        jac[: config.system.num_states, config.system.num_states :],
+        jac[config.system.num_states :, : config.system.num_states],
+        jac[config.system.num_states :, config.system.num_states :],
+    )
 
 
 class SystemJacobian:
-    def __init__(self,
-                 config: LinearizationConfiguration,
-                 system_matrix,
-                 input_matrix,
-                 output_matrix,
-                 feed_through_matrix):
+    """Represents the results of linearisation"""
+
+    def __init__(
+        self,
+        config: LinearizationConfiguration,
+        system_matrix,
+        input_matrix,
+        output_matrix,
+        feed_through_matrix,
+    ):
         self.config = config
         self.system_matrix = system_matrix
         self.input_matrix = input_matrix
@@ -217,18 +223,19 @@ def _system_function(config: LinearizationConfiguration, x_ref):
     Returns:
         The vector of state derivatives and outputs
     """
-    state = x_ref[:config.system.num_states]
-    inputs = x_ref[config.system.num_states:]
+    state = x_ref[: config.system.num_states]
+    inputs = x_ref[config.system.num_states :]
 
-    system_state = SystemState(time=config.time,
-                               system=config.system,
-                               state=state,
-                               inputs=inputs)
+    system_state = SystemState(
+        time=config.time, system=config.system, state=state, inputs=inputs
+    )
 
     outputs = np.zeros(config.num_outputs)
     for output in config.outputs:
-        outputs[output.output_index:output.output_index + output.port.size] = \
-            np.ravel(output.port(system_state))
+        outputs[
+            output.output_index : output.output_index + output.port.size
+        ] = np.ravel(output.port(system_state))
 
-    return np.concatenate((config.system.state_derivative(system_state),
-                           outputs))
+    return np.concatenate(
+        (config.system.state_derivative(system_state), outputs)
+    )
