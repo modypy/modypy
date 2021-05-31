@@ -43,7 +43,7 @@ To install the development version,
 
 .. code-block:: bash
 
-  $ git clone https://github.com/ralfgerlich/modypy.git
+  $ git clone https://github.com/modypy/modypy.git
   $ pip install -e modypy
 
 Examples
@@ -86,17 +86,17 @@ Contributing
 ------------
 
 Contributions are welcome! Check out the
-`GitHub Project Page <https://github.com/ralfgerlich/modypy>`_ for issues and
+`GitHub Project Page <https://github.com/modypy/modypy>`_ for issues and
 ideas on how to add to the project.
 
 Contributions must adhere to the following conditions:
 
-- New features must be accompanied by appropriate pytest tests.
+- New features must be accompanied by appropriate pytest tests (ensure 100%
+  statement *and* branch coverage!)
 - New features should at least carry Python Docstrings for API documentation
   following the general style of the existing API documentation.
-- Coding style should adhere to
-  `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_ as per the settings of the
-  ``pylintrc`` file in the project directory.
+- Use `black <https://pypi.org/project/black/>`_ with a line-length of 80 to
+  format your code. We are successively moving the project to the black style.
 - Contributors must accept publishing their contribution under the licensing
   conditions laid out in the ``LICENSE`` file.
 

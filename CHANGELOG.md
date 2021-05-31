@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [3.0.0rc2 - 2021-05-31]
 ### Changed
 - Updated the documentation regarding the changes in the default shape of
-  signals and states
+  signals and states, as well as the new coding style and the new github and
+  documentation URLs.
 
 ## [3.0.0rc1 - 2021-05-30]
 ### Added

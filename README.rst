@@ -37,7 +37,7 @@ The basic components of a dynamic system in MoDyPy are states and signals.
 States represent the internal state of the system, and signals represent the
 values calculated based on the state. Ports can be connected to signals, so that
 reusable blocks with input and output ports can be easily built. For more
-details refer to the `documentation <https://modypy.org/>`_.
+details refer to the `documentation <https://docs.modypy.org/>`_.
 
 Main Features
 -------------
@@ -64,7 +64,7 @@ To install the development version,
 
 .. code-block:: bash
 
-  $ git clone https://github.com/ralfgerlich/modypy.git
+  $ git clone https://github.com/modypy/modypy.git
   $ pip install -e modypy
 
 Examples
@@ -77,19 +77,19 @@ Examples
     Simulation of a DC-motor with propeller
 
 Check out the examples in the
-`examples directory <https://github.com/ralfgerlich/modypy/tree/master/examples>`_
-and the `User's Guide <https://modypy.org/>`_. These include:
+`examples directory <https://github.com/modypy/modypy/tree/master/examples>`_
+and the `User's Guide <https://docs.modypy.org/>`_. These include:
 
-`dcmotor.py <https://github.com/ralfgerlich/modypy/tree/master/examples/dcmotor.py>`_
+`dcmotor.py <https://github.com/modypy/modypy/tree/master/examples/dcmotor.py>`_
     A simple example using a DC-motor driving a propeller and sampling the
     thrust using a zero-order hold.
-`rigidbody.py <https://github.com/ralfgerlich/modypy/tree/master/examples/rigidbody.py>`_
+`rigidbody.py <https://github.com/modypy/modypy/tree/master/examples/rigidbody.py>`_
     Some rigid-body simulation using moments and forces showing an object
     moving in a circle with constant velocity and turn-rate.
-`bouncing_ball.py <https://github.com/ralfgerlich/modypy/tree/master/examples/bouncing_ball.py>`_
+`bouncing_ball.py <https://github.com/modypy/modypy/tree/master/examples/bouncing_ball.py>`_
     An example modelling a bouncing ball, demonstrating the use of events and
     event-handler functions.
-`quadcopter_trim.py <https://github.com/ralfgerlich/modypy/tree/master/examples/quadcopter_trim.py>`_
+`quadcopter_trim.py <https://github.com/modypy/modypy/tree/master/examples/quadcopter_trim.py>`_
     A larger example showcasing the steady-state-determination and linearisation
     of complex systems, in this case for a quadrocopter frame with four
     DC-motors with propellers.
@@ -108,16 +108,16 @@ Contributing
 ------------
 
 Contributions are welcome! Check out the
-`GitHub Project Page <https://github.com/ralfgerlich/modypy>`_ for issues and
+`GitHub Project Page <https://github.com/modypy/modypy>`_ for issues and
 ideas on how to add to the project.
 
 Contributions must adhere to the following conditions:
 
-- New features must be accompanied by appropriate pytest tests.
+- New features must be accompanied by appropriate pytest tests (ensure 100%
+  statement *and* branch coverage!)
 - New features should at least carry Python Docstrings for API documentation
   following the general style of the existing API documentation.
-- Coding style should adhere to
-  `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_ as per the settings of the
-  ``pylintrc`` file in the project directory.
+- Use `black <https://pypi.org/project/black/>`_ with a line-length of 80 to
+  format your code. We are successively moving the project to the black style.
 - Contributors must accept publishing their contribution under the licensing
   conditions laid out in the ``LICENSE`` file.
