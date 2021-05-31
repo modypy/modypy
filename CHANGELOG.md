@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated the documentation regarding the changes in the default shape of
   signals and states, as well as the new coding style and the new github and
   documentation URLs.
+## Fixed
+- Removed _version.py from coverage measurements, as it is actually not our own
+  code, is replaced by a very simple piece of code in releases and is not well
+  covered by tests.
 
 ## [3.0.0rc1 - 2021-05-30]
 ### Added

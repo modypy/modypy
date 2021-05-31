@@ -12,6 +12,6 @@ install:
    - pip install pytest-cov
    - pip install -e .
 script:
-   - pytest --cov-report=xml --cov-branch --cov=modypy
+   - pytest --cov=modypy --cov-config=.coveragerc --cov-report=xml
 after_success:
    - bash <(curl -s https://codecov.io/bash)
