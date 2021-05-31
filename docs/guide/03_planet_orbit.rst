@@ -67,7 +67,7 @@ Again, we first import the required modules:
     from modypy.model import System, State
     from modypy.simulation import Simulator, SimulationResult
 
-We will need ``numpy.linalg`` to determine the norm of the position vector.
+We will need :mod:`numpy.linalg` to determine the norm of the position vector.
 
 Following that we will define the system parameters and the initial states:
 
@@ -113,7 +113,7 @@ Now let us define the system, its states and state derivatives:
 
 The main thing that changed from the previous examples is that now our states
 are two-dimensional.
-In that case, ``modypy`` will provide their values as actual ``numpy`` arrays or
+In that case, MoDyPy will provide their values as actual NumPy arrays or
 vectors in this case.
 
 Running the Simulation

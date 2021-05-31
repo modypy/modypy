@@ -5,7 +5,7 @@ In the previous examples in this guide we only used continuous-time simulation.
 However, MoDyPy is also capable of modelling systems that mix continuous-
 and discrete-time elements.
 The discrete-time elements are modelled using clocks and states that do not have
-a derivative function, but which are instead updated as a reaction to events --
+a derivative function, but which are instead updated as a reaction to events ---
 either from a clock or from a zero-crossing event source.
 
 In the preceding example we modelled a DC-engine with a propeller.

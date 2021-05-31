@@ -32,9 +32,9 @@ so we will have the new velocity after the bounce as follows:
 
 Here, :math:`\delta` is the coefficient of restitution.
 
-We define the time when the ball hits the ground as the time when
-:math:`h\left(t\right)=0`.
-Put another way, the event occurs as :math:`h\left(t\right)` crosses the zero.
+We define the time when the ball hits the ground as the time when the sign of
+:math:`h\left(t\right)` changes from positive to negative, i.e., when it
+crosses zero while decreasing.
 This is why we call this a *zero-crossing event*.
 
 Defining our System
@@ -92,7 +92,7 @@ But now we define our bounce-event:
 
 The function ``bounce_event_function`` is defined in such a way so that its
 value changes its sign exactly when our ball hits the ground (we assume that our
-ball is infinitely small -- we do physics after all).
+ball is infinitely small --- we do physics after all).
 To achieve that, we simply use the height for the event function value.
 
 The parameter ``direction`` tells the simulator that only changes from positive
@@ -152,7 +152,7 @@ Simplifying
 -----------
 
 Our example is a special case in that our event function has the same value as
-a state in our system - namely, the height.
+a state in our system --- namely, the height.
 As our states are callable using the same interface as the event functions, we
 can simply drop the `bounce_event_function` and simply use the `height` state
 in its place:

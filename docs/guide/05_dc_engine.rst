@@ -172,7 +172,7 @@ There are three major difference to what we did earlier when defining states:
 
 We need some way to determine the input voltage and the external load
 acting on the motor axle.
-We do that by introducing two :class:`port <modypy.model.ports.Port>` instances.
+We do that by introducing two :class:`Port <modypy.model.ports.Port>` instances.
 Ports are place-holder objects that can be connected to signals.
 We will use them to access the value of whatever signal will be connected to
 them later.
@@ -291,8 +291,8 @@ We will interconnect the DC-motor and the propeller internally, by providing the
 speed of the DC-motor to the propeller as its turning speed and by providing the
 torque load of the propeller as external load to the DC-motor.
 
-For our engine block, we first create the elements -- the motor and the propeller
--- and make everything visible to the outside that needs to be:
+For our engine block, we first create the elements --- the motor and the propeller
+--- and make everything visible to the outside that needs to be:
 
 .. code-block:: python
 

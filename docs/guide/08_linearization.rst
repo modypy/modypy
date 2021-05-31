@@ -55,8 +55,8 @@ Running the example again, we get this output:
 
     Target height: 5.000000
     Steady state height: 5.000000
-    Steady state inflow: 19.809153
-    Steady state derivative: [3.22346662e-06]
+    Steady state inflow: 19.809089
+    Steady state height derivative: -0.000000
     Theoretical steady state inflow: 19.809089
     Linearization at steady-state point:
     A=[[-0.0990504]]
@@ -101,3 +101,12 @@ This allows for a bit more readable code:
     print("input_matrix=%s" % jacobian.input_matrix)
     print("output_matrix=%s" % jacobian.output_matrix)
     print("feed_through_matrix=%s" % jacobian.feed_through_matrix)
+
+The output should not be very much surprising:
+
+.. code-block::
+
+    system_matrix=[[-0.0990504]]
+    input_matrix=[[0.05]]
+    output_matrix=[[1.]]
+    feed_through_matrix=[[0.]]

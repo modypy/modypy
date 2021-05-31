@@ -56,7 +56,7 @@ turn it into a signal:
 .. code-block:: python
 
     # Define the cosine signal
-    @signal_function(shape=1)
+    @signal_function
     def cosine_input(system_state):
         """Calculate the value of the input signal"""
         return np.cos(system_state.time)
@@ -74,18 +74,23 @@ additional information and functionality over normal callables.
 In order to turn our function into a signal instance, we use the
 :func:`signal_function <modypy.model.ports.signal_function>` decorator.
 
+As we will see in later steps of this guide, signals can be scalar --- as in our
+case --- or they can be multi-dimensional with a defined
+`shape <https://numpy.org/devdocs/reference/arrays.ndarray.html>`_.
+The default --- as created by the
+:func:`signal_function <modypy.model.ports.signal_function>` decorator, however,
+is a `scalar <https://numpy.org/doc/stable/reference/arrays.scalars.html>`,
+which has the empty shape `()`.
+
 Now we need to create the integrator.
 We can simply specify the signal we just created as the derivative function:
 
 .. code-block:: python
 
     integrator_state = State(system,
-                             shape=1,
                              derivative_function=cosine_input)
 
-The state itself also is a scalar, so it has the same shape as our signal.
-Note that signals and states by default are scalar, so you could as well remove
-the ``shape`` parameter.
+As for signals, a state may have a shape, and the default shape is the scalar.
 
 The ``derivative_function`` is the callable that gives our time derivative of
 our state.
@@ -112,15 +117,12 @@ samples:
 
 .. code-block:: python
 
-    time=0.0 cosine_input=1.0 integrator_state=[0.]
-    time=9.999999999999999e-05 cosine_input=0.999999995 integrator_state=[9.99999998e-05]
-    time=0.0011 cosine_input=0.999999395000061 integrator_state=[0.0011]
-    time=0.0111 cosine_input=0.9999383956325267 integrator_state=[0.01109977]
-    time=0.1111 cosine_input=0.9938347405067498 integrator_state=[0.11087159]
-    time=1.1111 cosine_input=0.44367597936596415 integrator_state=[0.89618727]
-    time=4.512648865706943 cosine_input=-0.19841461917041545 integrator_state=[-0.98015265]
-    time=7.830624150908611 cosine_input=0.02335535925895628 integrator_state=[0.99972234]
-    time=10.0 cosine_input=-0.8390715290764524 integrator_state=[-0.54402658]
+    for state in simulator.run_until(time_boundary=10.0):
+        print("time=%.7f cosine_input=%f integrator_state=%f" % (
+            state.time,
+            cosine_input(state),
+            integrator_state(state)
+        ))
 
 The ``time_boundary`` parameter gives the time until that the simulation should
 be run, which in our case are 10 time-units.
@@ -138,15 +140,15 @@ This should give us a long output similar to this:
 
 .. code-block::
 
-    time=0.0 cosine_input=1.0 integrator_state=[0.]
-    time=9.999999999999999e-05 cosine_input=0.999999995 integrator_state=[9.99999998e-05]
-    time=0.00020000000033333328 cosine_input=0.99999998 integrator_state=[0.0002]
-    time=0.0004000000033333331 cosine_input=0.9999999199999997 integrator_state=[0.0004]
-    time=0.0008000000280000011 cosine_input=0.9999996799999946 integrator_state=[0.0008]
-    ...
-    time=9.968455855495531 cosine_input=-0.8558119465073212 integrator_state=[-0.51728707]
-    time=9.987558178155167 cosine_input=-0.8457750253402622 integrator_state=[-0.5335397]
-    time=10.0 cosine_input=-0.8390715290764524 integrator_state=[-0.54402111]
+    time=0.0000000 cosine_input=1.000000 integrator_state=0.000000
+    time=0.0001000 cosine_input=1.000000 integrator_state=0.000100
+    time=0.0011000 cosine_input=0.999999 integrator_state=0.001100
+    time=0.0111000 cosine_input=0.999938 integrator_state=0.011100
+    time=0.1111000 cosine_input=0.993835 integrator_state=0.110872
+    time=1.1111000 cosine_input=0.443676 integrator_state=0.896187
+    time=4.5126489 cosine_input=-0.198415 integrator_state=-0.980153
+    time=7.8306242 cosine_input=0.023355 integrator_state=0.999722
+    time=10.0000000 cosine_input=-0.839072 integrator_state=-0.544027
 
 However, that's not very informative and also quite boring, so we'd rather have
 a plot of all of this.
@@ -159,9 +161,9 @@ One way of doing that is to use a
 :class:`SimulationResult <modypy.simulation.SimulationResult>` object, which can
 be used in place of a system state object to access signals, states, etc.
 
-However, simply re-running `run_until` with the same boundary now would just
-give us the most recent sample, as the simulation time of the simulator has
-already advanced to our time limit.
+However, simply re-running `run_until` with the same boundary now would not give
+us any data, as the simulation time of the simulator has already advanced to our
+time limit.
 
 So, let's remove the code for dumping all the data to the console and instead
 use the following code:
@@ -174,7 +176,7 @@ use the following code:
     # Plot the result
     input_line, integrator_line = \
         plt.plot(result.time, cosine_input(result), "r",
-                 result.time, integrator_state(result)[0], "g")
+                 result.time, integrator_state(result), "g")
     plt.legend((input_line, integrator_line), ("Input", "Integrator State"))
     plt.title("Integrator")
     plt.xlabel("Time")
@@ -195,7 +197,7 @@ That looks a bit rough around the edges.
 The reason is simple:
 The simulator works using numerical approximations, and chooses the step size as
 large as possible without the numerical error exceeding a given threshold.
-In case of our example, this step size can be pretty large - one of the steps
+In case of our example, this step size can be pretty large --- one of the steps
 covers nearly 4 time units in the graph.
 
 However, if we wanted the output a bit finer, we could just add a `max_step`
@@ -227,14 +229,15 @@ time series of the values of that state or signal over the time of the
 simulation.
 
 That time series is essentially an array of state or signal values with shape
-``(n,k)``, where ``n`` is the shape of the original state or signal, and ``k``
+`n+(k,)`, where `n` is the shape of the original state or signal, and `k`
 is the number of samples in time that the simulation has produced.
 The sampling timestamp for each of the samples can be found in the ``time``
 property, which is a one-dimensional array with the index being the
 sample-index.
 
-In the example above, we plot both the input signal and the integrator state
-against time.
+In the example above, the shape of the input signal and the integrator state are
+the empty list `()`, so the respective time series are simply vectors.
+Thus, we can easily plot both against time.
 If we wanted, we could do other things with these results, such as checking the
 performance of a controller we built against control performance constraints and
 many other things.

@@ -96,12 +96,9 @@ depended on the input signal.
 Here, each of the derivative functions depends on the value of the respective
 other state.
 
-States are callables that accept a system state object as their single
-parameter.
-If called that way, the return value is the value of the state or a time series
-of the values of the state, depending on the kind of system state object.
-Note that for time series in modypy, the last index iterates over the different
-points in time!
+As states are callables that accept a a system state object as their single
+parameter, we can directly use them as derivative function --- as we do in this
+example for the ``omega`` state.
 
 Running the Simulation
 ----------------------

@@ -180,8 +180,8 @@ Running this code should give us the following output:
 
     Target height: 5.000000
     Steady state height: 5.000000
-    Steady state inflow: 19.809153
-    Steady state derivative: [3.22346662e-06]
+    Steady state inflow: 19.809089
+    Steady state height derivative: -0.000000
     Theoretical steady state inflow: 19.809089
 
 We see that the determined and the theoretical inflow coincide and that the
@@ -192,6 +192,6 @@ Playing around with the target height we get different values:
 
     Target height: 7.000000
     Steady state height: 7.000000
-    Steady state inflow: 23.439796
-    Steady state derivative: [6.82950784e-05]
+    Steady state inflow: 23.438430
+    Steady state height derivative: -0.000000
     Theoretical steady state inflow: 23.438430
