@@ -11,22 +11,39 @@ After this exercise, you will know
 - how to run a simulation of the system and capture the results, and
 - how to access simulation results.
 
-An integrator is a very simple dynamic element with a single state
-:math:`x\left(t\right)`.
-The derivative :math:`\frac{d}{dt} x\left(t\right)` of that state is just the
-input into the system.
-In addition to the derivative, we need to specify the initial value of the state
-:math:`x\left(t_0\right)`:
+Integrator Theory
+-----------------
+
+.. _integrator_schematic:
+.. figure:: 01_integrator_schematic.svg
+    :align: center
+    :alt: Schematic of the integrator
+
+    Schematic of the integrator
+
+We will build the structure shown in :numref:`integrator_schematic`.
+An integrator is a very simple dynamic element that accepts an input
+:math:`u\left(t\right)` and for times :math:`t \geq t_0` provides the integral
+of the input over time, :math:`x_0 + \int_{t_0}^t u\left(t\right) dt`, as
+output.
+It has a single state :math:`x\left(t\right)` with an initial value `x_0`
+and the input as its derivative over time:
 
 .. math::
     x\left(t_0\right) &= x_0 \\
     \frac{d}{dt} x\left(t\right) &= u\left(t\right)
+
+Preparations
+------------
 
 To view our results, we will use ``matplotlib``, so we install that first:
 
 .. code-block:: bash
 
     $ pip install matplotlib
+
+Coding the Model
+----------------
 
 Now let us code our model.
 We start by importing the relevant declarations:
@@ -38,9 +55,6 @@ We start by importing the relevant declarations:
 
     from modypy.model import System, State, signal_function
     from modypy.simulation import Simulator, SimulationResult
-
-Defining the System
--------------------
 
 All models in ``modypy`` are contained in a
 :class:`System <modypy.model.system.System>`, so we need to create an instance:
@@ -61,12 +75,20 @@ turn it into a signal:
         """Calculate the value of the input signal"""
         return np.cos(system_state.time)
 
-In our case, the signal is defined by a simple function that accepts the
-*system state*.
-That system state provides the current time, i.e., the time at which the signal
-is being evaluated.
-That time may be a scalar (when evaluating the signal at a single point in time)
-or a vector of times (when evaluating the signal at multiple points in time).
+Signals are defined by callables that accept the *system state* as their only
+parameter.
+System state objects implement a certain protocol, so that whenever we have a
+system state object, we can use it in the same way.
+For example, system state objects have a property ``time``.
+The value of that property can either be
+
+- a *scalar*, in which case the system state object represents the state of the
+  system at a single point in time, or it can be
+- a *vector*, in which case the system state object represents the state of the
+  system at multiple points in time.
+
+In our case, :func:`numpy.cos` will handle both cases, and return either the
+cosine of the single number, or a vector of cosines of all the numbers given.
 
 However, signals in modypy are actually instances of the
 :class:`Signal <modypy.model.ports.Signal>` class, which provides some
