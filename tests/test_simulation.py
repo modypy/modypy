@@ -15,7 +15,13 @@ from fixtures.models import (
 from modypy.blocks.discrete import zero_order_hold
 from modypy.blocks.linear import LTISystem, integrator
 from modypy.blocks.sources import constant
-from modypy.model import Clock, State, System, SystemState, ZeroCrossEventSource
+from modypy.model import (
+    Clock,
+    State,
+    System,
+    SystemState,
+    ZeroCrossEventSource,
+)
 from modypy.simulation import (
     ExcessiveEventError,
     SimulationError,
@@ -100,6 +106,13 @@ def test_lti_simulation(lti_system_with_reference):
     npt.assert_allclose(
         result.state, ref_state.T, rtol=rtol * 1e2, atol=atol * 1e2
     )
+
+    # Check that SimulationResult properly implements the sequence interface
+    assert len(result) == len(result.time)
+    for idx, item in enumerate(result):
+        npt.assert_equal(item.time, result.time[idx])
+        npt.assert_equal(item.state, result.state[:, idx])
+        npt.assert_equal(item.inputs, result.inputs[:, idx])
 
 
 class MockupIntegrator:

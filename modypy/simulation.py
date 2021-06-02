@@ -1,6 +1,7 @@
 """
 Provide classes for simulation.
 """
+from collections.abc import Sequence
 import warnings
 
 import numpy as np
@@ -31,7 +32,7 @@ class ExcessiveEventError(SimulationError):
     """
 
 
-class SimulationResult:
+class SimulationResult(Sequence):
     """The results provided by a simulation.
 
     A `SimulationResult` object captures the time series provided by a
@@ -53,17 +54,17 @@ class SimulationResult:
     @property
     def time(self):
         """The time vector of the simulation result"""
-        return self._t[0:self.current_idx]
+        return self._t[0 : self.current_idx]
 
     @property
     def inputs(self):
         """The input vector of the simulation result"""
-        return self._inputs[:, 0:self.current_idx]
+        return self._inputs[:, 0 : self.current_idx]
 
     @property
     def state(self):
         """The state vector of the simulation result"""
-        return self._state[:, 0:self.current_idx]
+        return self._state[:, 0 : self.current_idx]
 
     def collect_from(self, source):
         """Collect data points from the given source
@@ -101,14 +102,15 @@ class SimulationResult:
 
     def extend_space(self):
         """Extend the storage space for the vectors"""
-        self._t = np.r_[self._t,
-                        np.empty(RESULT_SIZE_EXTENSION)]
-        self._inputs = np.c_[self._inputs,
-                             np.empty((self.system.num_inputs,
-                                       RESULT_SIZE_EXTENSION))]
-        self._state = np.c_[self._state,
-                            np.empty((self.system.num_states,
-                                      RESULT_SIZE_EXTENSION))]
+        self._t = np.r_[self._t, np.empty(RESULT_SIZE_EXTENSION)]
+        self._inputs = np.c_[
+            self._inputs,
+            np.empty((self.system.num_inputs, RESULT_SIZE_EXTENSION)),
+        ]
+        self._state = np.c_[
+            self._state,
+            np.empty((self.system.num_states, RESULT_SIZE_EXTENSION)),
+        ]
 
     def get_state_value(self, state: State):
         """Determine the value of the given state in this result object"""
@@ -121,20 +123,33 @@ class SimulationResult:
         return self.inputs[signal.input_slice].reshape(signal.shape + (-1,))
 
     def __getitem__(self, key):
-        warnings.warn("The dictionary access interface is deprecated",
-                      DeprecationWarning)
-        if isinstance(key, tuple):
-            # In case of a tuple, the first entity is the actual object to
-            # access and the remainder is the index into the object
-            obj = key[0]
-            idx = key[1:]
-            value = obj(self)
-            if len(idx) > 1:
-                return value[idx]
-            return value[idx[0]]
-        # Otherwise, the item is an object to access, and we simply defer to
-        # the callable interface
-        return key(self)
+        if isinstance(key, (int, slice)):
+            return SystemState(
+                system=self.system,
+                time=self.time[key],
+                state=self.state[:, key],
+                inputs=self.inputs[:, key],
+            )
+        else:
+            warnings.warn(
+                "The dictionary access interface is deprecated",
+                DeprecationWarning,
+            )
+            if isinstance(key, tuple):
+                # In case of a tuple, the first entity is the actual object to
+                # access and the remainder is the index into the object
+                obj = key[0]
+                idx = key[1:]
+                value = obj(self)
+                if len(idx) > 1:
+                    return value[idx]
+                return value[idx[0]]
+            # Otherwise, the item is an object to access, and we simply defer to
+            # the callable interface
+            return key(self)
+
+    def __len__(self):
+        return self.current_idx
 
 
 class Simulator:
@@ -168,15 +183,17 @@ class Simulator:
             Options to be passed to the solver constructor.
     """
 
-    def __init__(self,
-                 system: System,
-                 start_time=0,
-                 initial_condition=None,
-                 max_successive_event_count=1000,
-                 event_xtol=1.E-12,
-                 event_maxiter=1000,
-                 solver_method=DEFAULT_INTEGRATOR,
-                 **solver_options):
+    def __init__(
+        self,
+        system: System,
+        start_time=0,
+        initial_condition=None,
+        max_successive_event_count=1000,
+        event_xtol=1.0e-12,
+        event_maxiter=1000,
+        solver_method=DEFAULT_INTEGRATOR,
+        **solver_options
+    ):
         """Construct a simulator for the system."""
 
         # Store the parameters
@@ -199,10 +216,12 @@ class Simulator:
         self.successive_event_count = 0
 
         # Register event tolerances and directions for easier access
-        self.event_tolerances = np.array([event.tolerance
-                                          for event in self.system.events])
-        self.event_directions = np.array([event.direction
-                                          for event in self.system.events])
+        self.event_tolerances = np.array(
+            [event.tolerance for event in self.system.events]
+        )
+        self.event_directions = np.array(
+            [event.direction for event in self.system.events]
+        )
 
         # Check if we have continuous-time states
         self.have_continuous_time_states = any(
@@ -211,8 +230,9 @@ class Simulator:
         )
 
         # Create the clock queue
-        self.clock_queue = ClockQueue(start_time=start_time,
-                                      clocks=self.system.clocks)
+        self.clock_queue = ClockQueue(
+            start_time=start_time, clocks=self.system.clocks
+        )
 
         # The current state is the left-sided limit of the time-dependent state
         # function at the current time. To proceed, we need the right-sided
@@ -245,10 +265,12 @@ class Simulator:
             yield from self._run_discrete_model_simulation(time_boundary)
 
         if include_last:
-            yield SystemState(system=self.system,
-                              time=self.current_time,
-                              state=self.current_state,
-                              inputs=self.current_inputs)
+            yield SystemState(
+                system=self.system,
+                time=self.current_time,
+                state=self.current_state,
+                inputs=self.current_inputs,
+            )
 
     def _run_mixed_model_simulation(self, time_boundary):
         # The outer loop iterates over solver instances as necessary.
@@ -260,16 +282,18 @@ class Simulator:
         # - terminating events
         # - non-terminating events
         # We will handle them separately later.
-        terminating_events = [event
-                              for event in self.system.events
-                              if len(event.listeners) > 0]
-        non_terminating_events = [event
-                                  for event in self.system.events
-                                  if len(event.listeners) == 0]
-        terminating_detector = _EventDetector(system=self.system,
-                                              events=terminating_events)
-        non_terminating_detector = _EventDetector(system=self.system,
-                                                  events=non_terminating_events)
+        terminating_events = [
+            event for event in self.system.events if len(event.listeners) > 0
+        ]
+        non_terminating_events = [
+            event for event in self.system.events if len(event.listeners) == 0
+        ]
+        terminating_detector = _EventDetector(
+            system=self.system, events=terminating_events
+        )
+        non_terminating_detector = _EventDetector(
+            system=self.system, events=non_terminating_events
+        )
 
         while self.current_time < time_boundary:
             terminated = False
@@ -281,20 +305,24 @@ class Simulator:
                 solver_bound = time_boundary
 
             # Create the solver
-            solver = self.solver_method(fun=self._state_derivative,
-                                        t0=self.current_time,
-                                        y0=self.current_state,
-                                        t_bound=solver_bound,
-                                        vectorized=True,
-                                        **self.solver_options)
+            solver = self.solver_method(
+                fun=self._state_derivative,
+                t0=self.current_time,
+                y0=self.current_state,
+                t_bound=solver_bound,
+                vectorized=True,
+                **self.solver_options
+            )
 
             # Run the integration until the determined time limit
             while self.current_time < solver_bound and not terminated:
                 # Yield the current state (after running the clock ticks)
-                yield SystemState(system=self.system,
-                                  time=self.current_time,
-                                  inputs=self.current_inputs,
-                                  state=self.current_state)
+                yield SystemState(
+                    system=self.system,
+                    time=self.current_time,
+                    inputs=self.current_inputs,
+                    state=self.current_state,
+                )
 
                 # Perform a solver step
                 msg = solver.step()
@@ -313,7 +341,8 @@ class Simulator:
                     start_time=self.current_time,
                     end_time=solver.t,
                     state=state_interpolator,
-                    inputs=_input_interpolator)
+                    inputs=_input_interpolator,
+                )
                 search_end_time = solver.t
 
                 # Restrict the search time for non-terminating events
@@ -326,17 +355,19 @@ class Simulator:
                     start_time=self.current_time,
                     end_time=search_end_time,
                     state=state_interpolator,
-                    inputs=_input_interpolator
+                    inputs=_input_interpolator,
                 )
 
                 # Yield intermediate states for non-terminating events in the
                 # order in which they occur
                 non_term_occs.sort(key=lambda v: v[0])
                 for time, event in non_term_occs:
-                    event_state = SystemState(system=self.system,
-                                              time=time,
-                                              state=state_interpolator(time),
-                                              inputs=_input_interpolator(time))
+                    event_state = SystemState(
+                        system=self.system,
+                        time=time,
+                        state=state_interpolator(time),
+                        inputs=_input_interpolator(time),
+                    )
                     yield event_state
 
                 # In case of a terminating event, advance time to the time of
@@ -366,10 +397,12 @@ class Simulator:
         # the time accordingly until we reach the time boundary.
         while self.current_time < time_boundary:
             # Yield the current state
-            yield SystemState(system=self.system,
-                              time=self.current_time,
-                              inputs=self.current_inputs,
-                              state=self.current_state)
+            yield SystemState(
+                system=self.system,
+                time=self.current_time,
+                inputs=self.current_inputs,
+                state=self.current_state,
+            )
 
             # Advance time to the next clock tick
             next_clock_tick = self.clock_queue.next_clock_tick
@@ -394,21 +427,21 @@ class Simulator:
         self._run_event_listeners(clocks_to_tick)
 
     def _run_event_listeners(self, event_sources):
-        """Run the event listeners on the given events.
-        """
+        """Run the event listeners on the given events."""
 
         while len(event_sources) > 0:
             # Check for excessive counts of successive events
             self.successive_event_count += 1
-            if (self.successive_event_count >
-                    self.max_successive_event_count):
+            if self.successive_event_count > self.max_successive_event_count:
                 raise ExcessiveEventError()
 
             # Prepare the system state for the state updater
-            state_updater = _SystemStateUpdater(system=self.system,
-                                                time=self.current_time,
-                                                state=self.current_state,
-                                                inputs=self.current_inputs)
+            state_updater = _SystemStateUpdater(
+                system=self.system,
+                time=self.current_time,
+                state=self.current_state,
+                inputs=self.current_inputs,
+            )
 
             # Determine the values of all event functions before running the
             # event listeners.
@@ -417,9 +450,11 @@ class Simulator:
             # Collect all listeners associated with the events
             # Note that we run each listener only once, even if it is associated
             # with multiple events
-            listeners = set(listener
-                            for event_source in event_sources
-                            for listener in event_source.listeners)
+            listeners = set(
+                listener
+                for event_source in event_sources
+                for listener in event_source.listeners
+            )
 
             # Run the event listeners
             # Note that we do not guarantee any specific order of execution
@@ -437,15 +472,18 @@ class Simulator:
             new_event_values = self.system.event_values(state_updater)
 
             # Determine which events occurred as a result of the changed state
-            event_mask = _find_active_events(start_values=last_event_values,
-                                             end_values=new_event_values,
-                                             tolerances=self.event_tolerances,
-                                             directions=self.event_directions)
+            event_mask = _find_active_events(
+                start_values=last_event_values,
+                end_values=new_event_values,
+                tolerances=self.event_tolerances,
+                directions=self.event_directions,
+            )
             if any(event_mask):
-                event_sources = [event
-                                 for event, flag in zip(self.system.events,
-                                                        event_mask)
-                                 if flag]
+                event_sources = [
+                    event
+                    for event, flag in zip(self.system.events, event_mask)
+                    if flag
+                ]
             else:
                 event_sources = []
 
@@ -461,9 +499,7 @@ class Simulator:
           The time-derivative of the state vector
         """
 
-        system_state = SystemState(system=self.system,
-                                   time=time,
-                                   state=state)
+        system_state = SystemState(system=self.system, time=time, state=state)
         state_derivative = self.system.state_derivative(system_state)
         return state_derivative
 
@@ -471,7 +507,7 @@ class Simulator:
 class _EventDetector:
     """Helper class for detecting and localizing events"""
 
-    def __init__(self, system, events, xtol=1E-12, maxiter=1000):
+    def __init__(self, system, events, xtol=1e-12, maxiter=1000):
         self.system = system
         self.events = events
         self.xtol = xtol
@@ -522,14 +558,18 @@ class _EventDetector:
             A list of tuples `(time, event)`, giving time and event object for
             each event having occurred in the given time frame.
         """
-        start_state = SystemState(system=self.system,
-                                  time=start_time,
-                                  state=state(start_time),
-                                  inputs=inputs(start_time))
-        end_state = SystemState(system=self.system,
-                                time=end_time,
-                                state=state(end_time),
-                                inputs=inputs(end_time))
+        start_state = SystemState(
+            system=self.system,
+            time=start_time,
+            state=state(start_time),
+            inputs=inputs(start_time),
+        )
+        end_state = SystemState(
+            system=self.system,
+            time=end_time,
+            state=state(end_time),
+            inputs=inputs(end_time),
+        )
 
         # Determine the list of active events
         active_events = self._get_active_events(start_state, end_state)
@@ -537,11 +577,9 @@ class _EventDetector:
         # For each of the active events, localize the zero-crossing
         locations = list()
         for event in active_events:
-            event_time = self._find_event_time(event,
-                                               start_time,
-                                               end_time,
-                                               state,
-                                               inputs)
+            event_time = self._find_event_time(
+                event, start_time, end_time, state, inputs
+            )
             locations.append((event_time, event))
         return locations
 
@@ -557,10 +595,12 @@ class _EventDetector:
         start_values = np.array([event(start_state) for event in self.events])
         end_values = np.array([event(end_state) for event in self.events])
 
-        mask = _find_active_events(start_values,
-                                   end_values,
-                                   self.event_tolerances,
-                                   self.event_directions)
+        mask = _find_active_events(
+            start_values,
+            end_values,
+            self.event_tolerances,
+            self.event_directions,
+        )
         return [event for event, flag in zip(self.events, mask) if flag]
 
     def _find_event_time(self, event, start_time, end_time, state, inputs):
@@ -584,32 +624,37 @@ class _EventDetector:
 
         assert start_time <= end_time
 
-        start_state = SystemState(system=self.system,
-                                  time=start_time,
-                                  state=state(start_time),
-                                  inputs=inputs(start_time))
-        end_state = SystemState(system=self.system,
-                                time=end_time,
-                                state=state(end_time),
-                                inputs=inputs(end_time))
+        start_state = SystemState(
+            system=self.system,
+            time=start_time,
+            state=state(start_time),
+            inputs=inputs(start_time),
+        )
+        end_state = SystemState(
+            system=self.system,
+            time=end_time,
+            state=state(end_time),
+            inputs=inputs(end_time),
+        )
 
         start_value = event(start_state)
         end_value = event(end_state)
 
-        assert (((start_value < -event.tolerance) ^
-                 (end_value < -event.tolerance)) |
-                ((event.tolerance < start_value) ^
-                 (event.tolerance < end_value)))
+        assert (
+            (start_value < -event.tolerance) ^ (end_value < -event.tolerance)
+        ) | ((event.tolerance < start_value) ^ (event.tolerance < end_value))
 
         iter_count = 0
         time_diff = end_time - start_time
         while iter_count < self.maxiter and time_diff > self.xtol:
             time_diff /= 2
             mid_time = start_time + time_diff
-            mid_state = SystemState(system=self.system,
-                                    time=mid_time,
-                                    state=state(mid_time),
-                                    inputs=inputs(mid_time))
+            mid_state = SystemState(
+                system=self.system,
+                time=mid_time,
+                state=state(mid_time),
+                inputs=inputs(mid_time),
+            )
             mid_value = event(mid_state)
             mid_value = 0 if np.abs(mid_value) < event.tolerance else mid_value
             if np.sign(mid_value) == np.sign(start_value):
@@ -634,8 +679,9 @@ class _SystemStateUpdater(SystemState):
         self.state[state.state_slice] = np.asarray(value).ravel()
 
     def __setitem__(self, key, value):
-        warnings.warn("The dictionary access interface is deprecated",
-                      DeprecationWarning)
+        warnings.warn(
+            "The dictionary access interface is deprecated", DeprecationWarning
+        )
         if isinstance(key, tuple):
             # In case the key is a tuple, its first element is the object to
             # access, and the remainder is the index of the element to address
@@ -659,14 +705,11 @@ def _find_active_events(start_values, end_values, tolerances, directions):
         sign change or not.
     """
 
-    up = (((start_values < -tolerances) &
-           (end_values >= -tolerances)) |
-          ((start_values <= tolerances) &
-           (end_values > tolerances)))
-    down = (((start_values >= -tolerances) &
-             (end_values < -tolerances)) |
-            ((start_values > tolerances) &
-             (end_values <= tolerances)))
-    mask = ((up & (directions >= 0)) |
-            (down & (directions <= 0)))
+    up = ((start_values < -tolerances) & (end_values >= -tolerances)) | (
+        (start_values <= tolerances) & (end_values > tolerances)
+    )
+    down = ((start_values >= -tolerances) & (end_values < -tolerances)) | (
+        (start_values > tolerances) & (end_values <= tolerances)
+    )
+    mask = (up & (directions >= 0)) | (down & (directions <= 0))
     return mask
