@@ -10,7 +10,15 @@ either from a clock or from a zero-crossing event source.
 
 In the preceding example we modelled a DC-engine with a propeller.
 In this example, we will extend that system by sampling the generated thrust at
-regular time intervals.
+regular time intervals, as shown in :numref:`dc_engine_sampling_blocks`.
+
+.. _dc_engine_sampling_blocks:
+.. figure:: 06_dc_engine_sampling_blocks.svg
+    :align: center
+    :alt: Block Diagram of DC-Engine with Zero-Order-Hold
+
+    Block Diagram of DC-Engine with Zero-Order-Hold
+
 At the end of this exercise you will know
 
 - how to define clocks,

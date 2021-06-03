@@ -27,7 +27,16 @@ Our pendulum has two states:
 - the current angle :math:`\alpha\left(t\right)` and
 - the current angular velocity :math:`\omega\left(t\right)`.
 
-Newtonian mechanics tells us that
+Newtonian mechanics together with some trigonometry tells us that the restoring
+moment of the pendulum is
+
+.. math::
+
+    \tau\left(t\right) = l F_r\left(\alpha\right)
+    = - m g l \sin\left(\alpha\left(t\right)\right)
+
+With the moment of inertia of the --- idealized --- pendulum :math:`J=m l^2`, we
+find that
 
 .. math::
     \frac{d}{dt} \omega\left(t\right) =

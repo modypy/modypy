@@ -25,44 +25,49 @@ def velocity_dt(_system_state):
     return -G
 
 
-velocity = State(system,
-                 derivative_function=velocity_dt,
-                 initial_condition=INITIAL_VELOCITY)
-height = integrator(system,
-                    input_signal=velocity,
-                    initial_condition=INITIAL_HEIGHT)
+velocity = State(
+    system, derivative_function=velocity_dt, initial_condition=INITIAL_VELOCITY
+)
+height = integrator(
+    system, input_signal=velocity, initial_condition=INITIAL_HEIGHT
+)
 
+# Run a simulation without event handler
+simulator = Simulator(system=system, start_time=0, max_step=0.1)
+result = SimulationResult(system=system)
+result.collect_from(simulator.run_until(time_boundary=2))
 
-# Define the zero-crossing-event
-def bounce_event_function(system_state):
-    """Define the value of the event function for detecting bounces"""
-    return height(system_state)
+# Plot the simulation result
+plt.plot(result.time, height(result))
+plt.xlabel("Time (s)")
+plt.ylabel("Height (m)")
+plt.title("Falling Ball")
+plt.grid(axis="y")
+plt.savefig("04_bouncing_ball_no_event.png")
 
-
-bounce_event = ZeroCrossEventSource(system,
-                                    event_function=bounce_event_function,
-                                    direction=-1)
+# Define a zero-crossing event for the height
+bounce_event = ZeroCrossEventSource(system, event_function=height, direction=-1)
 
 
 # Define the event-handler
 def bounce_event_handler(data):
     """Reverse the direction of motion after a bounce"""
-    velocity.set_value(data, -DELTA*velocity(data))
+    velocity.set_value(data, -DELTA * velocity(data))
 
 
 # Register it with the bounce event
 bounce_event.register_listener(bounce_event_handler)
 
-# Run a simulation
-simulator = Simulator(system,
-                      start_time=0.0,
-                      max_step=0.1)
-result = SimulationResult(system,
-                          simulator.run_until(time_boundary=8))
+# Run another simulation
+simulator = Simulator(system, start_time=0.0, max_step=0.1)
+result = SimulationResult(system, simulator.run_until(time_boundary=10))
 
 # Plot the result
+plt.figure()
 plt.plot(result.time, height(result))
 plt.title("Bouncing Ball")
-plt.xlabel("Time")
+plt.xlabel("Time (s)")
+plt.ylabel("Height (m)")
+plt.grid(axis="y")
 plt.savefig("04_bouncing_ball_simulation.png")
 plt.show()

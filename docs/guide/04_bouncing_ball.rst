@@ -15,8 +15,20 @@ After this exercise you will know
 Deriving the Equations
 ----------------------
 
-When not in contact with the ground, our ball at height :math:`h\left(t\right)`
-and with velocity :math:`v_y\left(t\right)` will simply be accelerated by
+:numref:`bouncing_ball` illustrates the setup:
+We have a ball of a given mass :math:`m` --- which will be inconsequential ---
+moving vertically.
+Its height above the ground shall be :math:`h\left(t\right)` and its velocity
+shall be designated :math:`v_y\left(t\right) := \frac{d}{dt} h\left(t\right)`.
+
+.. _bouncing_ball:
+.. figure:: 04_bouncing_ball.svg
+    :align: center
+    :alt: Falling Ball Setup
+
+    Falling Ball Setup
+
+When not in contact with the ground, our ball will simply be accelerated by
 gravity:
 
 .. math::
@@ -28,7 +40,7 @@ Also, its magnitude will be diminished due to friction losses inside the ball,
 so we will have the new velocity after the bounce as follows:
 
 .. math::
-    v'\left(t\right) = - \delta \times v\left(t\right)
+    v\left(t^+\right) = - \delta \times v\left(t^-\right)
 
 Here, :math:`\delta` is the coefficient of restitution.
 
@@ -76,24 +88,53 @@ Let's define our system and our states first:
                         initial_condition=INITIAL_HEIGHT)
 
 So far, there is not much difference to the previous examples.
-But now we define our bounce-event:
+Let's try and run a quick simulation:
 
 .. code-block:: python
 
-    # Define the zero-crossing-event
-    def bounce_event_function(system_state):
-        """Define the value of the event function for detecting bounces"""
-        return height(system_state)
+    # Run a simulation
+    simulator = Simulator(system=system,
+                          start_time=0,
+                          max_step=0.1)
+    result = SimulationResult(system=system)
+    result.collect_from(simulator.run_until(time_boundary=2))
 
+    # Plot the simulation result
+    plt.plot(result.time, height(result))
+    plt.xlabel("Time (s)")
+    plt.ylabel("Height (m)")
+    plt.title("Falling Ball")
+    plt.grid(axis="y")
+    plt.savefig("04_bouncing_ball_no_event.png")
 
+The resulting plot is shown in :numref:`bouncing_ball_no_event`.
+The ball keeps falling and falls through the ground --- not unexpectedly, as
+there is nothing in our model that would keep it from doing so.
+
+.. _bouncing_ball_no_event:
+.. figure:: 04_bouncing_ball_no_event.png
+    :align: center
+    :alt: Falling ball simulation
+
+    Falling ball simulation
+
+Adding the Bounce-Event
+-----------------------
+To change that, we add an event to detect hitting the ground:
+
+.. code-block:: python
+
+    # Define a zero-crossing event for the height
     bounce_event = ZeroCrossEventSource(system,
-                                        event_function=bounce_event_function,
+                                        event_function=height,
                                         direction=-1)
 
-The function ``bounce_event_function`` is defined in such a way so that its
-value changes its sign exactly when our ball hits the ground (we assume that our
-ball is infinitely small --- we do physics after all).
-To achieve that, we simply use the height for the event function value.
+This event will occur whenever the height changes sign from positive to
+negative, which is exactly the point where our ball hits the ground (we assume
+that our ball is infinitely small --- we do physics after all).
+Note that you use any callable as an event function, given that it accepts a
+single system state object as parameter.
+This is the case for signals and states, so these can be used directly.
 
 The parameter ``direction`` tells the simulator that only changes from positive
 to negative sign should be considered.
@@ -114,8 +155,8 @@ changes sign. However, we can do more:
     # Register it with the bounce event
     bounce_event.register_listener(bounce_event_handler)
 
-The function ``bounce_event_handler`` applies exactly that change to our state
-which we described above by changing the sign and the magnitude of the velocity.
+The function ``bounce_event_handler`` will change the sign and the magnitude of
+the velocity state, as described above.
 
 Running the Simulation
 ----------------------
@@ -148,17 +189,13 @@ As you can see, our ball bounces happily.
 
     Bouncing ball simulation
 
-Simplifying
------------
+Extending the Run Time: Too Many Events
+---------------------------------------
+What happens if we extend the run-time of the simulation to 10 time units?
+We will get an :class:`modypy.simulation.ExcessiveEventError` exception.
+This is because, as the ball loses energy, its impacts on the ground will become
+more and more frequent, and keep the simulation from progressing.
 
-Our example is a special case in that our event function has the same value as
-a state in our system --- namely, the height.
-As our states are callable using the same interface as the event functions, we
-can simply drop the `bounce_event_function` and simply use the `height` state
-in its place:
-
-.. code-block:: python
-
-    bounce_event = ZeroCrossEventSource(system,
-                                        event_function=height,
-                                        direction=-1)
+This is called
+`Zeno-behaviour <https://en.wikipedia.org/wiki/Hybrid_system#Bouncing_ball>`_
+and is an important problem in the simulation of systems with discontinuities.
