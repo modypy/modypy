@@ -39,7 +39,7 @@ We again start by importing our required elements and defining the constants:
 
     import matplotlib.pyplot as plt
 
-    from modypy.model import System, SignalState, Block, Clock
+    from modypy.model import System, State, Block, Clock
     from modypy.blocks.aerodyn import Propeller
     from modypy.blocks.elmech import DCMotor
     from modypy.blocks.sources import constant
@@ -86,7 +86,7 @@ Now, we define a state for keeping the last sampled value of the thrust signal:
 
 .. code-block:: python
 
-    sample_state = SignalState(system)
+    sample_state = State(system)
 
 Note how we did not specify a derivative function for this state.
 Internally, this is modelled as the derivative function being a constant zero,
