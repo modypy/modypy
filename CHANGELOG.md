@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and sphinx conf.py)
 ### Changed
 - Major reorganisation of the Simulator, in preparation for an extensible
-  event detection concept. With optimisiations on the Simulator, the ODE solver
+  event detection concept. With optimisations on the Simulator, the ODE solver
   is now only re-initialized if events lead to state changes. This also means
   that control of step size using `max_step` may be necessary.
 - States and ports may now be scalar instead of just of shape `(1)`.

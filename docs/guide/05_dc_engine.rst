@@ -22,9 +22,8 @@ response of such a motor and plot the results.
 At the end of this exercise, you will know
 
 - how to define ports as placeholders for signals,
-- how to connect ports to signals,
-- how to define reusable building blocks for systems, and
-- how to use :class:`signal states <modypy.model.states.SignalState>`.
+- how to connect ports to signals, and
+- how to define reusable building blocks for systems.
 
 
 The Engine Model
@@ -110,7 +109,7 @@ Again, we start by importing everything we need and defining some constants:
     import numpy as np
     import matplotlib.pyplot as plt
 
-    from modypy.model import System, SignalState, Block, Port, signal_method
+    from modypy.model import System, Block, Port, signal_method
     from modypy.blocks.sources import constant
     from modypy.simulation import Simulator, SimulationResult
 
@@ -160,19 +159,15 @@ In the next step, we create our states:
         # Create the velocity and current state
         # These can also be used as signals which export the exact value of
         # the respective state.
-        self.omega = SignalState(self,
-                                 derivative_function=self.omega_dt,
-                                 initial_condition=initial_speed)
-        self.current = SignalState(self,
-                                   derivative_function=self.current_dt,
-                                   initial_condition=initial_current)
+        self.omega = State(self,
+                           derivative_function=self.omega_dt,
+                           initial_condition=initial_speed)
+        self.current = State(self,
+                             derivative_function=self.current_dt,
+                             initial_condition=initial_current)
 
 There are three major difference to what we did earlier when defining states:
 
-- Instead of :class:`modypy.model.states.State` instances we use
-  :class:`modypy.model.states.SignalState` instances.
-  These are states which also double as signals, and thus can also be connected
-  to ports, as we will see in a later step.
 - The first parameter to the constructor is now the instance of the block
   instead of the system.
   This first parameter is the *owner* of the state or signal and both the
@@ -244,9 +239,7 @@ That signal will be unique for the `DCMotor` instance, and will not change over
 the lifetime of the latter.
 
 Note that we did not have to define signal output functions for our states
-``omega`` and ``current``.
-That work is done for us by using the :class:`modypy.model.states.SignalState`
-class.
+``omega`` and ``current``, as states can also be used as signals.
 
 A Static Propeller Model
 ^^^^^^^^^^^^^^^^^^^^^^^^
