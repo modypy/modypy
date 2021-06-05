@@ -1,12 +1,12 @@
 """Blocks for linear, time-invariant systems"""
 import numpy as np
 from functools import partial
-from modypy.model import Block, Port, Signal, SignalState, State
+from modypy.model import Block, Port, Signal, State
 
 
 class InvalidLTIException(RuntimeError):
-    """An exception which is raised when the specification of an LTI is invalid.
-    """
+    """An exception which is raised when the specification of an LTI is
+    invalid."""
 
 
 class LTISystem(Block):
@@ -19,13 +19,15 @@ class LTISystem(Block):
     ``feed_through_matrix`` define the state and output behaviour of the block.
     """
 
-    def __init__(self,
-                 parent,
-                 system_matrix,
-                 input_matrix,
-                 output_matrix,
-                 feed_through_matrix,
-                 initial_condition=None):
+    def __init__(
+        self,
+        parent,
+        system_matrix,
+        input_matrix,
+        output_matrix,
+        feed_through_matrix,
+        initial_condition=None,
+    ):
         Block.__init__(self, parent)
 
         # Determine the number of states and the shape of the state
@@ -34,21 +36,27 @@ class LTISystem(Block):
             num_states = 1
         else:
             system_matrix = np.asarray(system_matrix)
-            if (system_matrix.ndim == 2 and
-                    system_matrix.shape[0] > 0 and
-                    system_matrix.shape[0] == system_matrix.shape[1]):
+            if (
+                system_matrix.ndim == 2
+                and system_matrix.shape[0] > 0
+                and system_matrix.shape[0] == system_matrix.shape[1]
+            ):
                 self.state_shape = system_matrix.shape[0]
                 num_states = self.state_shape
             else:
-                raise InvalidLTIException('The system matrix must be a scalar '
-                                          'or a non-empty square matrix')
+                raise InvalidLTIException(
+                    "The system matrix must be a scalar "
+                    "or a non-empty square matrix"
+                )
 
         # Determine the number of inputs and the shape of the input signal
         if np.isscalar(input_matrix):
             if num_states > 1:
-                raise InvalidLTIException('There is more than one state, but '
-                                          'the input matrix is neither empty, '
-                                          'nor a vector or a matrix')
+                raise InvalidLTIException(
+                    "There is more than one state, but "
+                    "the input matrix is neither empty, "
+                    "nor a vector or a matrix"
+                )
             num_inputs = 1
             self.input_shape = ()
         else:
@@ -56,27 +64,35 @@ class LTISystem(Block):
             if input_matrix.ndim == 1:
                 # The input matrix is a column vector => one input
                 if num_states != input_matrix.shape[0]:
-                    raise InvalidLTIException('The height of the input matrix '
-                                              'must match the number of states')
+                    raise InvalidLTIException(
+                        "The height of the input matrix "
+                        "must match the number of states"
+                    )
                 num_inputs = 1
             elif input_matrix.ndim == 2:
                 # The input matrix is a matrix
                 if num_states != input_matrix.shape[0]:
-                    raise InvalidLTIException('The height of the input matrix '
-                                              'does not match the number of '
-                                              'states')
+                    raise InvalidLTIException(
+                        "The height of the input matrix "
+                        "does not match the number of "
+                        "states"
+                    )
                 num_inputs = input_matrix.shape[1]
             else:
-                raise InvalidLTIException('The input matrix must be empty,'
-                                          'a scalar, a vector or a matrix')
+                raise InvalidLTIException(
+                    "The input matrix must be empty,"
+                    "a scalar, a vector or a matrix"
+                )
             self.input_shape = num_inputs
 
         # Determine the number of outputs and the shape of the output array
         if np.isscalar(output_matrix):
             if num_states > 1:
-                raise InvalidLTIException('There is more than one state, but '
-                                          'the output matrix is neither an '
-                                          'empty, a vector nor a matrix')
+                raise InvalidLTIException(
+                    "There is more than one state, but "
+                    "the output matrix is neither an "
+                    "empty, a vector nor a matrix"
+                )
             num_outputs = 1
             self.output_shape = ()
         else:
@@ -84,57 +100,77 @@ class LTISystem(Block):
             if output_matrix.ndim == 1:
                 # The output matrix is a row vector => one output
                 if num_states != output_matrix.shape[0]:
-                    raise InvalidLTIException('The width of the output matrix '
-                                              'does not match the number of '
-                                              'states')
+                    raise InvalidLTIException(
+                        "The width of the output matrix "
+                        "does not match the number of "
+                        "states"
+                    )
                 num_outputs = 1
             elif output_matrix.ndim == 2:
                 # The output matrix is a matrix
                 if num_states != output_matrix.shape[1]:
-                    raise InvalidLTIException('The width of the output matrix '
-                                              'does not match the number of '
-                                              'states')
+                    raise InvalidLTIException(
+                        "The width of the output matrix "
+                        "does not match the number of "
+                        "states"
+                    )
                 num_outputs = output_matrix.shape[0]
             else:
-                raise InvalidLTIException('The output matrix must be empty, a'
-                                          'scalar, a vector or a matrix')
+                raise InvalidLTIException(
+                    "The output matrix must be empty, a"
+                    "scalar, a vector or a matrix"
+                )
             self.output_shape = num_outputs
 
         if np.isscalar(feed_through_matrix):
             if not (num_inputs == 1 and num_outputs == 1):
-                raise InvalidLTIException('A scalar feed-through matrix is '
-                                          'only allowed for systems with '
-                                          'exactly one input and one output')
+                raise InvalidLTIException(
+                    "A scalar feed-through matrix is "
+                    "only allowed for systems with "
+                    "exactly one input and one output"
+                )
         else:
             feed_through_matrix = np.asarray(feed_through_matrix)
             if feed_through_matrix.ndim == 1:
                 # A vector feed_through_matrix is interpreted as row vector,
                 # so there must be exactly one output.
                 if num_outputs == 0:
-                    raise InvalidLTIException('The feed-through matrix for a '
-                                              'system without outputs must be'
-                                              'empty')
+                    raise InvalidLTIException(
+                        "The feed-through matrix for a "
+                        "system without outputs must be"
+                        "empty"
+                    )
                 elif num_outputs > 1:
-                    raise InvalidLTIException('The feed-through matrix for a '
-                                              'system with more than one '
-                                              'output must be a matrix')
+                    raise InvalidLTIException(
+                        "The feed-through matrix for a "
+                        "system with more than one "
+                        "output must be a matrix"
+                    )
                 if feed_through_matrix.shape[0] != num_inputs:
-                    raise InvalidLTIException('The width of the feed-through '
-                                              'matrix must match the number of '
-                                              'inputs')
+                    raise InvalidLTIException(
+                        "The width of the feed-through "
+                        "matrix must match the number of "
+                        "inputs"
+                    )
             elif feed_through_matrix.ndim == 2:
                 if feed_through_matrix.shape[0] != num_outputs:
-                    raise InvalidLTIException('The height of the feed-through '
-                                              'matrix must match the number of '
-                                              'outputs')
+                    raise InvalidLTIException(
+                        "The height of the feed-through "
+                        "matrix must match the number of "
+                        "outputs"
+                    )
                 if feed_through_matrix.shape[1] != num_inputs:
-                    raise InvalidLTIException('The width of the feed-through '
-                                              'matrix must match the number of '
-                                              'inputs')
+                    raise InvalidLTIException(
+                        "The width of the feed-through "
+                        "matrix must match the number of "
+                        "inputs"
+                    )
             else:
-                raise InvalidLTIException('The feed-through matrix must be '
-                                          'empty, a scalar, a vector or a '
-                                          'matrix')
+                raise InvalidLTIException(
+                    "The feed-through matrix must be "
+                    "empty, a scalar, a vector or a "
+                    "matrix"
+                )
 
         self.system_matrix = system_matrix
         self.input_matrix = input_matrix
@@ -142,12 +178,15 @@ class LTISystem(Block):
         self.feed_through_matrix = feed_through_matrix
 
         self.input = Port(shape=self.input_shape)
-        self.state = State(self,
-                           shape=self.state_shape,
-                           derivative_function=self.state_derivative,
-                           initial_condition=initial_condition)
-        self.output = Signal(shape=self.output_shape,
-                             value=self.output_function)
+        self.state = State(
+            self,
+            shape=self.state_shape,
+            derivative_function=self.state_derivative,
+            initial_condition=initial_condition,
+        )
+        self.output = Signal(
+            shape=self.output_shape, value=self.output_function
+        )
 
     def state_derivative(self, data):
         """Calculates the state derivative for the system"""
@@ -187,8 +226,7 @@ class Gain(Block):
         self.k = np.atleast_2d(k)
 
         self.input = Port(shape=self.k.shape[0])
-        self.output = Signal(shape=self.k.shape[1],
-                             value=self.output_function)
+        self.output = Signal(shape=self.k.shape[1], value=self.output_function)
 
     def output_function(self, data):
         """Calculates the output for the system
@@ -233,10 +271,10 @@ def gain(gain_matrix, input_signal):
 
     # Determine the shape of the output signal
     output_shape = (gain_matrix @ np.zeros(input_signal.shape)).shape
-    return Signal(shape=output_shape,
-                  value=partial(_gain_function,
-                                gain_matrix,
-                                input_signal))
+    return Signal(
+        shape=output_shape,
+        value=partial(_gain_function, gain_matrix, input_signal),
+    )
 
 
 class Sum(Block):
@@ -252,19 +290,17 @@ class Sum(Block):
     This class is deprecated. Use ``sum_signal`` instead.
     """
 
-    def __init__(self,
-                 parent,
-                 channel_weights,
-                 output_size=1):
+    def __init__(self, parent, channel_weights, output_size=1):
         Block.__init__(self, parent)
 
         self.channel_weights = np.asarray(channel_weights)
         self.output_size = output_size
 
-        self.inputs = [Port(shape=self.output_size)
-                       for _ in range(self.channel_weights.shape[0])]
-        self.output = Signal(shape=self.output_size,
-                             value=self.output_function)
+        self.inputs = [
+            Port(shape=self.output_size)
+            for _ in range(self.channel_weights.shape[0])
+        ]
+        self.output = Signal(shape=self.output_size, value=self.output_function)
 
     def output_function(self, data):
         """Calculates the output for the system
@@ -324,20 +360,20 @@ def sum_signal(input_signals, gains=None):
 
     shape = input_signals[0].shape
     if any(signal.shape != shape for signal in input_signals):
-        raise ValueError('The shapes of the input signals do not match')
+        raise ValueError("The shapes of the input signals do not match")
     if len(input_signals) != len(gains):
-        raise ValueError('There must be as many gains as there are '
-                         'input signals')
+        raise ValueError(
+            "There must be as many gains as there are " "input signals"
+        )
 
-    return Signal(shape=shape,
-                  value=partial(_sum_function,
-                                input_signals,
-                                gains))
+    return Signal(
+        shape=shape, value=partial(_sum_function, input_signals, gains)
+    )
 
 
 def integrator(owner, input_signal, initial_condition=None):
     """
-    Create a state-signal that provides the integrated value of the input
+    Create a state that provides the integrated value of the input
     callable.
 
     The resulting signal will have the same shape as the input callable.
@@ -350,10 +386,12 @@ def integrator(owner, input_signal, initial_condition=None):
             (default: ``None``)
 
     Returns:
-        A state-signal that provides the integrated value of the input signal
+        A state that provides the integrated value of the input signal
     """
 
-    return SignalState(owner,
-                       shape=input_signal.shape,
-                       derivative_function=input_signal,
-                       initial_condition=initial_condition)
+    return State(
+        owner,
+        shape=input_signal.shape,
+        derivative_function=input_signal,
+        initial_condition=initial_condition,
+    )

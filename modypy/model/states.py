@@ -13,13 +13,11 @@ States may also be updated by :mod:`event listeners <modypy.model.events>`.
 States are represented as instances of the :class:`State` class. In addition,
 :class:`SignalState` instances are states that are also signals.
 """
-import functools
 import numpy as np
-import operator
-from modypy.model.ports import AbstractSignal, ShapeType
+from modypy.model.ports import AbstractSignal
 
 
-class State:
+class State(AbstractSignal):
     """A state describes a portion of the state of a block.
 
     Args:
@@ -30,23 +28,16 @@ class State:
         initial_condition: The initial value of the state (Default: 0)
     """
 
-    def __init__(self,
-                 owner,
-                 derivative_function=None,
-                 shape=(),
-                 initial_condition=None):
+    def __init__(
+        self, owner, derivative_function=None, shape=(), initial_condition=None
+    ):
+        super().__init__(shape)
         self.owner = owner
         self.derivative_function = derivative_function
-        if isinstance(shape, int):
-            self.shape = (shape,)
-        else:
-            self.shape = shape
         if initial_condition is None:
             self.initial_condition = np.zeros(self.shape)
         else:
             self.initial_condition = np.asarray(initial_condition)
-
-        self.size = functools.reduce(operator.mul, self.shape, 1)
 
         self.state_index = self.owner.system.allocate_state_lines(self.size)
         self.owner.system.states.append(self)
@@ -56,8 +47,7 @@ class State:
         """A slice object that represents the indices of this state in the
         states vector."""
 
-        return slice(self.state_index,
-                     self.state_index + self.size)
+        return slice(self.state_index, self.state_index + self.size)
 
     def __call__(self, system_state):
         return system_state.get_state_value(self)
@@ -71,19 +61,3 @@ class State:
             value: The value to set this state to
         """
         system_state.set_state_value(self, value)
-
-
-class SignalState(State, AbstractSignal):
-    """A state that also provides itself as an output signal."""
-
-    def __init__(self,
-                 owner,
-                 derivative_function=None,
-                 shape: ShapeType = (),
-                 initial_condition=None):
-        State.__init__(self,
-                       owner=owner,
-                       derivative_function=derivative_function,
-                       shape=shape,
-                       initial_condition=initial_condition)
-        AbstractSignal.__init__(self, shape)

@@ -1,5 +1,5 @@
 """Blocks for discrete-time simulation"""
-from modypy.model import Block, SignalState, Port, EventPort
+from modypy.model import Block, Port, EventPort, State
 
 
 class ZeroOrderHold(Block):
@@ -25,10 +25,12 @@ class ZeroOrderHold(Block):
         self.event_input = EventPort(self)
         self.event_input.register_listener(self.update_state)
         self.input = Port(shape=shape)
-        self.output = SignalState(self,
-                                  shape=shape,
-                                  initial_condition=initial_condition,
-                                  derivative_function=None)
+        self.output = State(
+            self,
+            shape=shape,
+            initial_condition=initial_condition,
+            derivative_function=None,
+        )
 
     def update_state(self, data):
         """Update the state on a clock event
@@ -55,9 +57,9 @@ def zero_order_hold(system, input_port, event_port, initial_condition=None):
         The output signal of the zero-order hold
     """
 
-    hold = ZeroOrderHold(system,
-                         shape=input_port.shape,
-                         initial_condition=initial_condition)
+    hold = ZeroOrderHold(
+        system, shape=input_port.shape, initial_condition=initial_condition
+    )
     hold.input.connect(input_port)
     hold.event_input.connect(event_port)
     return hold.output

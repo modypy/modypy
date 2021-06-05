@@ -4,7 +4,7 @@ generated thrust at regular intervals.
 """
 import matplotlib.pyplot as plt
 
-from modypy.model import System, SignalState, Block, Clock
+from modypy.model import System, Block, Clock, State
 from modypy.blocks.aerodyn import Propeller
 from modypy.blocks.elmech import DCMotor
 from modypy.blocks.sources import constant
@@ -92,7 +92,7 @@ engine.voltage.connect(voltage)
 engine.density.connect(density)
 
 # Set up the state for keeping the sampled value.
-sample_state = SignalState(system)
+sample_state = State(system)
 
 # Create a clock for sampling at 100Hz
 sample_clock = Clock(system, period=0.01)

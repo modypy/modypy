@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Added a schematic and made some information more explicit in the integrator
   tutorial.
+### Removed
+- Remove the ``SignalState`` class. Now all states are also signals.
 
 ## [3.0.0rc2 - 2021-05-31]
 ### Changed

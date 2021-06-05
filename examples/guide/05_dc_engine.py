@@ -4,7 +4,7 @@ An engine consisting of a DC motor and a static propeller.
 import numpy as np
 import matplotlib.pyplot as plt
 
-from modypy.model import System, SignalState, Block, Port, signal_method
+from modypy.model import System, Block, Port, signal_method, State
 from modypy.blocks.sources import constant
 from modypy.simulation import Simulator, SimulationResult
 
@@ -43,12 +43,12 @@ class DCMotor(Block):
         # Create the velocity and current state
         # These can also be used as signals which export the exact value of
         # the respective state.
-        self.omega = SignalState(
+        self.omega = State(
             self,
             derivative_function=self.omega_dt,
             initial_condition=initial_speed,
         )
-        self.current = SignalState(
+        self.current = State(
             self,
             derivative_function=self.current_dt,
             initial_condition=initial_current,

@@ -113,7 +113,7 @@ class Port:
 
 
 class AbstractSignal(Port):
-    """An signal is a terminal port with a defined value.
+    """A signal is a terminal port with a defined value.
 
     It is connected to itself, i.e., it can only be connected to other,
     unconnected ports or to ports that are already connected to itself."""

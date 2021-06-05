@@ -10,5 +10,5 @@ from .ports import (
     signal_function,
     signal_method,
 )
-from .states import SignalState, State
+from .states import State
 from .system import Block, System, SystemState

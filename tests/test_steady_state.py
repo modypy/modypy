@@ -6,18 +6,20 @@ import pytest
 from modypy.blocks.aerodyn import Propeller
 from modypy.blocks.linear import sum_signal
 from modypy.blocks.sources import constant
-from modypy.model import InputSignal, SignalState, State, System
+from modypy.model import InputSignal, State, System
 from modypy.steady_state import SteadyStateConfiguration, find_steady_state
 from numpy import testing as npt
 
 
-def water_tank_model(inflow_area=0.01,
-                     outflow_area=0.02,
-                     tank_area=0.2,
-                     target_height=5,
-                     initial_condition=None,
-                     initial_guess=None,
-                     max_inflow_velocity=None):
+def water_tank_model(
+    inflow_area=0.01,
+    outflow_area=0.02,
+    tank_area=0.2,
+    target_height=5,
+    initial_condition=None,
+    initial_guess=None,
+    max_inflow_velocity=None,
+):
     """Create a steady-state configuration for a water tank"""
 
     g = 9.81  # Gravity
@@ -32,11 +34,12 @@ def water_tank_model(inflow_area=0.01,
     def height_derivative(data):
         """Calculate the time derivative of the height"""
 
-        return (inflow_area * inflow_velocity(data)
-                - outflow_area * np.sqrt(2 * g * height_state(data))
-                ) / tank_area
+        return (
+            inflow_area * inflow_velocity(data)
+            - outflow_area * np.sqrt(2 * g * height_state(data))
+        ) / tank_area
 
-    height_state = SignalState(system, derivative_function=height_derivative)
+    height_state = State(system, derivative_function=height_derivative)
 
     # Set up the steady-state configuration
     config = SteadyStateConfiguration(system)
@@ -56,13 +59,15 @@ def water_tank_model(inflow_area=0.01,
     return config
 
 
-def propeller_model(thrust_coefficient=0.09,
-                    power_coefficient=0.04,
-                    density=1.29,
-                    diameter=8 * 25.4E-3,
-                    moment_of_inertia=5.284E-6,
-                    target_thrust=1.5 * 9.81 / 4,
-                    maximum_torque=None):
+def propeller_model(
+    thrust_coefficient=0.09,
+    power_coefficient=0.04,
+    density=1.29,
+    diameter=8 * 25.4e-3,
+    moment_of_inertia=5.284e-6,
+    target_thrust=1.5 * 9.81 / 4,
+    maximum_torque=None,
+):
     """Create a steady-state configuration for two propellers"""
 
     system = System()
@@ -72,14 +77,18 @@ def propeller_model(thrust_coefficient=0.09,
 
     density_signal = constant(density)
 
-    propeller_1 = Propeller(system,
-                            thrust_coefficient=thrust_coefficient,
-                            power_coefficient=power_coefficient,
-                            diameter=diameter)
-    propeller_2 = Propeller(system,
-                            thrust_coefficient=thrust_coefficient,
-                            power_coefficient=power_coefficient,
-                            diameter=diameter)
+    propeller_1 = Propeller(
+        system,
+        thrust_coefficient=thrust_coefficient,
+        power_coefficient=power_coefficient,
+        diameter=diameter,
+    )
+    propeller_2 = Propeller(
+        system,
+        thrust_coefficient=thrust_coefficient,
+        power_coefficient=power_coefficient,
+        diameter=diameter,
+    )
 
     def speed_1_dt(data):
         """Derivative of the speed of the first propeller"""
@@ -91,20 +100,16 @@ def propeller_model(thrust_coefficient=0.09,
         tot_torque = torque_2(data) - propeller_2.torque(data)
         return tot_torque / (2 * np.pi * moment_of_inertia)
 
-    speed_1 = SignalState(system,
-                          derivative_function=speed_1_dt)
-    speed_2 = SignalState(system,
-                          derivative_function=speed_2_dt)
+    speed_1 = State(system, derivative_function=speed_1_dt)
+    speed_2 = State(system, derivative_function=speed_2_dt)
 
     propeller_1.density.connect(density_signal)
     propeller_2.density.connect(density_signal)
     propeller_1.speed_rps.connect(speed_1)
     propeller_2.speed_rps.connect(speed_2)
 
-    total_thrust = sum_signal((propeller_1.thrust,
-                               propeller_2.thrust))
-    total_power = sum_signal((propeller_1.power,
-                              propeller_2.power))
+    total_thrust = sum_signal((propeller_1.thrust, propeller_2.thrust))
+    total_power = sum_signal((propeller_1.power, propeller_2.power))
 
     # Set up steady-state configuration
     config = SteadyStateConfiguration(system)
@@ -146,16 +151,15 @@ def pendulum(length=1):
 
         return omega(data)
 
-    omega = State(system,
-                  derivative_function=omega_dt)
-    phi = State(system,
-                derivative_function=phi_dt)
+    omega = State(system, derivative_function=omega_dt)
+    phi = State(system, derivative_function=phi_dt)
 
     # Set up a steady-state configuration
     config = SteadyStateConfiguration(system)
     # Minimize the total energy
-    config.objective = (lambda data: (g * length * (1 - np.cos(phi(data))) +
-                                      (length * omega(data)) ** 2))
+    config.objective = lambda data: (
+        g * length * (1 - np.cos(phi(data))) + (length * omega(data)) ** 2
+    )
     # Constrain the angular velocity (no steady state)
     config.states[omega].steady_state = False
     # Constrain the angle
@@ -209,20 +213,20 @@ def test_input_constraint_access():
 
 
 @pytest.mark.parametrize(
-    'config',
+    "config",
     [
         water_tank_model(),
         water_tank_model(initial_guess=3, initial_condition=10),
         propeller_model(),
         propeller_model(maximum_torque=0.2),
-        pendulum()
-    ]
+        pendulum(),
+    ],
 )
 def test_steady_state(config):
     """Test the find_steady_state function"""
 
     # Adjust solver options
-    config.solver_options['gtol'] = 1E-10
+    config.solver_options["gtol"] = 1e-10
 
     sol = find_steady_state(config)
     assert sol.success
@@ -232,33 +236,42 @@ def test_steady_state(config):
     assert sol.inputs.size == config.system.num_inputs
 
     # Check state bounds
-    assert (-config.solver_options['gtol'] <=
-            (sol.state - config.state_bounds[:, 0])).all()
-    assert (-config.solver_options['gtol'] <=
-            (config.state_bounds[:, 1] - sol.state)).all()
+    assert (
+        -config.solver_options["gtol"]
+        <= (sol.state - config.state_bounds[:, 0])
+    ).all()
+    assert (
+        -config.solver_options["gtol"]
+        <= (config.state_bounds[:, 1] - sol.state)
+    ).all()
 
     # Check input bounds
-    assert (-config.solver_options['gtol'] <=
-            (sol.inputs - config.input_bounds[:, 0])).all()
-    assert (-config.solver_options['gtol'] <=
-            (config.input_bounds[:, 1] - sol.inputs)).all()
+    assert (
+        -config.solver_options["gtol"]
+        <= (sol.inputs - config.input_bounds[:, 0])
+    ).all()
+    assert (
+        -config.solver_options["gtol"]
+        <= (config.input_bounds[:, 1] - sol.inputs)
+    ).all()
 
     # Check port constraints
     for signal_constraint in config.ports.values():
         value = signal_constraint.port(sol.system_state)
-        assert (-config.solver_options['gtol'] <=
-                (value - signal_constraint.lb)).all()
-        assert (-config.solver_options['gtol'] <=
-                (signal_constraint.ub - value)).all()
+        assert (
+            -config.solver_options["gtol"] <= (value - signal_constraint.lb)
+        ).all()
+        assert (
+            -config.solver_options["gtol"] <= (signal_constraint.ub - value)
+        ).all()
 
     # Check for steady states
     num_steady_states = np.count_nonzero(config.steady_states)
-    diff_tol = np.sqrt(config.solver_options['gtol']*num_steady_states)
-    steady_state_derivatives = \
-        config.system.state_derivative(sol.system_state)[config.steady_states]
-    npt.assert_allclose(steady_state_derivatives.ravel(),
-                        0,
-                        atol=diff_tol)
+    diff_tol = np.sqrt(config.solver_options["gtol"] * num_steady_states)
+    steady_state_derivatives = config.system.state_derivative(sol.system_state)[
+        config.steady_states
+    ]
+    npt.assert_allclose(steady_state_derivatives.ravel(), 0, atol=diff_tol)
 
 
 def test_invalid_objective():

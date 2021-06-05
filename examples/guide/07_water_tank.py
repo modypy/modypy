@@ -3,14 +3,14 @@ Steady-state determination for a water tank.
 """
 import numpy as np
 
-from modypy.model import System, SignalState, InputSignal
+from modypy.model import System, InputSignal, State
 from modypy.steady_state import SteadyStateConfiguration, find_steady_state
 
 # Constants
-G = 9.81    # Gravity
-A1 = 0.01   # Inflow cross section
-A2 = 0.02   # Outflow cross section
-At = 0.2    # Tank cross section
+G = 9.81  # Gravity
+A1 = 0.01  # Inflow cross section
+A2 = 0.02  # Outflow cross section
+At = 0.2  # Tank cross section
 TARGET_HEIGHT = 5
 
 # Create a new system
@@ -24,11 +24,13 @@ inflow_velocity = InputSignal(system)
 def height_derivative(system_state):
     """Calculate the time derivative of the height"""
 
-    return (A1*inflow_velocity(system_state)
-            - A2*np.sqrt(2*G*height_state(system_state)))/At
+    return (
+        A1 * inflow_velocity(system_state)
+        - A2 * np.sqrt(2 * G * height_state(system_state))
+    ) / At
 
 
-height_state = SignalState(system, derivative_function=height_derivative)
+height_state = State(system, derivative_function=height_derivative)
 
 # Configure for steady-state determination
 steady_state_config = SteadyStateConfiguration(system)
@@ -43,8 +45,11 @@ result = find_steady_state(steady_state_config)
 print("Target height: %f" % TARGET_HEIGHT)
 print("Steady state height: %f" % height_state(result.system_state))
 print("Steady state inflow: %f" % inflow_velocity(result.system_state))
-print("Steady state height derivative: %f" %
-      height_derivative(result.system_state))
-print("Theoretical steady state inflow: %f" % (
-    np.sqrt(2*G*TARGET_HEIGHT)*A2/A1
-))
+print(
+    "Steady state height derivative: %f"
+    % height_derivative(result.system_state)
+)
+print(
+    "Theoretical steady state inflow: %f"
+    % (np.sqrt(2 * G * TARGET_HEIGHT) * A2 / A1)
+)
