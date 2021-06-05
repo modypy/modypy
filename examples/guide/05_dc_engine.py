@@ -8,19 +8,32 @@ from modypy.model import System, SignalState, Block, Port, signal_method
 from modypy.blocks.sources import constant
 from modypy.simulation import Simulator, SimulationResult
 
+# Motor Parameters
+MOTOR_CONSTANT = 789.0e-6  # V/(rad/s)
+RESISTANCE = 43.3e-3  # Ohm
+INDUCTANCE = 1.9e-3  # H
+MOMENT_OF_INERTIA = 5.284e-6  # kg m^2
+
+# Propeller Parameters
+DIAMETER = 8 * 25.4e-3  # m
+THRUST_COEFFICIENT = 0.09
+POWER_COEFFICIENT = 0.04
+
 
 # Define the DC-motor block
 class DCMotor(Block):
     """A block describing a DC-motor"""
 
-    def __init__(self,
-                 parent,
-                 motor_constant,
-                 resistance,
-                 inductance,
-                 moment_of_inertia,
-                 initial_speed=None,
-                 initial_current=None):
+    def __init__(
+        self,
+        parent,
+        motor_constant,
+        resistance,
+        inductance,
+        moment_of_inertia,
+        initial_speed=None,
+        initial_current=None,
+    ):
         Block.__init__(self, parent)
         self.motor_constant = motor_constant
         self.resistance = resistance
@@ -30,12 +43,16 @@ class DCMotor(Block):
         # Create the velocity and current state
         # These can also be used as signals which export the exact value of
         # the respective state.
-        self.omega = SignalState(self,
-                                 derivative_function=self.omega_dt,
-                                 initial_condition=initial_speed)
-        self.current = SignalState(self,
-                                   derivative_function=self.current_dt,
-                                   initial_condition=initial_current)
+        self.omega = SignalState(
+            self,
+            derivative_function=self.omega_dt,
+            initial_condition=initial_speed,
+        )
+        self.current = SignalState(
+            self,
+            derivative_function=self.current_dt,
+            initial_condition=initial_current,
+        )
 
         # Create (input) ports for voltage and external torque load
         self.voltage = Port()
@@ -44,17 +61,19 @@ class DCMotor(Block):
     def omega_dt(self, data):
         """Calculate the derivative of the angular velocity"""
 
-        return ((self.motor_constant * self.current(data)
-                 - self.external_torque(data)) /
-                self.moment_of_inertia)
+        return (
+            self.motor_constant * self.current(data)
+            - self.external_torque(data)
+        ) / self.moment_of_inertia
 
     def current_dt(self, data):
         """Calculate the derivative of the coil current"""
 
-        return ((self.voltage(data)
-                 - self.resistance * self.current(data)
-                 - self.motor_constant * self.omega(data)) /
-                self.inductance)
+        return (
+            self.voltage(data)
+            - self.resistance * self.current(data)
+            - self.motor_constant * self.omega(data)
+        ) / self.inductance
 
     @signal_method
     def speed_rps(self, data):
@@ -73,11 +92,7 @@ class DCMotor(Block):
 class Propeller(Block):
     """A block representing a static propeller"""
 
-    def __init__(self,
-                 parent,
-                 thrust_coefficient,
-                 power_coefficient,
-                 diameter):
+    def __init__(self, parent, thrust_coefficient, power_coefficient, diameter):
         Block.__init__(self, parent)
         self.thrust_coefficient = thrust_coefficient
         self.power_coefficient = power_coefficient
@@ -101,35 +116,46 @@ class Propeller(Block):
 
         rho = self.density(data)
         n = self.speed_rps(data)
-        return self.power_coefficient / (2 * np.pi) * \
-            rho * self.diameter ** 5 * n ** 2
+        return (
+            self.power_coefficient
+            / (2 * np.pi)
+            * rho
+            * self.diameter ** 5
+            * n ** 2
+        )
 
 
 # Define the engine
 class Engine(Block):
     """A block defining an engine consisting of a DC motor and a propeller"""
 
-    def __init__(self,
-                 parent,
-                 thrust_coefficient,
-                 power_coefficient,
-                 diameter,
-                 motor_constant,
-                 resistance,
-                 inductance,
-                 moment_of_inertia):
+    def __init__(
+        self,
+        parent,
+        thrust_coefficient,
+        power_coefficient,
+        diameter,
+        motor_constant,
+        resistance,
+        inductance,
+        moment_of_inertia,
+    ):
         Block.__init__(self, parent)
 
         # Create the DC motor and the propeller
-        self.dc_motor = DCMotor(self,
-                                motor_constant=motor_constant,
-                                resistance=resistance,
-                                inductance=inductance,
-                                moment_of_inertia=moment_of_inertia)
-        self.propeller = Propeller(self,
-                                   thrust_coefficient=thrust_coefficient,
-                                   power_coefficient=power_coefficient,
-                                   diameter=diameter)
+        self.dc_motor = DCMotor(
+            self,
+            motor_constant=motor_constant,
+            resistance=resistance,
+            inductance=inductance,
+            moment_of_inertia=moment_of_inertia,
+        )
+        self.propeller = Propeller(
+            self,
+            thrust_coefficient=thrust_coefficient,
+            power_coefficient=power_coefficient,
+            diameter=diameter,
+        )
 
         # We will simply pass through the voltage and density ports of the
         # motor and the propeller
@@ -149,14 +175,16 @@ class Engine(Block):
 
 # Create the system and the engine
 system = System()
-engine = Engine(system,
-                motor_constant=789.E-6,
-                resistance=43.3E-3,
-                inductance=1.9E-3,
-                moment_of_inertia=5.284E-6,
-                thrust_coefficient=0.09,
-                power_coefficient=0.04,
-                diameter=8*25.4E-3)
+engine = Engine(
+    system,
+    motor_constant=MOTOR_CONSTANT,
+    resistance=RESISTANCE,
+    inductance=INDUCTANCE,
+    moment_of_inertia=MOMENT_OF_INERTIA,
+    thrust_coefficient=THRUST_COEFFICIENT,
+    power_coefficient=POWER_COEFFICIENT,
+    diameter=DIAMETER,
+)
 
 # Provide constant signals for the voltage and the air density
 voltage = constant(value=3.5)
@@ -168,8 +196,7 @@ engine.density.connect(density)
 
 # Create the simulator and run it
 simulator = Simulator(system, start_time=0.0, max_step=0.01)
-result = SimulationResult(system,
-                          simulator.run_until(time_boundary=0.5))
+result = SimulationResult(system, simulator.run_until(time_boundary=0.5))
 
 # Plot the result
 plt.plot(result.time, engine.thrust(result))

@@ -103,7 +103,7 @@ propeller block, as shown in :numref:`dc_engine_blocks`.
 
     DC-Engine Blocks
 
-Again, we start by importing everything we need:
+Again, we start by importing everything we need and defining some constants:
 
 .. code-block:: python
 
@@ -113,6 +113,17 @@ Again, we start by importing everything we need:
     from modypy.model import System, SignalState, Block, Port, signal_method
     from modypy.blocks.sources import constant
     from modypy.simulation import Simulator, SimulationResult
+
+    # Motor Parameters
+    MOTOR_CONSTANT = 789.E-6  # V/(rad/s)
+    RESISTANCE = 43.3E-3  # Ohm
+    INDUCTANCE = 1.9E-3  # H
+    MOMENT_OF_INERTIA = 5.284E-6  # kg m^2
+
+    # Propeller Parameters
+    DIAMETER = 8*25.4E-3  # m
+    THRUST_COEFFICIENT = 0.09
+    POWER_COEFFICIENT = 0.04
 
 A DC-Motor Block
 ^^^^^^^^^^^^^^^^
@@ -359,13 +370,13 @@ So, let us create our system:
 
     system = System()
     engine = Engine(system,
-                    motor_constant=789.E-6,
-                    resistance=43.3E-3,
-                    inductance=1.9E-3,
-                    moment_of_inertia=5.284E-6,
-                    thrust_coefficient=0.09,
-                    power_coefficient=0.04,
-                    diameter=8*25.4E-3)
+                    motor_constant=MOTOR_CONSTANT,
+                    resistance=RESISTANCE,
+                    inductance=INDUCTANCE,
+                    moment_of_inertia=MOMENT_OF_INERTIA,
+                    thrust_coefficient=THRUST_COEFFICIENT,
+                    power_coefficient=POWER_COEFFICIENT,
+                    diameter=DIAMETER)
 
     # Provide constant signals for the voltage and the air density
     voltage = constant(value=3.5)

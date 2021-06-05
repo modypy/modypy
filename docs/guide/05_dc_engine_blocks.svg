@@ -9,14 +9,31 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="283.45468mm"
-   height="90.958328mm"
-   viewBox="0 0 283.45468 90.958328"
+   height="91.958328mm"
+   viewBox="0 0 283.45468 91.958328"
    version="1.1"
    id="svg1998"
    inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
-   sodipodi:docname="05_dc_engine_blocks.svg">
+   sodipodi:docname="05_dc_engine_blocks.svg"
+   inkscape:export-filename="D:\MoDyPy\Tutorials\05_DC_Engine\GRAPHICS\05_dc_engine_blocks.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96">
   <defs
      id="defs1992">
+    <marker
+       inkscape:stockid="CurveOut"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker1743"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         id="path1741"
+         d="m -5.4129913,-5.0456926 c 2.76,0 4.99999999,2.24 4.99999999,5.00000002 0,2.75999998 -2.23999999,4.99999998 -4.99999999,4.99999998"
+         style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
+         transform="scale(0.6)" />
+    </marker>
     <marker
        inkscape:isstock="true"
        style="overflow:visible"
@@ -53,7 +70,8 @@
        refX="0"
        refY="0"
        orient="auto"
-       inkscape:stockid="CurveOut">
+       inkscape:stockid="CurveOut"
+       inkscape:collect="always">
       <path
          transform="scale(0.6)"
          style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
@@ -118,36 +136,6 @@
          d="m -5.4129913,-5.0456926 c 2.76,0 4.99999999,2.24 4.99999999,5.00000002 0,2.75999998 -2.23999999,4.99999998 -4.99999999,4.99999998"
          style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
          transform="scale(0.6)" />
-    </marker>
-    <marker
-       inkscape:isstock="true"
-       style="overflow:visible"
-       id="marker7800"
-       refX="0"
-       refY="0"
-       orient="auto"
-       inkscape:stockid="DotM"
-       inkscape:collect="always">
-      <path
-         transform="matrix(0.4,0,0,0.4,2.96,0.4)"
-         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
-         d="m -2.5,-1 c 0,2.76 -2.24,5 -5,5 -2.76,0 -5,-2.24 -5,-5 0,-2.76 2.24,-5 5,-5 2.76,0 5,2.24 5,5 z"
-         id="path7798" />
-    </marker>
-    <marker
-       inkscape:isstock="true"
-       style="overflow:visible"
-       id="marker7790"
-       refX="0"
-       refY="0"
-       orient="auto"
-       inkscape:stockid="CurveOut"
-       inkscape:collect="always">
-      <path
-         transform="scale(0.6)"
-         style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
-         d="m -5.4129913,-5.0456926 c 2.76,0 4.99999999,2.24 4.99999999,5.00000002 0,2.75999998 -2.23999999,4.99999998 -4.99999999,4.99999998"
-         id="path7788" />
     </marker>
     <marker
        inkscape:stockid="CurveOut"
@@ -610,17 +598,17 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.7"
-     inkscape:cx="484.36466"
-     inkscape:cy="375.17932"
+     inkscape:zoom="0.98994949"
+     inkscape:cx="520.14921"
+     inkscape:cy="226.80807"
      inkscape:document-units="mm"
-     inkscape:current-layer="g13347"
+     inkscape:current-layer="g15789"
      inkscape:document-rotation="0"
      showgrid="true"
      inkscape:window-width="1920"
-     inkscape:window-height="1046"
-     inkscape:window-x="-11"
-     inkscape:window-y="-11"
+     inkscape:window-height="1057"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
      inkscape:window-maximized="1"
      showguides="true"
      inkscape:guide-bbox="true"
@@ -632,8 +620,8 @@
     <inkscape:grid
        type="xygrid"
        id="grid2561"
-       originx="22.461249"
-       originy="-25.958334" />
+       originx="22.46125"
+       originy="-25.458335" />
   </sodipodi:namedview>
   <metadata
      id="metadata1995">
@@ -651,7 +639,7 @@
      inkscape:label="Ebene 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(22.46125,-25.958334)">
+     transform="translate(22.46125,-25.458334)">
     <text
        xml:space="preserve"
        style="font-size:4.23333px;line-height:2.24014px;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;stroke-width:0.264583"
@@ -669,7 +657,7 @@
        style="font-size:4.23333px;line-height:2.24014px;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect3982);" />
   </g>
   <g
-     transform="matrix(0.37499999,0,0,0.37499999,-0.22499996,0.65583303)"
+     transform="matrix(0.37499999,0,0,0.37499999,-0.22499996,1.1558331)"
      id="g3752-6">
     <svg
        height="100%"
@@ -696,7 +684,7 @@
   </g>
   <g
      id="g3654-2"
-     transform="matrix(0.37499999,0,0,0.37499999,-0.04208296,27.772499)">
+     transform="matrix(0.37499999,0,0,0.37499999,-0.04208296,28.272499)">
     <svg
        id="svg3652-3"
        version="1.1"
@@ -722,7 +710,7 @@
   </g>
   <g
      id="g13347"
-     transform="translate(22.46125,-25.958334)">
+     transform="translate(22.46125,-25.458334)">
     <g
        id="g3561-9-3"
        transform="matrix(0.37499999,0,0,0.37499999,245.12517,90.080251)">
@@ -782,7 +770,7 @@
     <g
        id="g15789">
       <rect
-         style="fill:#ececec;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none"
+         style="fill:#ececec;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none"
          id="rect8668"
          width="243.41667"
          height="89.958328"
@@ -791,7 +779,7 @@
       <g
          inkscape:export-ydpi="96.115173"
          inkscape:export-xdpi="96.115173"
-         inkscape:export-filename="D:\Ralf Gerlich\Videos\MoDyPy\Tutorials\05_DC_Engine\GRAPHICS\05_dc_engine_propeller_block.png"
+         inkscape:export-filename="D:\MoDyPy\Tutorials\05_DC_Engine\GRAPHICS\05_dc_engine_propeller_block.png"
          id="g15492">
         <path
            id="path4870"
@@ -801,36 +789,6 @@
            style="fill:none;stroke:#000000;stroke-width:0.75;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker7296)"
            d="m 145.52083,74.083333 h -7.9375"
            id="path4872" />
-        <g
-           transform="matrix(0.37499999,0,0,0.37499999,123.08342,80.859583)"
-           id="g3561-9">
-          <svg
-             height="100%"
-             width="100%"
-             version="1.1"
-             id="svg3559-8">
-            <path
-               d="m 3.8199999,6.3800001 h 5.6000002 c 0.4533329,0 0.7133329,0.1000004 0.7799999,0.3000002 v 0.019999 c 0.01333,0.04 0.02,0.093334 0.02,0.1600008 0,0.4533334 -0.3266665,0.6799998 -0.9799992,0.6799994 H 5.8799996 L 4.54,14.38 C 4.4333334,14.886666 4.2199998,15.166667 3.8999999,15.22 3.833333,15.233334 3.7733331,15.24 3.72,15.24 c -0.346667,0 -0.5400004,-0.18 -0.5800001,-0.54 -3e-7,-0.09333 0.066667,-0.34 0.2,-0.74 L 5.2999997,7.54 H 3.6399999 C 2.5999999,7.5400004 1.7533332,8.0533333 1.1,9.0799999 0.97999996,9.2399998 0.87333328,9.3199997 0.77999991,9.3199997 0.61999995,9.3199997 0.53999996,9.253334 0.53999996,9.1200008 0.53999996,8.9733334 0.77999997,8.5733337 1.26,7.9200001 1.4333332,7.6933336 1.5999999,7.4933338 1.76,7.3200002 2.3466663,6.6933336 3.0333331,6.3800001 3.8199999,6.3800001 Z"
-               fill="#000000"
-               id="path3549-0" />
-            <path
-               d="m 10.619101,11.812 c 0.503999,0 0.877332,0.209999 1.119999,0.629999 0.09333,0.177334 0.149333,0.373334 0.168001,0.588001 0.597333,-0.812 1.325332,-1.218 2.184,-1.218 0.476,0 0.858666,0.121333 1.147999,0.364 0.261333,0.224 0.410667,0.555333 0.448,0.994 0.634666,-0.905333 1.395334,-1.358 2.282001,-1.358 0.830666,0 1.343998,0.322 1.540001,0.966 v 0.014 c 0.04667,0.158666 0.07,0.331333 0.07,0.517999 0,0.494668 -0.284668,1.521334 -0.854001,3.08 -0.168001,0.410668 -0.252,0.742001 -0.252,0.994002 0,0.307998 0.111999,0.462 0.336,0.462 0.578667,0 1.035999,-0.513335 1.372,-1.540001 l 0.056,-0.195999 c 0.04667,-0.149334 0.09333,-0.228668 0.140001,-0.238001 v -0.014 h 0.07 c 0.111999,0 0.167999,0.04667 0.167999,0.14 0,0.158666 -0.098,0.452666 -0.294001,0.881999 -0.401335,0.849335 -0.914667,1.274 -1.539999,1.274 -0.476002,0 -0.816667,-0.200666 -1.021999,-0.601999 -0.084,-0.167999 -0.126001,-0.35 -0.126001,-0.545999 0,-0.186667 0.06067,-0.443335 0.182001,-0.770001 0.578666,-1.530666 0.868,-2.576 0.868,-3.136 0,-0.653333 -0.252003,-0.98 -0.756001,-0.98 -0.821335,0 -1.502668,0.443334 -2.044,1.33 -0.149334,0.233333 -0.238,0.410666 -0.266001,0.532 -0.028,0.121333 -0.308,1.246001 -0.839999,3.374001 C 14.674434,17.757334 14.557767,18 14.4271,18.084 l -0.014,0.014 h -0.014 c -0.06533,0.03733 -0.149333,0.056 -0.252,0.056 -0.233333,-0.04666 -0.368666,-0.172666 -0.406,-0.378 l 0.182,-0.825998 0.28,-1.064001 0.392,-1.624 c 0.14,-0.522667 0.21,-0.910001 0.21,-1.162 0,-0.653333 -0.251999,-0.98 -0.755999,-0.98 -0.840001,0 -1.544667,0.466667 -2.114,1.4 -0.06533,0.102666 -0.121335,0.205333 -0.168001,0.308 l -0.182,0.7 c -0.04667,0.214666 -0.125999,0.527333 -0.238,0.938 l -0.307999,1.26 c -0.158667,0.644001 -0.247334,0.989334 -0.266001,1.035999 -0.084,0.242668 -0.256666,0.373335 -0.518,0.392 -0.233333,-0.04666 -0.3686664,-0.172666 -0.4059999,-0.378 0,0.01867 0.042,-0.181999 0.1260004,-0.601999 l 0.8119995,-3.234 c 0.149334,-0.597334 0.224001,-0.989335 0.224001,-1.176001 0,-0.429333 -0.144667,-0.644 -0.434,-0.644 -0.382668,0 -0.6953337,0.443334 -0.9380009,1.33 -0.028,0.102667 -0.056,0.214667 -0.084,0.335999 C 9.4524333,13.991333 9.3731,14.098667 9.3171002,14.108 9.2050998,14.108 9.1491,14.06133 9.1491,13.968 c 0,-0.149334 0.088667,-0.466667 0.2659998,-0.952 0.056,-0.158667 0.1120005,-0.294 0.1680002,-0.406 0.224,-0.457333 0.504,-0.718666 0.84,-0.784 0.06533,-0.0093 0.130666,-0.014 0.196001,-0.014 z"
-               fill="#000000"
-               id="path3551-6" />
-            <path
-               d="m 27.955296,0 c 0.133333,9.5367432e-7 0.2,0.06666756 0.2,0.2000007 0,0.0666667 -0.08667,0.18000037 -0.260002,0.3399992 C 25.748629,2.7266674 24.675295,5.8800011 24.675295,10 c 0,4.106667 1.046667,7.226667 3.140001,9.360001 0.226666,0.226665 0.34,0.373333 0.34,0.439998 0,0.133333 -0.06667,0.200001 -0.2,0.200001 -0.16,0 -0.513335,-0.273335 -1.060002,-0.82 -0.826666,-0.826667 -1.513332,-1.806667 -2.059999,-2.94 -0.879999,-1.813334 -1.32,-3.893334 -1.32,-6.24 0,-2.2533331 0.42,-4.2866669 1.26,-6.0999994 0.693333,-1.4799996 1.573334,-2.666667 2.64,-3.56000051 C 27.695295,0.11333466 27.875294,9.5367432e-7 27.955296,0 Z"
-               fill="#000000"
-               id="path3553-0" />
-            <path
-               d="m 33.833096,2.4800005 c 0.346664,9e-7 0.539997,0.1800013 0.579998,0.54 0,0.08 -0.273331,1.2000007 -0.82,3.3599996 h 1.760002 c 0.346664,0 0.533333,0.073334 0.559998,0.2200003 0,0.2399998 -0.106667,0.373333 -0.32,0.3999996 h -0.02 -0.259998 -1.880001 l -1.48,5.9 c -0.08,0.333334 -0.119998,0.653333 -0.119998,0.96 0,0.613333 0.206665,0.92 0.619998,0.92 0.880002,0 1.653336,-0.646667 2.32,-1.94 l 0.279999,-0.62 c 0.08,-0.173333 0.18,-0.266666 0.300003,-0.279999 0.16,0 0.239998,0.06667 0.239998,0.199999 0,0.173334 -0.173332,0.553334 -0.520001,1.14 -0.77333,1.293334 -1.659999,1.94 -2.659999,1.94 -0.773333,0 -1.319998,-0.32 -1.64,-0.96 -0.133333,-0.266666 -0.199999,-0.56 -0.199999,-0.88 0,-0.253333 0.406666,-1.98 1.22,-5.1799992 L 32.093094,7 H 30.333096 C 29.999762,7 29.819761,6.9466667 29.793095,6.8400002 h -0.02 v -0.08 c 0,-0.2266664 0.106667,-0.3533334 0.320002,-0.3800001 h 0.279999 1.879999 l 0.780002,-3.1800003 c 0.119999,-0.4666662 0.386666,-0.706666 0.8,-0.7199993 z"
-               fill="#000000"
-               id="path3555-0" />
-            <path
-               d="m 37.875355,0 c 0.16,9.5367432e-7 0.513332,0.2733345 1.060001,0.82000077 C 39.76202,1.6466675 40.448689,2.626667 40.995354,3.7600002 41.875355,5.5733337 42.315353,7.6533337 42.315353,10 c 0,2.253333 -0.419998,4.286667 -1.259998,6.1 -0.693333,1.48 -1.573334,2.666666 -2.639999,3.56 -0.280003,0.226665 -0.460003,0.34 -0.540001,0.34 -0.133335,0 -0.200001,-0.06667 -0.200001,-0.200001 0,-0.06667 0.08667,-0.18 0.260002,-0.34 C 40.08202,17.273333 41.155354,14.12 41.155354,10 c 0,-4.0666656 -1,-7.1466656 -3,-9.23999965 l -0.1,-0.1000005 c -0.253333,-0.23999977 -0.38,-0.39333248 -0.38,-0.45999915 C 37.675354,0.06666756 37.74202,9.5367432e-7 37.875355,0 Z"
-               fill="#000000"
-               id="path3557-3" />
-          </svg>
-        </g>
         <g
            id="g3752"
            transform="matrix(0.37499999,0,0,0.37499999,125.8225,47.711667)">
@@ -947,10 +905,6 @@
            id="path4872-1"
            d="m 211.66667,79.374993 h 7.9375"
            style="fill:none;stroke:#000000;stroke-width:0.750001;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker5016-9)" />
-        <path
-           id="path6007"
-           d="m 145.52083,89.958333 h -7.9375"
-           style="fill:none;stroke:#000000;stroke-width:0.75;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker7306)" />
         <g
            id="g15192">
           <rect
@@ -959,7 +913,7 @@
              height="47.625"
              width="66.145836"
              id="rect4818"
-             style="fill:#ececec;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none" />
+             style="fill:#ececec;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none" />
           <text
              id="text4860"
              y="89.958336"
@@ -1017,14 +971,14 @@
       <g
          inkscape:export-ydpi="96.115173"
          inkscape:export-xdpi="96.115173"
-         inkscape:export-filename="D:\Ralf Gerlich\Videos\MoDyPy\Tutorials\05_DC_Engine\GRAPHICS\05_dc_engine_motor_block.png"
+         inkscape:export-filename="D:\MoDyPy\Tutorials\05_DC_Engine\GRAPHICS\05_dc_engine_motor_block.png"
          id="g4720"
          transform="translate(-6.4195964e-6,2.645833)">
         <g
            transform="translate(-18.520832,-10.583333)"
            id="g2787">
           <rect
-             style="fill:#ececec;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none"
+             style="fill:#ececec;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none"
              id="rect2563"
              width="66.145836"
              height="47.625"
@@ -1336,11 +1290,6 @@
          id="path7620"
          sodipodi:nodetypes="cccc" />
       <path
-         id="path7786"
-         d="M 100.54167,89.958333 H 134.9375"
-         style="fill:none;stroke:#000000;stroke-width:0.75;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker7790);marker-end:url(#marker7800)"
-         sodipodi:nodetypes="cc" />
-      <path
          style="fill:none;stroke:#000000;stroke-width:0.75;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker8098);marker-end:url(#marker8276)"
          d="m 222.25,79.374999 h 5.29166 V 103.1875 H 5.2916666 V 79.374999 h 7.9375004"
          id="path8094" />
@@ -1358,9 +1307,9 @@
        d="m 222.25,63.499999 h 23.8125"
        style="fill:none;stroke:#000000;stroke-width:0.75;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker10646);marker-end:url(#marker10860)" />
     <path
-       sodipodi:nodetypes="ccczcc"
        id="path11078"
-       d="m 124.35417,89.958332 v 10.583338 h 100.54166 c 0,0 -1e-5,-2.645839 2.64583,-2.645838 2.64584,10e-7 2.64584,2.645838 2.64584,2.645838 h 15.875"
-       style="fill:none;stroke:#000000;stroke-width:0.75;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker11112)" />
+       style="fill:none;stroke:#000000;stroke-width:0.75;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker1743);marker-end:url(#marker11112)"
+       d="m 100.54167,89.958333 23.8125,-10e-7 v 10.583338 h 100.54166 c 0,0 -1e-5,-2.645839 2.64583,-2.645838 2.64584,10e-7 2.64584,2.645838 2.64584,2.645838 h 15.875"
+       sodipodi:nodetypes="ccsccc" />
   </g>
 </svg>

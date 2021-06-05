@@ -33,7 +33,7 @@ which we will use in this example.
 Defining our System
 -------------------
 
-We again start by importing our required elements:
+We again start by importing our required elements and defining the constants:
 
 .. code-block:: python
 
@@ -45,6 +45,17 @@ We again start by importing our required elements:
     from modypy.blocks.sources import constant
     from modypy.simulation import Simulator
 
+    # Motor Parameters
+    MOTOR_CONSTANT = 789.E-6  # V/(rad/s)
+    RESISTANCE = 43.3E-3  # Ohm
+    INDUCTANCE = 1.9E-3  # H
+    MOMENT_OF_INERTIA = 5.284E-6  # kg m^2
+
+    # Propeller Parameters
+    DIAMETER = 8*25.4E-3  # m
+    THRUST_COEFFICIENT = 0.09
+    POWER_COEFFICIENT = 0.04
+
 We will re-use the ``Engine`` class as well as the system definition from the
 previous exercise:
 
@@ -55,13 +66,13 @@ previous exercise:
 
     system = System()
     engine = Engine(system,
-                    motor_constant=789.E-6,
-                    resistance=43.3E-3,
-                    inductance=1.9E-3,
-                    moment_of_inertia=5.284E-6,
-                    thrust_coefficient=0.09,
-                    power_coefficient=0.04,
-                    diameter=8*25.4E-3)
+                    motor_constant=MOTOR_CONSTANT,
+                    resistance=RESISTANCE,
+                    inductance=INDUCTANCE,
+                    moment_of_inertia=MOMENT_OF_INERTIA,
+                    thrust_coefficient=THRUST_COEFFICIENT,
+                    power_coefficient=POWER_COEFFICIENT,
+                    diameter=DIAMETER)
 
     # Provide constant signals for the voltage and the air density
     voltage = constant(value=3.5)
