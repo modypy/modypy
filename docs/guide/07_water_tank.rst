@@ -67,6 +67,11 @@ create a new system:
 
 .. code-block:: python
 
+    import numpy as np
+
+    from modypy.model import System, InputSignal, State
+    from modypy.steady_state import SteadyStateConfiguration, find_steady_state
+
     # Constants
     G = 9.81    # Gravity
     A1 = 0.01   # Inflow cross section
