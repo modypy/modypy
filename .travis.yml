@@ -10,7 +10,7 @@ git:
 install:
    - pip install -r requirements-test.txt
    - pip install pytest-cov
-   - pip install -e .
+   - python setup.py install
 script:
    - pytest --cov=modypy --cov-config=.coveragerc --cov-report=xml
 after_success:
