@@ -8,8 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - ``SimulationResult`` now implements the sequence protocol (#36)
 ### Changed
-- Added a schematic and made some information more explicit in the integrator
-  tutorial.
+- Improved the User's Guide.
 ### Removed
 - Remove the ``SignalState`` class. Now all states are also signals.
 
