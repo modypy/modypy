@@ -60,7 +60,7 @@ bounce_event.register_listener(bounce_event_handler)
 
 # Run another simulation
 simulator = Simulator(system, start_time=0.0, max_step=0.1)
-result = SimulationResult(system, simulator.run_until(time_boundary=10))
+result = SimulationResult(system, simulator.run_until(time_boundary=8))
 
 # Plot the result
 plt.figure()
