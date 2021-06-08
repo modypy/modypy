@@ -101,7 +101,7 @@ case --- or they can be multi-dimensional with a defined
 `shape <https://numpy.org/devdocs/reference/arrays.ndarray.html>`_.
 The default --- as created by the
 :func:`signal_function <modypy.model.ports.signal_function>` decorator, however,
-is a `scalar <https://numpy.org/doc/stable/reference/arrays.scalars.html>`,
+is a :doc:`scalar <numpy:reference/arrays.scalars>`,
 which has the empty shape `()`.
 
 Now we need to create the integrator.
