@@ -152,6 +152,194 @@ class SimulationResult(Sequence):
         return self.current_idx
 
 
+class SimpleEventDetector:
+    """Helper class for detecting and localizing events
+
+    Args:
+        system: The system for which to detect events.
+        events: The events to consider (default: all events in the system)
+        xtol: The absolute tolerance for event times.
+        maxiter: The maximum number of iterations for the root finding
+            algorithm.
+        max_subdiv: The maximum number of subdivisions for a given time
+            interval.
+        min_subdiv_length: The minimum length of a subdivision.
+    """
+
+    def __init__(
+        self,
+        system,
+        events,
+        xtol=1e-12,
+        maxiter=1000,
+        max_subdiv=5,
+        min_subdiv_length=1e-3,
+    ):
+        self.system = system
+        self.events = events
+        self.xtol = xtol
+        self.maxiter = maxiter
+        self.max_subdiv = max_subdiv
+        self.min_subdiv_length = min_subdiv_length
+        self.event_tolerances = np.array([event.tolerance for event in events])
+        self.event_directions = np.array([event.direction for event in events])
+
+    def localize_first_event(self, start_time, end_time, state, inputs):
+        """Localize the first event occurring in the given time frame.
+
+        Args:
+            start_time: The start time of the time frame.
+            end_time: The end time of the time_frame.
+            state:
+                A callable, with `state(t)` being the state vector at time `t`
+                for any scalar or one-dimensional array `t` with
+                `start_time <= t <= end_time`.
+            inputs:
+                A callable, with `state(t)` being the input vector at time `t`
+                for any scalar or one-dimensional array `t` with
+                `start_time <= t <= end_time`.
+        Returns:
+            A tuple `(time, event)`, giving time and event object for the first
+            event having occurred in the given time frame, or `None`, if none of
+            the events has occurred in the time frame.
+        """
+        event_locs = self.localize_events(start_time, end_time, state, inputs)
+        if len(event_locs) > 0:
+            # At least one of the events has occurred, so we find the first one
+            return min(event_locs, key=lambda evt: evt[0])
+        return None
+
+    def localize_events(self, start_time, end_time, state, inputs):
+        """Localize the all events occurring in the given time frame.
+
+        To do that, we subdivide the given time interval into at most
+        `max_subdiv` or `ceil((end_time-start_time)/min_subdiv_length)`
+        subdivisions, whichever is smaller.
+
+        We then check each subdivision for active events and localize them.
+
+        Args:
+            start_time: The start time of the time frame.
+            end_time: The end time of the time_frame.
+            state:
+                A callable, with `state(t)` being the state vector at time `t`
+                for any scalar or one-dimensional array `t` with
+                `start_time <= t <= end_time`.
+            inputs:
+                A callable, with `state(t)` being the input vector at time `t`
+                for any scalar or one-dimensional array `t` with
+                `start_time <= t <= end_time`.
+        Returns:
+            A list of tuples `(time, event)`, giving time and event object for
+            each event having occurred in the given time frame.
+        """
+
+        # Determine the number of subdivisions to create
+        time_length = end_time - start_time
+        subdivision_count = min(
+            self.max_subdiv, int(np.ceil(time_length / self.min_subdiv_length))
+        )
+        # Determine the sampling times
+        sample_times = np.linspace(
+            start=start_time, stop=end_time, num=subdivision_count + 1
+        )
+
+        # Get the values of the event functions at these points
+        states = SystemState(
+            system=self.system,
+            time=sample_times,
+            state=state(sample_times),
+            inputs=inputs(sample_times),
+        )
+        event_values = np.array([event(states) for event in self.events])
+
+        # Determine the location of the event values relative to the boundaries
+        positive = event_values.T > self.event_tolerances
+        negative = event_values.T < -self.event_tolerances
+
+        up = (negative[:-1] & ~negative[1:]) | (~positive[:-1] & positive[1:])
+        down = (~negative[:-1] & negative[1:]) | (positive[:-1] & ~positive[1:])
+        mask = np.transpose(
+            (up & (self.event_directions >= 0))
+            | (down & (self.event_directions <= 0))
+        )
+
+        # For each of the active events, localize the zero-crossing
+        locations = list()
+        for idx, event in enumerate(self.events):
+            for time_idx, flag in enumerate(mask[idx]):
+                if flag:
+                    event_time = self._find_event_time(
+                        event,
+                        sample_times[time_idx],
+                        sample_times[time_idx + 1],
+                        state,
+                        inputs,
+                    )
+                    locations.append((event_time, event))
+        return locations
+
+    def _find_event_time(self, event, start_time, end_time, state, inputs):
+        """
+        Find the time when the sign change occurs.
+
+        Args:
+            start_time: The start time of the time frame.
+            end_time: The end time of the time_frame.
+            state:
+                A callable, with `state(t)` being the state vector at time `t`
+                for any scalar or one-dimensional array `t` with
+                `start_time <= t <= end_time`.
+            inputs:
+                A callable, with `state(t)` being the input vector at time `t`
+                for any scalar or one-dimensional array `t` with
+                `start_time <= t <= end_time`.
+        Returns:
+            A time at or after the sign change occurs
+        """
+
+        assert start_time <= end_time
+
+        start_state = SystemState(
+            system=self.system,
+            time=start_time,
+            state=state(start_time),
+            inputs=inputs(start_time),
+        )
+        end_state = SystemState(
+            system=self.system,
+            time=end_time,
+            state=state(end_time),
+            inputs=inputs(end_time),
+        )
+
+        start_value = event(start_state)
+        end_value = event(end_state)
+
+        assert (
+            (start_value < -event.tolerance) ^ (end_value < -event.tolerance)
+        ) | ((event.tolerance < start_value) ^ (event.tolerance < end_value))
+
+        iter_count = 0
+        time_diff = end_time - start_time
+        while iter_count < self.maxiter and time_diff > self.xtol:
+            time_diff /= 2
+            mid_time = start_time + time_diff
+            mid_state = SystemState(
+                system=self.system,
+                time=mid_time,
+                state=state(mid_time),
+                inputs=inputs(mid_time),
+            )
+            mid_value = event(mid_state)
+            mid_value = 0 if np.abs(mid_value) < event.tolerance else mid_value
+            if np.sign(mid_value) == np.sign(start_value):
+                # The sign change happens after mid_time
+                start_time = mid_time
+            iter_count += 1
+        return start_time
+
+
 class Simulator:
     """Simulator for dynamic systems.
 
@@ -171,16 +359,23 @@ class Simulator:
             specified in the states)
         event_xtol:
             The absolute tolerance for identifying the time of a
-            zero-crossing event.
+            zero-crossing event. Deprecated. Use `event_detector_options`
+            instead.
         event_maxiter:
             The maximum number of iterations for identifying the time of a
-            zero-crossing event.
+            zero-crossing event. Deprecated. Use `event_detector_options`
+            instead.
         solver:
             The solver to be used for integrating continuous-time systems.
             The default is the :class:`DOP853 <scipy.integrate.DOP853>`
             solver.
         solver_options:
             Options to be passed to the solver constructor.
+        event_detector:
+            Constructor for an event detector implementation. See
+            :class:`SimpleEventDetector` for more information.
+        event_detector_options:
+            Optional keyword arguments to the event detector constructor.s
     """
 
     def __init__(
@@ -189,9 +384,11 @@ class Simulator:
         start_time=0,
         initial_condition=None,
         max_successive_event_count=1000,
-        event_xtol=1.0e-12,
-        event_maxiter=1000,
+        event_xtol=None,
+        event_maxiter=None,
         solver_method=DEFAULT_INTEGRATOR,
+        event_detector=SimpleEventDetector,
+        event_detector_options=None,
         **solver_options
     ):
         """Construct a simulator for the system."""
@@ -199,10 +396,16 @@ class Simulator:
         # Store the parameters
         self.system = system
         self.max_successive_event_count = max_successive_event_count
-        self.event_xtol = event_xtol
-        self.event_maxiter = event_maxiter
+        if event_maxiter is not None:
+            warnings.warn("event_maxiter is deprecated", DeprecationWarning)
+        if event_xtol is not None:
+            warnings.warn("event_xtol is deprecated", DeprecationWarning)
         self.solver_method = solver_method
         self.solver_options = solver_options
+        self.event_detector = event_detector
+        if event_detector_options is None:
+            event_detector_options = dict()
+        self.event_detector_options = event_detector_options
 
         # Initialize the simulation state
         self.current_time = start_time
@@ -288,11 +491,15 @@ class Simulator:
         non_terminating_events = [
             event for event in self.system.events if len(event.listeners) == 0
         ]
-        terminating_detector = _EventDetector(
-            system=self.system, events=terminating_events
+        terminating_detector = self.event_detector(
+            system=self.system,
+            events=terminating_events,
+            **self.event_detector_options
         )
-        non_terminating_detector = _EventDetector(
-            system=self.system, events=non_terminating_events
+        non_terminating_detector = self.event_detector(
+            system=self.system,
+            events=non_terminating_events,
+            **self.event_detector_options
         )
 
         while self.current_time < time_boundary:
@@ -502,166 +709,6 @@ class Simulator:
         system_state = SystemState(system=self.system, time=time, state=state)
         state_derivative = self.system.state_derivative(system_state)
         return state_derivative
-
-
-class _EventDetector:
-    """Helper class for detecting and localizing events"""
-
-    def __init__(self, system, events, xtol=1e-12, maxiter=1000):
-        self.system = system
-        self.events = events
-        self.xtol = xtol
-        self.maxiter = maxiter
-        self.event_tolerances = np.array([event.tolerance for event in events])
-        self.event_directions = np.array([event.direction for event in events])
-
-    def localize_first_event(self, start_time, end_time, state, inputs):
-        """Localize the first event occurring in the given time frame.
-
-        Args:
-            start_time: The start time of the time frame.
-            end_time: The end time of the time_frame.
-            state:
-                A callable, with `state(t)` being the state vector at time `t`
-                for any scalar or one-dimensional array `t` with
-                `start_time <= t <= end_time`.
-            inputs:
-                A callable, with `state(t)` being the input vector at time `t`
-                for any scalar or one-dimensional array `t` with
-                `start_time <= t <= end_time`.
-        Returns:
-            A tuple `(time, event)`, giving time and event object for the first
-            event having occurred in the given time frame, or `None`, if none of
-            the events has occurred in the time frame.
-        """
-        event_locs = self.localize_events(start_time, end_time, state, inputs)
-        if len(event_locs) > 0:
-            # At least one of the events has occurred, so we find the first one
-            return min(event_locs, key=lambda evt: evt[0])
-        return None
-
-    def localize_events(self, start_time, end_time, state, inputs):
-        """Localize the all events occurring in the given time frame.
-
-        Args:
-            start_time: The start time of the time frame.
-            end_time: The end time of the time_frame.
-            state:
-                A callable, with `state(t)` being the state vector at time `t`
-                for any scalar or one-dimensional array `t` with
-                `start_time <= t <= end_time`.
-            inputs:
-                A callable, with `state(t)` being the input vector at time `t`
-                for any scalar or one-dimensional array `t` with
-                `start_time <= t <= end_time`.
-        Returns:
-            A list of tuples `(time, event)`, giving time and event object for
-            each event having occurred in the given time frame.
-        """
-        start_state = SystemState(
-            system=self.system,
-            time=start_time,
-            state=state(start_time),
-            inputs=inputs(start_time),
-        )
-        end_state = SystemState(
-            system=self.system,
-            time=end_time,
-            state=state(end_time),
-            inputs=inputs(end_time),
-        )
-
-        # Determine the list of active events
-        active_events = self._get_active_events(start_state, end_state)
-
-        # For each of the active events, localize the zero-crossing
-        locations = list()
-        for event in active_events:
-            event_time = self._find_event_time(
-                event, start_time, end_time, state, inputs
-            )
-            locations.append((event_time, event))
-        return locations
-
-    def _get_active_events(self, start_state, end_state):
-        """Determine which events are active in the given time frame.
-
-        Args:
-            start_state: The state at the beginning of the time frame.
-            end_state: The state at the end of the time frame.
-        Returns:
-            List of events that have occurred in the given time frame.
-        """
-        start_values = np.array([event(start_state) for event in self.events])
-        end_values = np.array([event(end_state) for event in self.events])
-
-        mask = _find_active_events(
-            start_values,
-            end_values,
-            self.event_tolerances,
-            self.event_directions,
-        )
-        return [event for event, flag in zip(self.events, mask) if flag]
-
-    def _find_event_time(self, event, start_time, end_time, state, inputs):
-        """
-        Find the time when the sign change occurs.
-
-        Args:
-            start_time: The start time of the time frame.
-            end_time: The end time of the time_frame.
-            state:
-                A callable, with `state(t)` being the state vector at time `t`
-                for any scalar or one-dimensional array `t` with
-                `start_time <= t <= end_time`.
-            inputs:
-                A callable, with `state(t)` being the input vector at time `t`
-                for any scalar or one-dimensional array `t` with
-                `start_time <= t <= end_time`.
-        Returns:
-            A time at or after the sign change occurs
-        """
-
-        assert start_time <= end_time
-
-        start_state = SystemState(
-            system=self.system,
-            time=start_time,
-            state=state(start_time),
-            inputs=inputs(start_time),
-        )
-        end_state = SystemState(
-            system=self.system,
-            time=end_time,
-            state=state(end_time),
-            inputs=inputs(end_time),
-        )
-
-        start_value = event(start_state)
-        end_value = event(end_state)
-
-        assert (
-            (start_value < -event.tolerance) ^ (end_value < -event.tolerance)
-        ) | ((event.tolerance < start_value) ^ (event.tolerance < end_value))
-
-        iter_count = 0
-        time_diff = end_time - start_time
-        while iter_count < self.maxiter and time_diff > self.xtol:
-            time_diff /= 2
-            mid_time = start_time + time_diff
-            mid_state = SystemState(
-                system=self.system,
-                time=mid_time,
-                state=state(mid_time),
-                inputs=inputs(mid_time),
-            )
-            mid_value = event(mid_state)
-            mid_value = 0 if np.abs(mid_value) < event.tolerance else mid_value
-            if np.sign(mid_value) == np.sign(start_value):
-                # The sign change happens after mid_time
-                start_time = mid_time
-            iter_count += 1
-        return start_time
 
 
 class _SystemStateUpdater(SystemState):

@@ -164,8 +164,7 @@ def test_zero_crossing_event_detection():
         start_time=0,
         initial_condition=initial_condition,
         max_step=0.05,
-        event_xtol=1.0e-9,
-        event_maxiter=1000,
+        event_detector_options={"max_subdiv": 10},
     )
     result = SimulationResult(system, simulator.run_until(time_boundary=8.0))
 
@@ -351,3 +350,13 @@ def test_system_state_updater_dictionary_access():
     simulator = Simulator(system, start_time=0)
     for _ in simulator.run_until(time_boundary=10):
         pass
+
+
+def test_deprecated_options():
+    """Test if deprecated options lead to warnings"""
+
+    system = System()
+    with pytest.warns(DeprecationWarning):
+        Simulator(system, start_time=0, event_xtol=1e-12)
+    with pytest.warns(DeprecationWarning):
+        Simulator(system, start_time=0, event_maxiter=1000)

@@ -33,8 +33,9 @@ class System:
         """The initial condition vector for the state of this system"""
         initial_condition = np.zeros(self.num_states)
         for state in self.states:
-            initial_condition[state.state_slice] = \
-                state.initial_condition.ravel()
+            initial_condition[
+                state.state_slice
+            ] = state.initial_condition.ravel()
         return initial_condition
 
     @property
@@ -116,8 +117,9 @@ class System:
         """
         event_vector = np.empty(self.num_events)
         for event_instance in self.events:
-            event_vector[event_instance.event_index] = \
-                event_instance(system_state)
+            event_vector[event_instance.event_index] = event_instance(
+                system_state
+            )
         return event_vector
 
     def state_derivative(self, system_state):
@@ -133,8 +135,9 @@ class System:
         state_derivative = np.zeros(self.num_states)
         for state_instance in self.states:
             if state_instance.derivative_function is not None:
-                state_derivative[state_instance.state_slice] = \
-                    np.ravel(state_instance.derivative_function(system_state))
+                state_derivative[state_instance.state_slice] = np.ravel(
+                    state_instance.derivative_function(system_state)
+                )
         return state_derivative
 
 
@@ -170,7 +173,10 @@ class SystemState:
         Returns:
           The value of the state
         """
-        return self.state[state.state_slice].reshape(state.shape)
+        if np.isscalar(self.time):
+            return self.state[state.state_slice].reshape(state.shape)
+        else:
+            return self.state[state.state_slice].reshape(state.shape + (-1,))
 
     def get_input_value(self, signal):
         """Determine the value of a given input signal.
@@ -181,11 +187,15 @@ class SystemState:
         Returns:
             The value of the input signal
         """
-        return self.inputs[signal.input_slice].reshape(signal.shape)
+        if np.isscalar(self.time):
+            return self.inputs[signal.input_slice].reshape(signal.shape)
+        else:
+            return self.inputs[signal.input_slice].reshape(signal.shape + (-1,))
 
     def __getitem__(self, key):
-        warnings.warn("The dictionary access interface is deprecated",
-                      DeprecationWarning)
+        warnings.warn(
+            "The dictionary access interface is deprecated", DeprecationWarning
+        )
         if isinstance(key, tuple):
             # In case of a tuple, the first entity is the actual object to
             # access and the remainder is the index into the object
