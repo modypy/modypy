@@ -2,9 +2,10 @@ User's Guide
 ============
 
 Before you start diving into the details of programming systems and blocks, have
-a look at the :doc:`mathematical background of dynamical systems <math>`, if you
-haven't already. That theory will help you understand much better what goes on
-in the system simulation.
+a look at the :doc:`mathematical background of dynamical systems
+<background/math>`, if you haven't already.
+That theory will help you understand much better what goes on in the system
+simulation.
 
 Also, as MoDyPy is heavily based on `NumPy <https://numpy.org>`_, you might want
 check out their documentation as well, at least the basic introduction into

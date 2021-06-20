@@ -105,6 +105,6 @@ Contributions must adhere to the following conditions:
     :hidden:
     :maxdepth: 2
 
-    math
+    background
     guide
     api/api
