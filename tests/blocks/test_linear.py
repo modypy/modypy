@@ -94,6 +94,13 @@ def test_gain_class():
     npt.assert_almost_equal(gain_block.output(None), [11, 25])
 
 
+def test_scalar_gain_function():
+    gain_in = constant(value=[[3, 4], [5, 6]])
+    gain_signal = gain(gain_matrix=3, input_signal=gain_in)
+
+    npt.assert_almost_equal(gain_signal(None), [[9, 12], [15, 18]])
+
+
 def test_gain_function():
     gain_in = constant(value=[3, 4])
     gain_signal = gain(gain_matrix=[[1, 2], [3, 4]], input_signal=gain_in)

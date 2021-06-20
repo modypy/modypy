@@ -255,6 +255,22 @@ def _gain_function(gain_matrix, input_signal, data):
     return np.matmul(gain_matrix, input_signal(data))
 
 
+def _scalar_gain_function(gain_factor, input_signal, data):
+    """
+    Calculate the product of the given scalar gain and the value of the signal.
+
+    Args:
+        gain_factor: The gain to apply
+        input_signal: The input signal
+        data: The data provider
+
+    Returns:
+        The product of the gain and the value of the signal
+    """
+
+    return np.multiply(gain_factor, input_signal(data))
+
+
 def gain(gain_matrix, input_signal):
     """
     Create a signal that represents the product of the given gain matrix and the
@@ -270,11 +286,17 @@ def gain(gain_matrix, input_signal):
     """
 
     # Determine the shape of the output signal
-    output_shape = (gain_matrix @ np.zeros(input_signal.shape)).shape
-    return Signal(
-        shape=output_shape,
-        value=partial(_gain_function, gain_matrix, input_signal),
-    )
+    if np.isscalar(gain_matrix):
+        return Signal(
+            shape=input_signal.shape,
+            value=partial(_scalar_gain_function, gain_matrix, input_signal),
+        )
+    else:
+        output_shape = (gain_matrix @ np.zeros(input_signal.shape)).shape
+        return Signal(
+            shape=output_shape,
+            value=partial(_gain_function, gain_matrix, input_signal),
+        )
 
 
 class Sum(Block):
