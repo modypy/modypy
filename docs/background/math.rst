@@ -131,5 +131,47 @@ However, MoDyPy is able to handle non-linear and linear systems of both the
 discrete- and the continuous-time variant. Specifically, MoDyPy is designed to
 handle mixed systems consisting of continuous-time and discrete-time parts,
 also with mixed periods. It can also
-:doc:`derive linear approximations <api/packages/linearization>` of the dynamics
+:doc:`derive linear approximations </api/packages/linearization>` of the dynamics
 of a continuous-time non-linear system.
+
+Event Functions
+---------------
+
+Besides regular clocks, so-called mixed systems can also contain discrete
+state transitions defined by the occurrence of events that are not bound to
+time.
+Examples for such events can be a ball hitting a surface (see the
+:doc:`Bouncing Ball Tutorial </guide/04_bouncing_ball>`) or the velocity of a
+car falling below the minimum at which adaptive cruise control is possible.
+
+Such events can be described by so-called event functions, which are functions
+mapping the state of the system to a scalar.
+The event is said to occur when the event function changes its sign.
+The sign change can also be constrained to a specific direction, so that the
+event is said to occur only if the sign changes, for example, from positive to
+negative.
+
+State-changes can be modelled to be a consequence of such events.
+For example, a model of a car with adaptive cruise control can actively
+deactivate the controller when the velocity drops below the pre-defined
+threshold.
+
+However, such state changes can also lead to other state changes.
+In the example of the bouncing ball, bouncing off the ground leads to loss of
+energy in the ball due to internal friction.
+As a consequence, the maximum height to which the ball will ascend after
+bouncing will diminish with each bounce, and the time between bounces will
+become smaller and smaller.
+
+For the bouncing ball and other similar systems the maximum number of events
+occurring in any given positive length of time may be unbounded.
+That means that for any natural number :math:`n` and any positive length of time
+:math:`\Delta t>0` we would be able to find a time interval
+:math:`\left[t, t+\Delta t)` such that there are more than :math:`n` events in
+that time interval.
+
+This kind of behaviour is called
+`Zeno-behaviour <https://en.wikipedia.org/wiki/Hybrid_system#Bouncing_ball>`_
+after the Greek philosopher Zeno of Elea.
+It brings a lot of problems for simulation and analysis of such hybrid systems,
+and a lot of ways were invented trying to deal with them.
