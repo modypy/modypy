@@ -16,7 +16,8 @@ States represent the internal state of the system, and signals represent the
 values calculated based on the state. Ports can be connected to signals, so that
 reusable blocks with input and output ports can be easily built. For more details,
 refer to the :doc:`User's Guide <guide>` and the
-:doc:`API Documentation <api/api>`.
+:doc:`API Documentation <api/api>` or check out the `video tutorial
+<https://www.youtube.com/watch?v=vlSGeh6Xx8A&list=PL8mUFT3KgUN_CRhiLKiNq1T7xLBfphDY->`_.
 
 Main Features
 -------------
