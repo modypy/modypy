@@ -20,7 +20,7 @@
     :target: https://codecov.io/gh/modypy/modypy
 
 .. image:: https://www.code-inspector.com/project/22584/score/svg
-    :alt: Code Quality Store
+    :alt: Code Quality Score
 
 .. image:: https://www.code-inspector.com/project/22584/status/svg
     :alt: Code Grade
