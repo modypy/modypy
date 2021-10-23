@@ -7,13 +7,13 @@
 .. image:: https://img.shields.io/github/license/modypy/modypy
     :alt: GitHub
 
-.. image:: https://travis-ci.com/modypy/modypy.svg?branch=master
-    :alt: Build Status
-    :target: https://travis-ci.com/modypy/modypy
+.. image:: https://github.com/modypy/modypy/actions/workflows/test.yml/badge.svg?branch=master
+    :alt: Build
+    :target: https://github.com/modypy/modypy/actions/workflows/test.yml
 
-.. image:: https://readthedocs.org/projects/modypy/badge/
-    :alt: ReadTheDocs Build Status
-    :target: https://docs.modypy.org
+.. image:: https://github.com/modypy/modypy/actions/workflows/deploy_devdoc.yml/badge.svg?branch=master
+    :alt: Documentation Build
+    :target: https://github.com/modypy/modypy/actions/workflows/deploy_devdoc.yml
 
 .. image:: https://codecov.io/gh/modypy/modypy/branch/master/graph/badge.svg
     :alt: Code Coverage
