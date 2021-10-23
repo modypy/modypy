@@ -1,0 +1,39 @@
+name: Run Python Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        # The Python 3.10 package used by github
+        # does not have pre-built scipy, so installing
+        # scipy takes too long. So we'll drop 3.10 for
+        # the time being.
+        python_version: ['3.6', '3.7', '3.8', '3.9']
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          # We need submodules for the documentation styles
+          submodules: true
+      - name: Set up Python ${{ matrix.python_version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python_version }}
+      - name: Install depedencies
+        run : |
+          pip install -r requirements-test.txt -r requirements-docs.txt
+      - name: Install MoDyPy
+        run : |
+          pip install .
+      - name: Test with pytest
+        run : |
+          pytest
+      - name: Test HTML documentation build
+        run : |
+          python -m sphinx -b html docs docs/_build/html

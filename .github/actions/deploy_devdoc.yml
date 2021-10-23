@@ -1,0 +1,42 @@
+name: Deploy development documentation
+
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          # We need submodules for the documentation styles
+          submodules: true
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          # github currently uses 3.10 by default, but
+          # does not have pre-built scipy, so installing
+          # scipy takes too long. Instead, we'll use 3.9
+          # for the time being.
+          python-version: "3.9"
+      - name: Install depedencies
+        run : |
+          pip install -r requirements-docs.txt
+      - name: Install MoDyPy
+        run : |
+          pip install .
+      - name: Build HTML documentation
+        run : |
+          python -m sphinx -b html -t deployment docs docs/_build/html
+      - name: Deploy the documentation to the server
+        uses: SamKirkland/FTP-Deploy-Action@4.1.0
+        with:
+          protocol: ftps
+          server: ${{ secrets.docs_server }}
+          username: ${{ secrets.docs_username }}
+          password: ${{ secrets.docs_password }}
+          local-dir: ./docs/_build/html/
+          server-dir: ${{ secrets.docs_target_dir }}
+          security: strict
