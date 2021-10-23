@@ -34,12 +34,14 @@ jobs:
       - name: Test with pytest
         run : |
           pytest --cov=modypy --cov-config=.coveragerc --cov-report=xml
+      - name: Show coverage report
+        run : |
+          cat coverage.xml
       - name: Upload coverage to codecov.io
         uses: codecov/codecov-action@v2
         with:
           files: ./coverage.xml
-          name: Python ${{ matrix.python_version }} # optional
-          verbose: true # optional (default = false)
+          name: Python ${{ matrix.python_version }}
       - name: Test HTML documentation build
         run : |
           python -m sphinx -b html docs docs/_build/html
