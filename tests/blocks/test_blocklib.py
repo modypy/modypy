@@ -7,7 +7,7 @@ from modypy.blocks.aerodyn import Propeller, Thruster
 from modypy.blocks.elmech import DCMotor
 from modypy.blocks.linear import sum_signal
 from modypy.blocks.rigid import DirectCosineToEuler, RigidBody6DOFFlatEarth
-from modypy.blocks.sources import constant, time
+from modypy.blocks.sources import constant, time, FunctionSignal
 from modypy.model import InputSignal, System, Clock
 from modypy.simulation import Simulator, SimulationResult
 from modypy.steady_state import SteadyStateConfiguration, find_steady_state
@@ -22,6 +22,39 @@ def test_time_signal():
         system=system, source=simulator.run_until(time_boundary=10.0)
     )
     npt.assert_equal(result.time, time(result))
+
+
+def atan2_function_signal():
+    sin_signal = FunctionSignal(np.sin, time)
+    cos_signal = FunctionSignal(np.cos, time)
+    atan2_signal = FunctionSignal(np.arctan2, signals=(sin_signal, cos_signal))
+    return atan2_signal
+
+
+@pytest.mark.parametrize(
+    "func_signal, ref_signal",
+    [
+        (FunctionSignal(np.sin, time), lambda s: np.sin(s.time)),
+        (
+            FunctionSignal(
+                np.arctan2,
+                signals=(
+                    FunctionSignal(np.sin, time),
+                    FunctionSignal(np.cos, time),
+                ),
+            ),
+            time,
+        ),
+    ],
+)
+def test_function_signal(func_signal, ref_signal):
+    system = System()
+    Clock(owner=system, period=1 / 10.0)
+    simulator = Simulator(system=system, start_time=0.0)
+    result = SimulationResult(
+        system=system, source=simulator.run_until(time_boundary=1.0)
+    )
+    npt.assert_almost_equal(func_signal(result), ref_signal(result))
 
 
 @pytest.mark.parametrize(
