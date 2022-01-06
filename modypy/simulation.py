@@ -623,6 +623,9 @@ class Simulator:
             # limit, so we execute all pending clock ticks now.
             self._run_clock_ticks()
 
+            # Reset the count of successive events for the next round
+            self.successive_event_count = 0
+
     def _run_clock_ticks(self):
         """Run all the pending clock ticks."""
 
