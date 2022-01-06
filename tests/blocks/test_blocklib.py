@@ -7,11 +7,21 @@ from modypy.blocks.aerodyn import Propeller, Thruster
 from modypy.blocks.elmech import DCMotor
 from modypy.blocks.linear import sum_signal
 from modypy.blocks.rigid import DirectCosineToEuler, RigidBody6DOFFlatEarth
-from modypy.blocks.sources import constant
-from modypy.model import InputSignal, System
-from modypy.simulation import Simulator
+from modypy.blocks.sources import constant, time
+from modypy.model import InputSignal, System, Clock
+from modypy.simulation import Simulator, SimulationResult
 from modypy.steady_state import SteadyStateConfiguration, find_steady_state
 from numpy import testing as npt
+
+
+def test_time_signal():
+    system = System()
+    Clock(owner=system, period=1 / 10.0)
+    simulator = Simulator(system=system, start_time=0.0)
+    result = SimulationResult(
+        system=system, source=simulator.run_until(time_boundary=10.0)
+    )
+    npt.assert_equal(result.time, time(result))
 
 
 @pytest.mark.parametrize(
