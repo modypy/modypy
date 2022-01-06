@@ -16,6 +16,9 @@ Linear blocks (:mod:`modypy.blocks.linear`)
 Discrete-Time blocks (:mod:`modypy.blocks.discrete`)
     are special blocks for use in discrete-time or mixed systems.
 
+Filter blocks (:mod:`modypy.blocks.filters`)
+    are blocks intended to simplify use of linear filters.
+
 Discontuity blocks (:mod:`modypy.blocks.discont`)
     are blocks that implement discontinuities.
 
