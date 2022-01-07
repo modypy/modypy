@@ -352,6 +352,26 @@ def test_system_state_updater_dictionary_access():
         pass
 
 
+def test_system_state_updater_previous_state_access():
+    """Test whether the previous state provided by the system state updater
+    is actually read-only"""
+
+    system = System()
+    counter = State(system, shape=(2, 2))
+
+    clock = Clock(system, 1.0)
+
+    def _update_counter(system_state):
+        system_state.prev[counter] += 1
+
+    clock.register_listener(_update_counter)
+
+    with pytest.raises(ValueError):
+        simulator = Simulator(system, start_time=0)
+        for _ in simulator.run_until(time_boundary=10):
+            pass
+
+
 def test_deprecated_options():
     """Test if deprecated options lead to warnings"""
 

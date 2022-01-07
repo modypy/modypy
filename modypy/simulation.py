@@ -716,12 +716,20 @@ class Simulator:
 
 class _SystemStateUpdater(SystemState):
     """A ``_SystemStateUpdater`` is a system state in which the states can be
-    updated"""
+    updated
+
+    Attributes:
+        prev: `SystemState` object that represents the state before any changes
+    """
 
     def __init__(self, time, system: System, state=None, inputs=None):
-        super().__init__(time, system, state, inputs)
-        # Make a copy of the state
-        self.state = self.state.copy()
+        # For the new state we work on a copy of the old state
+        super().__init__(time, system, state.copy(), inputs)
+        # For the previous state we provide the old state array
+        # For that we create a view of the old state and mark it read only
+        old_state = state.view()
+        old_state.flags.writeable = False
+        self.prev = SystemState(time, system, old_state, inputs)
 
     def set_state_value(self, state: State, value):
         """Update the value of the given state"""
@@ -732,18 +740,20 @@ class _SystemStateUpdater(SystemState):
         warnings.warn(
             "The dictionary access interface is deprecated", DeprecationWarning
         )
-        if isinstance(key, tuple):
-            # In case the key is a tuple, its first element is the object to
-            # access, and the remainder is the index of the element to address
-            obj = key[0]
+        try:
+            len(key)
+        except TypeError:
+            key = (key,)
+        if len(key) > 1:
+            # If the key has more than one element, the first element is the
+            # state to access and the remainder is the index of the element to
+            # address.
+            state = key[0]
             idx = key[1:]
-            if len(idx) > 1:
-                obj(self)[idx] = value
-            else:
-                obj(self)[idx[0]] = value
+            self.state[state.state_slice].reshape(state.shape)[idx] = value
         else:
             # Otherwise, we'll fall back to the set_value interface
-            key.set_value(self, value)
+            self.set_state_value(key[0], value)
 
 
 def _find_active_events(start_values, end_values, tolerances, directions):
