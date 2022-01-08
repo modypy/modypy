@@ -47,7 +47,7 @@ def zero_order_hold(system, input_port, event_port, initial_condition=None):
     zero-order-hold block.
 
     Args:
-      system: The system the ``ZeroOrderHold`` block shall be added to.
+      system: The owner of the ``ZeroOrderHold`` block.
       input_port: The input port to sample.
       event_port: The event port to use as a sampling signal
       initial_condition: The initial condition of the ``ZeroOrderHold`` block.

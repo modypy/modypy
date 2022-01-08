@@ -65,7 +65,7 @@ class EventPort:
         self._reference = new_reference
 
     @property
-    def source(self) -> Optional['EventPort']:
+    def source(self) -> Optional["EventPort"]:
         """The event source this port is connected to or ``None`` if it is
         not connected to any event source"""
 
@@ -153,7 +153,7 @@ class ZeroCrossEventSource(AbstractEventSource):
     monitored and the values of event functions are recorded by the simulator.
     """
 
-    def __init__(self, owner, event_function, direction=0, tolerance=1E-12):
+    def __init__(self, owner, event_function, direction=0, tolerance=1e-12):
         """
         Create a new zero-crossing event-source.
 
@@ -188,23 +188,29 @@ class ZeroCrossEventSource(AbstractEventSource):
 
 
 class Clock(AbstractEventSource):
-    """A clock is an event source that generates a periodic event."""
+    """A clock is an event source that generates a periodic event with optional
+    jitter.
 
-    def __init__(self,
-                 owner,
-                 period,
-                 start_time=0.0,
-                 end_time=None,
-                 run_before_start=False):
+    The events are generated off of an ideal periodic event source and shifted
+    by a random amount of jitter.
+
+    The ideal periodic event source generates ticks separated by a given period.
+    The ticks are shifted so that one tick will occur at the given start time.
+    The interval from which the ideal event source will generate ticks can be
+    limited at either side.
+    """
+
+    def __init__(
+        self,
+        owner,
+        period,
+        start_time=0.0,
+        end_time=None,
+        run_before_start=False,
+        jitter_generator=None,
+    ):
         """
         Construct a clock.
-
-        The clock generates a periodic tick occurring at multiples of
-        ``period`` offset by ``start_time``. If ``end_time`` is set to
-        a value other than ``None``, no ticks will be generated after
-        ``end_time``. If ``run_before_start`` is set to ``True``, the
-        clock will also generate ticks before the time defined by
-        ``start_time``.
 
         Args:
             owner: The owner object of this clock (a system or a block)
@@ -213,6 +219,13 @@ class Clock(AbstractEventSource):
             end_time: The end time of the clock (default: ``None``)
             run_before_start: Flag indicating whether the clock shall already
                 run before the start time (default: ``False``)
+            jitter_generator: A callable which will return a single random value
+                to be used as jitter, or ``None`` if no jitter shall be
+                generated (default: ``None``)
+
+        Generation of jitter values with an absolute value larger than or equal
+        to the period may lead to generation of non-monotonously increasing tick
+        times.
         """
 
         AbstractEventSource.__init__(self, owner)
@@ -220,12 +233,13 @@ class Clock(AbstractEventSource):
         self.start_time = start_time
         self.end_time = end_time
         self.run_before_start = run_before_start
+        self.jitter_generator = jitter_generator
 
         self.owner.system.register_clock(self)
 
     def tick_generator(self, not_before):
-        """Return a generate that will yield the times of the ticks of
-        this clock.
+        """Return a generator that will yield the times of the ticks of this
+        clock.
 
         Args:
           not_before: The ticks shown shall not be before the given time
@@ -234,16 +248,27 @@ class Clock(AbstractEventSource):
           A generator for ticks
         """
 
-        k = ceil((not_before - self.start_time) / self.period)
+        # Note that we must not generate any ticks before the given time.
+        # This means that even with jitter, the time must not be before that
+        # time. Thus, we select the jitter amount first and then define
+        # our index such that the tick with the given jitter will not be
+        # before the start time.
+        j = self.jitter_generator() if self.jitter_generator is not None else 0
+        k = ceil((not_before - self.start_time - j) / self.period)
         if k < 0 and not self.run_before_start:
             # No ticks before the start
             k = 0
 
-        tick_time = self.start_time + k * self.period
+        tick_time = self.start_time + k * self.period + j
         while self.end_time is None or tick_time <= self.end_time:
             yield tick_time
             k += 1
-            tick_time = self.start_time + k * self.period
+            j = (
+                self.jitter_generator()
+                if self.jitter_generator is not None
+                else 0
+            )
+            tick_time = self.start_time + k * self.period + j
 
 
 class ClockQueue:
@@ -279,8 +304,10 @@ class ClockQueue:
         # later.
         clocks_to_tick = list()
 
-        while (len(self.clock_queue) > 0 and
-               self.clock_queue[0].tick_time <= current_time):
+        while (
+            len(self.clock_queue) > 0
+            and self.clock_queue[0].tick_time <= current_time
+        ):
             tick_entry = heapq.heappop(self.clock_queue)
             clock = tick_entry.clock
 
@@ -289,9 +316,9 @@ class ClockQueue:
             try:
                 # Get the next tick for the clock
                 next_tick_time = next(tick_entry.tick_generator)
-                next_tick_entry = _TickEntry(next_tick_time,
-                                             clock,
-                                             tick_entry.tick_generator)
+                next_tick_entry = _TickEntry(
+                    next_tick_time, clock, tick_entry.tick_generator
+                )
                 # Add the clock tick to the queue
                 heapq.heappush(self.clock_queue, next_tick_entry)
             except StopIteration:

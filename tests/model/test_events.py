@@ -8,7 +8,12 @@ import pytest
 import numpy.testing as npt
 
 from modypy.model import System, PortNotConnectedError
-from modypy.model.events import MultipleEventSourcesError, EventPort, Clock, ZeroCrossEventSource
+from modypy.model.events import (
+    MultipleEventSourcesError,
+    EventPort,
+    Clock,
+    ZeroCrossEventSource,
+)
 
 
 def test_event_port():
@@ -92,27 +97,30 @@ def test_multiple_event_sources_error():
 
 
 @pytest.mark.parametrize(
-    "start_time, end_time, run_before_start, expected",
+    "start_time, end_time, run_before_start, jitter_generator, expected",
     [
-        [0.0, None, False, [0.0, 1.0, 2.0, 3.0]],
-        [1.5, None, False, [1.5, 2.5, 3.5, 4.5]],
-        [0.5, None, True, [0.5, 1.5, 2.5, 3.5]],
-        [0.5, 2.0, False, [0.5, 1.5]]
-    ]
+        [0.0, None, False, None, [0.0, 1.0, 2.0, 3.0]],
+        [1.5, None, False, None, [1.5, 2.5, 3.5, 4.5]],
+        [0.5, None, True, None, [0.5, 1.5, 2.5, 3.5]],
+        [0.5, 2.0, False, None, [0.5, 1.5]],
+        [0.5, 3.0, False, Mock(side_effect=[-0.6, 0.2, 0.3]), [0.9, 2.7]],
+    ],
 )
-def test_tick_generator(start_time,
-                        end_time,
-                        run_before_start,
-                        expected):
+def test_tick_generator(
+    start_time, end_time, run_before_start, jitter_generator, expected
+):
     """Test the tick generator of a clock event"""
 
     system = System()
 
-    clock = Clock(system,
-                  period=1.0,
-                  start_time=start_time,
-                  end_time=end_time,
-                  run_before_start=run_before_start)
+    clock = Clock(
+        system,
+        period=1.0,
+        start_time=start_time,
+        end_time=end_time,
+        run_before_start=run_before_start,
+        jitter_generator=jitter_generator,
+    )
 
     tick_generator = clock.tick_generator(not_before=0.0)
 
@@ -128,10 +136,7 @@ def test_tick_generator_stop_iteration():
 
     system = System()
 
-    clock = Clock(system,
-                  period=1.0,
-                  start_time=0.0,
-                  end_time=2.0)
+    clock = Clock(system, period=1.0, start_time=0.0, end_time=2.0)
 
     tick_generator = clock.tick_generator(not_before=3.0)
 
@@ -143,8 +148,9 @@ def test_event_port_call():
     """Test the call method on EventPort objects"""
 
     mock_event_source = Mock()
-    mock_event_source.configure_mock(source=mock_event_source,
-                                     reference=mock_event_source)
+    mock_event_source.configure_mock(
+        source=mock_event_source, reference=mock_event_source
+    )
     mock_event_source.signal.return_value = mock_event_source
 
     mock_data = Mock()
