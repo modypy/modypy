@@ -11,11 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        # The Python 3.10 package used by github
-        # does not have pre-built scipy, so installing
-        # scipy takes too long. So we'll drop 3.10 for
-        # the time being.
-        python_version: ['3.6', '3.7', '3.8', '3.9']
+        python_version: ['3.6', '3.7', '3.8', '3.9', '3.10']
     steps:
       - uses: actions/checkout@v1
         with:

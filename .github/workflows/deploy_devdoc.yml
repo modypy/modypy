@@ -15,12 +15,6 @@ jobs:
           submodules: true
       - name: Set up Python
         uses: actions/setup-python@v1
-        with:
-          # github currently uses 3.10 by default, but
-          # does not have pre-built scipy, so installing
-          # scipy takes too long. Instead, we'll use 3.9
-          # for the time being.
-          python-version: "3.9"
       - name: Install depedencies
         run : |
           pip install -r requirements-docs.txt
