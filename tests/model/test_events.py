@@ -7,7 +7,7 @@ import pytest
 
 import numpy.testing as npt
 
-from modypy.model import System, PortNotConnectedError
+from modypy.model import System
 from modypy.model.events import (
     MultipleEventSourcesError,
     EventPort,
@@ -56,8 +56,10 @@ def test_event_connection():
     port_c = EventPort(system)
     port_d = EventPort(system)
 
+    assert port_a.source is None
+
     port_b.connect(clock_a)
-    port_d.connect(clock_a)
+    clock_a.connect(port_d)
 
     port_a.connect(port_b)
     port_c.connect(port_d)
@@ -144,46 +146,17 @@ def test_tick_generator_stop_iteration():
         next(tick_generator)
 
 
-def test_event_port_call():
-    """Test the call method on EventPort objects"""
-
-    mock_event_source = Mock()
-    mock_event_source.configure_mock(
-        source=mock_event_source, reference=mock_event_source
-    )
-    mock_event_source.signal.return_value = mock_event_source
-
-    mock_data = Mock()
-
-    system = System()
-    port = EventPort(system)
-
-    port.connect(mock_event_source)
-
-    port(mock_data)
-
-    mock_event_source.assert_called_with(mock_data)
-
-
 def test_zero_crossing_event_access():
     """Test whether calling a ``ZeroCrossEventSource`` object calls the
     ``get_event_value`` method of the provider object"""
 
     system = System()
 
-    event_port = EventPort(system)
     event_function = Mock()
     event_source = ZeroCrossEventSource(system, event_function)
 
-    event_port.connect(event_source)
-
     provider = Mock()
 
-    event_port(provider)
+    event_source(provider)
 
     event_function.assert_called_with(provider)
-
-    unconnected_port = EventPort(system)
-
-    with pytest.raises(PortNotConnectedError):
-        unconnected_port(None)

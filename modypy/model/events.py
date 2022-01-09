@@ -35,7 +35,6 @@ from math import ceil
 
 import heapq
 from abc import ABC
-from modypy.model.ports import PortNotConnectedError
 from typing import Optional
 
 
@@ -44,41 +43,67 @@ class MultipleEventSourcesError(RuntimeError):
     shall be connected to each other."""
 
 
-class EventPort:
-    """An event port is a port that can be connected to other event ports."""
+class AbstractEventSource(ABC):
+    """An event source defines the circumstances under which an event occurs.
+    Events are occurrences of special occurrence that may require a reaction.
+
+    Events can be reacted upon by updating the state of the system. For this
+    purpose, event listeners can be registered which are called upon occurrence
+    of the event.
+
+    ``AbstractEventSource`` is the abstract base class for all event sources."""
 
     def __init__(self, owner):
         self.owner = owner
-        self._reference = self
         self._listeners = set()
 
+    def connect(self, other):
+        """Connect an event to another event.
+
+        Args:
+            other: The other event port
+
+        Raises:
+            MultipleEventSourcesError: raised if both sides of the connection
+                are already connected to different event sources
+        """
+        other.reference = self
+
     @property
-    def reference(self):
-        """The event port that is referenced by connection to this event
-        port."""
-        if self._reference is not self:
-            self._reference = self._reference.reference
-        return self._reference
+    def reference(self) -> "AbstractEventSource":
+        return self
 
     @reference.setter
-    def reference(self, new_reference):
-        self._reference = new_reference
+    def reference(self, other: "AbstractEventSource"):
+        if other.reference is not self:
+            raise MultipleEventSourcesError
 
     @property
-    def source(self) -> Optional["EventPort"]:
-        """The event source this port is connected to or ``None`` if it is
-        not connected to any event source"""
-
-        if self.reference == self:
-            return None
-        return self.reference.source
+    def source(self) -> "AbstractEventSource":
+        """The event source this of this event"""
+        return self
 
     @property
     def listeners(self):
-        """The listeners registered on this event port"""
-        if self.reference == self:
-            return self._listeners
-        return self.reference.listeners
+        """The listeners registered on this event source"""
+        return self._listeners
+
+    def register_listener(self, listener):
+        """Register a listener for this event port.
+
+        Args:
+          listener: The listener to register
+        """
+        self.listeners.add(listener)
+
+
+class EventPort(AbstractEventSource):
+    """An event port is a placeholder for an event port that can be connected to
+    other event ports or an event source."""
+
+    def __init__(self, owner):
+        AbstractEventSource.__init__(self, owner)
+        self._reference = self
 
     def connect(self, other):
         """Connect an event port to another event port.
@@ -92,59 +117,44 @@ class EventPort:
                 other
         """
 
-        if self.source is not None and other.source is not None:
-            # Both ports are already connected to an event.
-            # It is an error if it's not the same event.
-            if self.source != other.source:
-                raise MultipleEventSourcesError()
-        else:
-            # At least one of the ports is not yet connected to an event.
-            # We select a common reference and join all the listeners connected
-            # to both ports in one set.
-            if other.source is not None:
-                # The other port is already connected to an event,
-                # so we choose the other port as reference and add
-                # our listeners to its listeners.
-                other.listeners.update(self.listeners)
-                self.reference.reference = other.reference
-            else:
-                # The other part is not yet connected to a event,
-                # so we make ourselves the reference and add
-                # its listeners to our listeners.
-                self.listeners.update(other.listeners)
-                other.reference.reference = self.reference
-
-    def register_listener(self, listener):
-        """Register a listener for this event port.
-
-        Args:
-          listener: The listener to register
-        """
-        self.listeners.add(listener)
-
-    def __call__(self, provider):
-        if self.source is None:
-            raise PortNotConnectedError()
-        # pylint does not recognise that source is either None or an EventPort,
-        # which is callable.
-        # pylint: disable=not-callable
-        return self.source(provider)
-
-
-class AbstractEventSource(EventPort, ABC):
-    """An event source defines the circumstances under which an event occurs.
-    Events are occurrences of special occurrence that may require a reaction.
-
-    Events can be reacted upon by updating the state of the system. For this
-    purpose, event listeners can be registered which are called upon occurrence
-    of the event.
-
-    ``AbstractEventSource`` is the abstract base class for all event sources."""
+        self.reference = other
 
     @property
-    def source(self):
-        """An event source always has itself as source"""
-        return self
+    def reference(self) -> AbstractEventSource:
+        """The event port referenced by this port"""
+        if self._reference is not self:
+            # Try to further shorten the reference path
+            self._reference = self._reference.reference
+        return self._reference
+
+    @reference.setter
+    def reference(self, other: AbstractEventSource):
+        if self._reference is self:
+            other.listeners.update(self._listeners)
+            self._reference = other.reference
+        elif other.reference is other:
+            self.listeners.update(other.listeners)
+            other.reference = self
+        else:
+            # Both sides are bound already, so we defer this to one of the
+            # references
+            self._reference.reference = other
+
+    @property
+    def source(self) -> Optional[AbstractEventSource]:
+        """The event source this port is connected to or ``None`` if it is
+        not connected to any event source"""
+
+        if self.reference is self:
+            return None
+        return self.reference.source
+
+    @property
+    def listeners(self):
+        """The listeners registered on this event source"""
+        if self.reference is not self:
+            return self.reference.listeners
+        return self._listeners
 
 
 class ZeroCrossEventSource(AbstractEventSource):
