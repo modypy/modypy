@@ -15,6 +15,8 @@ other and to signals using the ``connect`` method. In fact, each signal is also
 a port.
 """
 import functools
+from abc import abstractmethod
+
 import numpy as np
 import operator
 from typing import Optional, Sequence, Tuple, Union
@@ -56,15 +58,15 @@ class AbstractSignal:
         self.size = functools.reduce(operator.mul, self.shape, 1)
 
     def connect(self, other: "AbstractSignal"):
-        """Connect this port to another port.
+        """Connect this signal to another signal.
 
         Args:
-          other: The other port to connect to
+          other: The signal to connect to
 
         Raises:
-          ShapeMismatchError: if the shapes of the ports do not match
-          MultipleSignalsError: if both ports are already connected to
-            different signals
+          ShapeMismatchError: raised if the shapes of the signals do not match
+          MultipleSignalsError: raised if both sides of the connection are
+            already connected to different signals
         """
         other.reference = self
 
@@ -78,13 +80,17 @@ class AbstractSignal:
             raise MultipleSignalsError
 
     @property
-    def signal(self) -> Optional["AbstractSignal"]:
+    def signal(self) -> "AbstractSignal":
         return self
+
+    @abstractmethod
+    def __call__(self, *args, **kwargs):
+        raise NotImplementedError
 
 
 class Port(AbstractSignal):
     """A port is a placeholder for a signal that can be connected to other ports
-    or signals."""
+    or a signal."""
 
     def __init__(self, shape: ShapeType = ()):
         AbstractSignal.__init__(self, shape)
@@ -108,23 +114,23 @@ class Port(AbstractSignal):
             self._reference.reference = other
 
     @property
-    def signal(self):
+    def signal(self) -> Optional[AbstractSignal]:
         """The signal referenced by this port or ``None`` if this port is not
         connected to any signal."""
         if self._reference is not self:
             return self.reference.signal
         return None
 
-    def connect(self, other):
-        """Connect this port to another port.
+    def connect(self, other: "AbstractSignal"):
+        """Connect this port to a signal.
 
         Args:
-          other: The other port to connect to
+          other: The signal to connect to
 
         Raises:
-          ShapeMismatchError: if the shapes of the ports do not match
-          MultipleSignalsError: if both ports are already connected to
-            different signals
+          ShapeMismatchError: raised if the shapes of the signals do not match
+          MultipleSignalsError: raised if both sides of the connection are
+            already connected to different signals
         """
         if self.shape != other.shape:
             # It is an error if the shapes of the ports do not match.
