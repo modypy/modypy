@@ -80,7 +80,7 @@ class IIRFilter(Block, AbstractSignal):
         >>> plt.tight_layout()
         >>> plt.show()
 
-    .. versionadded:: 3.1.0
+    .. versionadded:: 4.0.0
     """
 
     def __init__(self, parent, source, filter_spec, filter_format="ba"):
