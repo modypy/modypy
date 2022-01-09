@@ -19,7 +19,6 @@ import numpy as np
 import operator
 from typing import Optional, Sequence, Tuple, Union
 
-
 ShapeType = Union[int, Sequence[int], Tuple[int]]
 
 
@@ -38,15 +37,57 @@ class ShapeMismatchError(RuntimeError):
     connected to each other."""
 
 
-class Port:
-    """A port is a structural element of a system that can be connected to a
-    signal."""
+class AbstractSignal:
+    """A signal is a function of the system state.
+
+    Args:
+        shape: The shape of the signal, which is either an empty tuple for a
+            scalar signal (the default), an integer for a vector signal of the
+            given dimension or a tuple of integers for a multi-dimensional
+            signal.
+    """
 
     def __init__(self, shape: ShapeType = ()):
-        if isinstance(shape, int):
+        try:
+            len(shape)
+        except TypeError:
             shape = (shape,)
         self.shape = shape
         self.size = functools.reduce(operator.mul, self.shape, 1)
+
+    def connect(self, other: "AbstractSignal"):
+        """Connect this port to another port.
+
+        Args:
+          other: The other port to connect to
+
+        Raises:
+          ShapeMismatchError: if the shapes of the ports do not match
+          MultipleSignalsError: if both ports are already connected to
+            different signals
+        """
+        other.reference = self
+
+    @property
+    def reference(self) -> "AbstractSignal":
+        return self
+
+    @reference.setter
+    def reference(self, other: "AbstractSignal"):
+        if other.reference is not self:
+            raise MultipleSignalsError
+
+    @property
+    def signal(self) -> Optional["AbstractSignal"]:
+        return self
+
+
+class Port(AbstractSignal):
+    """A port is a placeholder for a signal that can be connected to other ports
+    or signals."""
+
+    def __init__(self, shape: ShapeType = ()):
+        AbstractSignal.__init__(self, shape)
         self._reference = self
 
     @property
@@ -58,11 +99,16 @@ class Port:
         return self._reference
 
     @reference.setter
-    def reference(self, value):
-        self._reference = value
+    def reference(self, other):
+        if self._reference is self:
+            self._reference = other
+        elif other.reference is other:
+            other.reference = self
+        else:
+            self._reference.reference = other
 
     @property
-    def signal(self) -> Optional["Port"]:
+    def signal(self):
         """The signal referenced by this port or ``None`` if this port is not
         connected to any signal."""
         if self._reference is not self:
@@ -86,20 +132,7 @@ class Port:
                 "Shape (%s) of left port does not match "
                 "shape (%s) of right port" % (self.shape, other.shape)
             )
-        if self.signal is not None and other.signal is not None:
-            # Both ports are already connected to a signal.
-            # It is an error if they are not connected to the same signal.
-            if self.signal != other.signal:
-                raise MultipleSignalsError()
-        else:
-            if self.signal is None:
-                # We are not yet connected to a signal, so we take the reference
-                # from the other port.
-                self.reference.reference = other.reference
-            else:
-                # The other port is not yet connected to a signal, so we update
-                # the reference of the other port.
-                other.reference.reference = self.reference
+        self.reference = other
 
     def __call__(self, *args, **kwargs):
         if self.size == 0:
@@ -110,19 +143,6 @@ class Port:
         # which _is_ callable.
         # pylint: disable=not-callable
         return self.signal(*args, **kwargs)
-
-
-class AbstractSignal(Port):
-    """A signal is a terminal port with a defined value.
-
-    It is connected to itself, i.e., it can only be connected to other,
-    unconnected ports or to ports that are already connected to itself."""
-
-    @property
-    def signal(self):
-        """The signal this signal is connected to, i.e., itself."""
-        # A signal is always connected to itself
-        return self
 
 
 class Signal(AbstractSignal):
