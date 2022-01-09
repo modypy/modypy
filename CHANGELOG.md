@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Introduced public event detector interface in simulation (#37)
 - Added documentation on the simulation main loop (#38)
 - Added basic description of zero-crossing events.
+### Changed
+- Reversed class hierarchy for signals and events so that ports are a special
+  case now instead of being the base case.
 ### Fixed
 - Fix handling gain blocks with scalar gain.
 
