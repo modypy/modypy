@@ -85,7 +85,7 @@ class AbstractSignal:
 
     @abstractmethod
     def __call__(self, *args, **kwargs):
-        raise NotImplementedError
+        """Evaluate the value of the signal"""
 
 
 class Port(AbstractSignal):
