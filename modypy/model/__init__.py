@@ -1,6 +1,8 @@
 """Declarations for creation of models"""
-from .events import Clock, EventPort, ZeroCrossEventSource
+from .events import AbstractEventSource, EventPort, Clock, ZeroCrossEventSource
 from .ports import (
+    ShapeType,
+    AbstractSignal,
     InputSignal,
     MultipleSignalsError,
     Port,

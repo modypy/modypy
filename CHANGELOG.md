@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- Introduced noise source (#12)
 - Introduced simulation of clock jitter (#34)
 - Introduced IIR filter block (#42)
 - Introduced access to copy of old state in state updaters
